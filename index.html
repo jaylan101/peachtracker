@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PeachTracker — Live Election Results for Macon-Bibb County</title>
+<meta name="description" content="Live election results for Macon-Bibb County, Georgia, reported by the community as they're announced at the Board of Elections.">
+
+<!-- OpenGraph / Social -->
+<meta property="og:title" content="PeachTracker — Live Election Results for Macon-Bibb County">
+<meta property="og:description" content="Live election results for Macon-Bibb County, Georgia, reported by the community.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PeachTracker — Live Election Results for Macon-Bibb County">
+<meta name="twitter:description" content="Live election results for Macon-Bibb County, Georgia, reported by the community.">
+<meta name="twitter:image" content="/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     PEACHTRACKER — newsroom / civic data aesthetic
+     Flat. Sharp edges. Pastels. Extreme type contrast.
+     ============================================================ */
+  :root {
+    --peach: #E0956E;
+    --peach-pastel: #F5D5C3;
+    --peach-bg: #FDF0E8;
+    --green: #5E9470;
+    --green-pastel: #C3DECA;
+    --green-bg: #EBF3ED;
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --border: #E0DCD6;
+    --text: #2A2725;
+    --text-secondary: #87817A;
+    --text-light: #B5AFA8;
+
+    /* Type scale — deliberate contrast */
+    --kicker: 0.68rem;       /* eyebrow / section labels */
+    --micro:  0.72rem;       /* footer notes, source, timestamp */
+    --body:   0.92rem;       /* body paragraphs */
+    --lead:   1.05rem;       /* larger body / lede */
+
+    /* Layout */
+    --content: 1120px;       /* container */
+    --gutter: 40px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { background: var(--bg); }
+
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ---- ACCENT BAR ---- */
+  .accent-bar {
+    height: 5px;
+    background: var(--peach);
+  }
+
+  /* ---- NAV ---- */
+  .nav {
+    background: var(--card);
+    border-bottom: 2px solid var(--text);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 16px var(--gutter);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .nav-logo {
+    display: block;
+    height: 56px;
+    width: auto;
+  }
+
+  /* ============================================================
+     HERO — asymmetric, left-biased, confident
+     ============================================================ */
+  .hero {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 96px var(--gutter) 72px;
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: 56px;
+    align-items: end;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .hero-eyebrow {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--peach);
+  }
+
+  .hero-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 180px;
+  }
+
+  .hero-title {
+    font-weight: 900;
+    font-size: clamp(2.4rem, 4.6vw, 3.6rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--peach);
+  }
+
+  .hero-desc {
+    font-size: var(--lead);
+    color: var(--text-secondary);
+    line-height: 1.55;
+    font-weight: 450;
+  }
+
+  .hero-desc strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     RESULTS — the main event. Extreme type contrast.
+     Goes full container width. Sits on a full-bleed divider band.
+     ============================================================ */
+  .results-band {
+    /* full-bleed separator: a thin dark rule across the page */
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .results {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 56px var(--gutter) 64px;
+  }
+
+  .results-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    gap: 24px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 16px;
+  }
+
+  .results-head-title {
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.015em;
+  }
+
+  .results-head-meta {
+    display: flex;
+    gap: 24px;
+    font-size: var(--kicker);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .results-head-meta span strong {
+    display: block;
+    font-size: 0.85rem;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: var(--text);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* Candidate row — two column grid, photo outside, numbers inside */
+  .cand-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-bottom: none;
+    overflow: hidden;  /* clip any giant-type overflow within the card */
+  }
+
+  .cand {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    min-height: 320px;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .cand.cand-a { background: var(--peach-bg); }
+  .cand.cand-b {
+    background: var(--green-bg);
+    grid-template-columns: minmax(0, 1fr) 220px;
+    border-left: 1.5px solid var(--border);
+  }
+
+  .cand-photo {
+    overflow: hidden;
+    position: relative;
+    background: var(--border);
+  }
+
+  .cand-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.4s ease;
+  }
+
+  .cand-a .cand-photo img { object-position: 55% 25%; }
+  .cand-b .cand-photo img { object-position: 50% 20%; }
+
+  .cand.trailing .cand-photo img {
+    filter: grayscale(35%) brightness(0.96);
+  }
+
+  .cand-info {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;  /* prevent flex/grid blowout from large numbers */
+    overflow: hidden;
+  }
+
+  .cand.cand-b .cand-info {
+    order: -1;
+    text-align: right;
+    padding-right: 40px;
+  }
+
+  .cand-tag {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 14px;
+  }
+
+  .cand-a .cand-tag { color: var(--peach); }
+  .cand-b .cand-tag { color: var(--green); }
+
+  .cand-name {
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    margin-bottom: 18px;
+  }
+
+  .cand-pct {
+    font-weight: 900;
+    font-size: clamp(4.5rem, 8vw, 6rem);
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .cand-a .cand-pct { color: var(--peach); }
+  .cand-b .cand-pct { color: var(--green); }
+
+  .cand-votes {
+    font-size: var(--micro);
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- SPLIT BAR — tall, becomes a visual landmark ---- */
+  .split-bar {
+    display: flex;
+    height: 88px;
+    border-left: 1.5px solid var(--border);
+    border-right: 1.5px solid var(--border);
+  }
+
+  .split-peach {
+    background: var(--peach);
+    display: flex;
+    align-items: center;
+    padding-left: 28px;
+  }
+
+  .split-green {
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 28px;
+  }
+
+  .split-label {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+
+  /* ---- STATS STRIP — calm, editorial ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    align-items: end;
+    gap: 40px;
+    padding: 28px 32px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-top: none;
+  }
+
+  .stat-label {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-light);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-feature-settings: "tnum" 1;
+  }
+
+  .stat-first .stat-value {
+    color: var(--peach);
+  }
+
+  .stat-timestamp {
+    text-align: right;
+    font-size: var(--micro);
+    color: var(--text-light);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .stat-timestamp strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* ============================================================
+     EDITORIAL — "How we do this" as a single line, not 3 boxes
+     ============================================================ */
+  .editorial {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 24px var(--gutter) 80px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .editorial-label {
+    font-size: var(--kicker);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--peach);
+    padding-top: 6px;
+    border-top: 2px solid var(--peach);
+    display: inline-block;
+  }
+
+  .editorial-body {
+    font-size: 1.15rem;
+    font-weight: 450;
+    line-height: 1.5;
+    color: var(--text);
+    max-width: 680px;
+    letter-spacing: -0.005em;
+  }
+
+  .editorial-body strong {
+    font-weight: 700;
+  }
+
+  /* ============================================================
+     WHY — confident block, not a pastel footnote
+     ============================================================ */
+  .why {
+    background: var(--peach-bg);
+    border-top: 1.5px solid var(--peach-pastel);
+    border-bottom: 1.5px solid var(--peach-pastel);
+  }
+
+  .why-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 72px var(--gutter);
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .why-title {
+    font-weight: 900;
+    font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+
+  .why-title em {
+    font-style: normal;
+    color: var(--peach);
+  }
+
+  .why-text {
+    font-size: var(--lead);
+    color: var(--text);
+    line-height: 1.55;
+    font-weight: 450;
+    max-width: 560px;
+  }
+
+  .why-text + .why-text { margin-top: 14px; }
+
+  /* ============================================================
+     DISCLAIMER — deliberate, bordered, legible
+     ============================================================ */
+  .disclaimer-band {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 56px var(--gutter) 24px;
+  }
+
+  .disclaimer {
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .disclaimer-label {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-light);
+  }
+
+  .disclaimer-body {
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.55;
+    font-weight: 500;
+  }
+
+  .disclaimer-body strong {
+    font-weight: 700;
+  }
+
+  /* ============================================================
+     FOOTER — anchored
+     ============================================================ */
+  .site-footer {
+    border-top: 2px solid var(--text);
+    margin-top: 24px;
+  }
+
+  .footer-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 28px var(--gutter) 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    display: block;
+    height: 42px;
+    width: auto;
+  }
+
+  .footer-meta {
+    font-size: var(--micro);
+    color: var(--text-light);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 960px) {
+    :root { --gutter: 28px; }
+
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 64px var(--gutter) 48px;
+      align-items: start;
+    }
+
+    .hero-desc { max-width: 560px; }
+
+    .cand { grid-template-columns: 180px 1fr; }
+    .cand.cand-b { grid-template-columns: 1fr 180px; }
+
+    .stats {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px 32px;
+    }
+    .stat-timestamp { grid-column: 1 / -1; text-align: left; }
+
+    .editorial {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .why-inner {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 56px var(--gutter);
+    }
+
+    .disclaimer {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    :root { --gutter: 20px; }
+
+    .hero { padding: 48px var(--gutter) 36px; }
+    .hero-title { font-size: 2rem; }
+
+    .results { padding: 40px var(--gutter) 48px; }
+
+    .results-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .results-head-meta { gap: 16px; flex-wrap: wrap; }
+
+    /* Stack candidates vertically */
+    .cand-row { grid-template-columns: 1fr; }
+
+    .cand {
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+    .cand.cand-a { border-bottom: 1.5px solid var(--border); }
+    .cand.cand-b {
+      grid-template-columns: 1fr;
+      border-left: none;
+    }
+    .cand.cand-b .cand-info {
+      order: 1;
+      text-align: left;
+      padding-right: 32px;
+    }
+
+    .cand-photo { height: 220px; }
+
+    .cand-pct { font-size: 4.4rem; }
+
+    .split-bar { height: 64px; }
+    .split-label { font-size: 1.1rem; }
+
+    .stats {
+      grid-template-columns: 1fr 1fr;
+      padding: 22px 24px;
+      gap: 20px 24px;
+    }
+
+    .editorial { padding: 16px var(--gutter) 56px; }
+    .editorial-body { font-size: 1rem; }
+
+    .why-inner { padding: 44px var(--gutter); }
+    .why-title { font-size: 1.6rem; }
+    .why-text { font-size: 0.95rem; }
+
+    .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     RACE DATA — EDIT ME ON ELECTION NIGHT
+     ============================================================ -->
+<script>
+  const RACE_DATA = {
+    race: "District 5 Special Election Runoff",
+    date: "April 14, 2026",
+    lastUpdated: "Polls open until 7:00 PM",
+    precinctsReporting: { reported: 0, total: 6 },
+    candidates: [
+      { name: "Andrea Cooke",  votes: 0, color: "peach", photo: "images/andrea-cooke.jpg"  },
+      { name: "Edward Foster", votes: 0, color: "green", photo: "images/edward-foster.jpg" }
+    ]
+  };
+</script>
+
+<!-- Top accent bar -->
+<div class="accent-bar"></div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-inner">
+    <img class="nav-logo" src="images/peachlogo2-remove-bg-io.png" alt="PeachTracker">
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div>
+    <div class="hero-meta">
+      <span class="hero-eyebrow">Macon-Bibb County · Georgia</span>
+      <span class="hero-rule"></span>
+    </div>
+    <h1 class="hero-title">Live election results, reported by the community.</h1>
+  </div>
+  <p class="hero-desc">
+    <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
+  </p>
+</section>
+
+<!-- Results -->
+<div class="results-band">
+  <section class="results">
+    <div class="results-head">
+      <div class="results-head-title" id="js-race"></div>
+      <div class="results-head-meta">
+        <span>Date<strong id="js-date"></strong></span>
+        <span>Precincts<strong id="js-precincts"></strong></span>
+        <span>Updated<strong id="js-updated"></strong></span>
+      </div>
+    </div>
+
+    <!-- Candidate row -->
+    <div class="cand-row">
+      <div class="cand cand-a" id="js-cand-a">
+        <div class="cand-photo"><img id="js-photo-a" alt=""></div>
+        <div class="cand-info">
+          <div class="cand-tag" id="js-tag-a"></div>
+          <div class="cand-name" id="js-name-a"></div>
+          <div class="cand-pct" id="js-pct-a"></div>
+          <div class="cand-votes" id="js-votes-a"></div>
+        </div>
+      </div>
+      <div class="cand cand-b" id="js-cand-b">
+        <div class="cand-photo"><img id="js-photo-b" alt=""></div>
+        <div class="cand-info">
+          <div class="cand-tag" id="js-tag-b"></div>
+          <div class="cand-name" id="js-name-b"></div>
+          <div class="cand-pct" id="js-pct-b"></div>
+          <div class="cand-votes" id="js-votes-b"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split bar -->
+    <div class="split-bar">
+      <div class="split-peach" id="js-split-a">
+        <span class="split-label" id="js-split-label-a"></span>
+      </div>
+      <div class="split-green" id="js-split-b">
+        <span class="split-label" id="js-split-label-b"></span>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats">
+      <div class="stat-first">
+        <div class="stat-label">Leading by</div>
+        <div class="stat-value"><span id="js-margin"></span> <span style="font-size:0.9rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);">votes</span></div>
+      </div>
+      <div>
+        <div class="stat-label">Total Votes</div>
+        <div class="stat-value" id="js-total"></div>
+      </div>
+      <div>
+        <div class="stat-label">Precincts In</div>
+        <div class="stat-value" id="js-precincts-stat"></div>
+      </div>
+      <div class="stat-timestamp">
+        Source: Macon-Bibb Board of Elections<br>
+        Last updated <strong id="js-updated-2"></strong>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Editorial: how we do it -->
+<section class="editorial">
+  <span class="editorial-label">On the ground</span>
+  <p class="editorial-body">
+    We're on-site at the Macon-Bibb Board of Elections on election night, entering vote totals into this page by hand as each precinct reports. <strong>No algorithm, no estimate</strong> — just the numbers posted in the lobby, delivered to you in minutes instead of hours.
+  </p>
+</section>
+
+<!-- Why PeachTracker -->
+<section class="why">
+  <div class="why-inner">
+    <h2 class="why-title">Because Macon <em>deserves to know.</em></h2>
+    <div>
+      <p class="why-text">
+        Local elections in Macon-Bibb don't have live public reporting. Results trickle out in printouts at the Board of Elections while the rest of the country watches their local races in real time.
+      </p>
+      <p class="why-text">
+        PeachTracker closes that gap — bringing transparency to every race by putting real-time results in the hands of the community that actually shows up to vote in them.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Disclaimer -->
+<section class="disclaimer-band">
+  <div class="disclaimer">
+    <div class="disclaimer-label">A note on these results</div>
+    <div class="disclaimer-body">
+      PeachTracker is not affiliated with Macon-Bibb County government. Results displayed here are <strong>unofficial until certified</strong> by the Macon-Bibb County Board of Elections.
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <img class="footer-logo" src="images/peachlogo2-remove-bg-io.png" alt="PeachTracker">
+    <div class="footer-meta">© 2026 · Made in Macon</div>
+  </div>
+</footer>
+
+<script>
+  // ============================================================
+  // RENDER — derives percentages, margin, leading/trailing from votes
+  // ============================================================
+  (function render() {
+    const d = RACE_DATA;
+    const [c1, c2] = d.candidates;
+    const total = c1.votes + c2.votes;
+
+    const pct1Raw = total > 0 ? (c1.votes / total) * 100 : 50;
+    const pct1 = Math.round(pct1Raw * 10) / 10;
+    const pct2 = Math.round((100 - pct1) * 10) / 10;
+
+    const margin = Math.abs(c1.votes - c2.votes);
+
+    // Map peach candidate to slot A, green to slot B
+    const a = c1.color === "peach" ? c1 : c2;
+    const b = c1.color === "peach" ? c2 : c1;
+    const aPct = a === c1 ? pct1 : pct2;
+    const bPct = b === c1 ? pct1 : pct2;
+    const aLeading = a.votes >= b.votes;
+
+    // Header
+    document.getElementById("js-race").textContent = d.race;
+    document.getElementById("js-date").textContent = d.date;
+    document.getElementById("js-updated").textContent = d.lastUpdated;
+    document.getElementById("js-precincts").textContent =
+      d.precinctsReporting.reported + " of " + d.precinctsReporting.total;
+
+    // Photos + trailing class
+    const imgA = document.getElementById("js-photo-a");
+    const imgB = document.getElementById("js-photo-b");
+    imgA.src = a.photo; imgA.alt = a.name;
+    imgB.src = b.photo; imgB.alt = b.name;
+    document.getElementById("js-cand-a").classList.toggle("trailing", !aLeading);
+    document.getElementById("js-cand-b").classList.toggle("trailing",  aLeading);
+
+    // Candidate A
+    document.getElementById("js-tag-a").textContent   = aLeading ? "Leading" : "Trailing";
+    document.getElementById("js-name-a").textContent  = a.name;
+    document.getElementById("js-pct-a").textContent   = aPct.toFixed(1) + "%";
+    document.getElementById("js-votes-a").textContent = a.votes.toLocaleString() + " votes";
+
+    // Candidate B
+    document.getElementById("js-tag-b").textContent   = aLeading ? "Trailing" : "Leading";
+    document.getElementById("js-name-b").textContent  = b.name;
+    document.getElementById("js-pct-b").textContent   = bPct.toFixed(1) + "%";
+    document.getElementById("js-votes-b").textContent = b.votes.toLocaleString() + " votes";
+
+    // Split bar
+    document.getElementById("js-split-a").style.width = aPct + "%";
+    document.getElementById("js-split-b").style.width = bPct + "%";
+    document.getElementById("js-split-label-a").textContent = aPct.toFixed(1) + "%";
+    document.getElementById("js-split-label-b").textContent = bPct.toFixed(1) + "%";
+
+    // Stats strip
+    document.getElementById("js-margin").textContent  = margin.toLocaleString();
+    document.getElementById("js-total").textContent   = total.toLocaleString();
+    document.getElementById("js-precincts-stat").textContent =
+      d.precinctsReporting.reported + " / " + d.precinctsReporting.total;
+    document.getElementById("js-updated-2").textContent = d.lastUpdated;
+  })();
+</script>
+
+</body>
+</html>
