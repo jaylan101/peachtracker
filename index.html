@@ -419,20 +419,39 @@
   }
 
   /* ============================================================
-     WHY — confident block, not a pastel footnote
+     WHY — confident block with Macon City Hall background.
+     Background image sits behind the section, anchored to
+     the right with a peach-tinted overlay that blends the
+     illustration into the section's pastel palette.
      ============================================================ */
   .why {
-    background: var(--peach-bg);
+    position: relative;
+    background-color: var(--peach-bg);
+    background-image:
+      linear-gradient(
+        to right,
+        var(--peach-bg) 0%,
+        var(--peach-bg) 32%,
+        rgba(253, 240, 232, 0.88) 55%,
+        rgba(253, 240, 232, 0.55) 80%,
+        rgba(253, 240, 232, 0.35) 100%
+      ),
+      url('images/macon-city-hall.jpg');
+    background-position: center, right center;
+    background-size: cover, auto 110%;
+    background-repeat: no-repeat;
     border-top: 1.5px solid var(--peach-pastel);
     border-bottom: 1.5px solid var(--peach-pastel);
+    overflow: hidden;
   }
 
   .why-inner {
+    position: relative;
     max-width: var(--content);
     margin: 0 auto;
-    padding: 72px var(--gutter);
+    padding: 96px var(--gutter) 104px;
     display: grid;
-    grid-template-columns: 5fr 7fr;
+    grid-template-columns: 6fr 6fr;
     gap: 56px;
     align-items: start;
   }
@@ -558,6 +577,19 @@
       gap: 16px;
     }
 
+    .why {
+      /* On tablet/mobile: text-prioritized overlay so words stay readable */
+      background-image:
+        linear-gradient(
+          to bottom,
+          var(--peach-bg) 0%,
+          rgba(253, 240, 232, 0.92) 40%,
+          rgba(253, 240, 232, 0.78) 100%
+        ),
+        url('images/macon-city-hall.jpg');
+      background-position: center, center bottom;
+      background-size: cover, 140% auto;
+    }
     .why-inner {
       grid-template-columns: 1fr;
       gap: 24px;
@@ -749,10 +781,10 @@
     <h2 class="why-title">Because Macon <em>deserves to know.</em></h2>
     <div>
       <p class="why-text">
-        Local elections in Macon-Bibb don't have live public reporting. Results trickle out in printouts at the Board of Elections while the rest of the country watches their local races in real time.
+        Local election results in Macon-Bibb are delivered the old-fashioned way — on paper, in person, at the Board of Elections lobby. That's how the county has always done it, and PeachTracker doesn't change a thing about how it works.
       </p>
       <p class="why-text">
-        PeachTracker closes that gap — bringing transparency to every race by putting real-time results in the hands of the community that actually shows up to vote in them.
+        We just thought it'd be nice if folks who couldn't make it down there could still follow along. So we show up, watch the numbers come in, and post them here. A community project, for the community.
       </p>
     </div>
   </div>
