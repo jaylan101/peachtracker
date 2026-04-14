@@ -95,16 +95,39 @@
   }
 
   /* ============================================================
-     HERO — asymmetric, left-biased, confident
+     HERO — Macon City Hall as the background. Text sits in a
+     protected peach zone on the left; the building breathes
+     from the center-right with a soft pastel wash.
      ============================================================ */
+  .hero-band {
+    position: relative;
+    background-color: var(--peach-bg);
+    background-image:
+      linear-gradient(
+        to right,
+        rgba(253, 240, 232, 1) 0%,
+        rgba(253, 240, 232, 1) 42%,
+        rgba(253, 240, 232, 0.78) 58%,
+        rgba(253, 240, 232, 0.28) 82%,
+        rgba(253, 240, 232, 0.08) 100%
+      ),
+      url('images/macon-city-hall-banner.jpg');
+    background-size: cover, auto 130%;
+    background-position: center, 110% center;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
   .hero {
+    position: relative;
     max-width: var(--content);
     margin: 0 auto;
-    padding: 96px var(--gutter) 72px;
+    padding: 112px var(--gutter) 128px;
     display: grid;
-    grid-template-columns: 7fr 5fr;
+    grid-template-columns: minmax(0, 620px) 1fr;
     gap: 56px;
-    align-items: end;
+    align-items: center;
   }
 
   .hero-meta {
@@ -143,75 +166,16 @@
 
   .hero-desc {
     font-size: var(--lead);
-    color: var(--text-secondary);
+    color: var(--text);
     line-height: 1.55;
     font-weight: 450;
+    margin-top: 24px;
+    max-width: 520px;
   }
 
   .hero-desc strong {
     color: var(--text);
-    font-weight: 600;
-  }
-
-  /* ============================================================
-     LOCATION BANNER — full-bleed Macon City Hall illustration,
-     peach-washed. Anchors the geography of the site before
-     the race data appears below.
-     ============================================================ */
-  .location-banner {
-    position: relative;
-    height: 300px;
-    background-color: var(--peach-bg);
-    background-image:
-      linear-gradient(
-        to right,
-        rgba(253, 240, 232, 0.98) 0%,
-        rgba(253, 240, 232, 0.94) 38%,
-        rgba(253, 240, 232, 0.55) 62%,
-        rgba(253, 240, 232, 0.18) 88%,
-        rgba(253, 240, 232, 0.05) 100%
-      ),
-      url('images/macon-city-hall-banner.jpg');
-    background-size: cover, auto 120%;
-    background-position: center, right center;
-    background-repeat: no-repeat;
-    border-bottom: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  .location-banner-inner {
-    max-width: var(--content);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .location-eyebrow {
-    font-size: var(--kicker);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    color: var(--peach);
-  }
-
-  .location-line {
-    font-weight: 900;
-    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
-    letter-spacing: -0.02em;
-    line-height: 1;
-    color: var(--text);
-    max-width: 460px;
-  }
-
-  .location-sub {
-    font-size: var(--body);
-    color: var(--text-secondary);
-    max-width: 420px;
-    line-height: 1.5;
   }
 
   /* ============================================================
@@ -600,7 +564,7 @@
     .hero {
       grid-template-columns: 1fr;
       gap: 24px;
-      padding: 64px var(--gutter) 48px;
+      padding: 72px var(--gutter) 88px;
       align-items: start;
     }
 
@@ -620,19 +584,16 @@
       gap: 16px;
     }
 
-    .location-banner {
-      height: 220px;
-    }
-    .location-banner {
-      /* On narrower widths, pull the overlay further across so
-         text-side stays readable */
+    .hero-band {
+      /* On narrower widths, pull the overlay across so the
+         text-side stays readable even when the building shrinks */
       background-image:
         linear-gradient(
           to right,
-          rgba(253, 240, 232, 0.96) 0%,
-          rgba(253, 240, 232, 0.82) 45%,
-          rgba(253, 240, 232, 0.45) 80%,
-          rgba(253, 240, 232, 0.20) 100%
+          rgba(253, 240, 232, 0.98) 0%,
+          rgba(253, 240, 232, 0.92) 55%,
+          rgba(253, 240, 232, 0.55) 85%,
+          rgba(253, 240, 232, 0.25) 100%
         ),
         url('images/macon-city-hall-banner.jpg');
     }
@@ -651,8 +612,9 @@
   @media (max-width: 560px) {
     :root { --gutter: 20px; }
 
-    .hero { padding: 48px var(--gutter) 36px; }
+    .hero { padding: 56px var(--gutter) 64px; }
     .hero-title { font-size: 2rem; }
+    .hero-desc { font-size: 0.95rem; }
 
     .results { padding: 40px var(--gutter) 48px; }
 
@@ -697,9 +659,19 @@
     .why-title { font-size: 1.6rem; }
     .why-text { font-size: 0.95rem; }
 
-    .location-banner { height: 180px; }
-    .location-line { font-size: 1.4rem; }
-    .location-sub { font-size: 0.88rem; }
+    .hero-band {
+      /* On mobile: building fades further — text side is fully opaque */
+      background-image:
+        linear-gradient(
+          to bottom,
+          rgba(253, 240, 232, 0.96) 0%,
+          rgba(253, 240, 232, 0.92) 55%,
+          rgba(253, 240, 232, 0.80) 100%
+        ),
+        url('images/macon-city-hall-banner.jpg');
+      background-size: cover, 200% auto;
+      background-position: center, center bottom;
+    }
 
     .footer-inner {
       flex-direction: column;
@@ -737,27 +709,20 @@
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
-  <div>
-    <div class="hero-meta">
-      <span class="hero-eyebrow">Macon-Bibb County · Georgia</span>
-      <span class="hero-rule"></span>
+<!-- Hero (with Macon City Hall as background) -->
+<div class="hero-band">
+  <section class="hero">
+    <div>
+      <div class="hero-meta">
+        <span class="hero-eyebrow">Macon-Bibb County · Georgia</span>
+        <span class="hero-rule"></span>
+      </div>
+      <h1 class="hero-title">Live election results, reported by the community.</h1>
+      <p class="hero-desc">
+        <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
+      </p>
     </div>
-    <h1 class="hero-title">Live election results, reported by the community.</h1>
-  </div>
-  <p class="hero-desc">
-    <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
-  </p>
-</section>
-
-<!-- Location banner -->
-<div class="location-banner">
-  <div class="location-banner-inner">
-    <span class="location-eyebrow">Tracking live from</span>
-    <div class="location-line">Macon-Bibb County, Georgia</div>
-    <p class="location-sub">The site of tonight's District 5 Special Election Runoff.</p>
-  </div>
+  </section>
 </div>
 
 <!-- Results -->
