@@ -154,6 +154,67 @@
   }
 
   /* ============================================================
+     LOCATION BANNER — full-bleed Macon City Hall illustration,
+     peach-washed. Anchors the geography of the site before
+     the race data appears below.
+     ============================================================ */
+  .location-banner {
+    position: relative;
+    height: 300px;
+    background-color: var(--peach-bg);
+    background-image:
+      linear-gradient(
+        to right,
+        rgba(253, 240, 232, 0.98) 0%,
+        rgba(253, 240, 232, 0.94) 38%,
+        rgba(253, 240, 232, 0.55) 62%,
+        rgba(253, 240, 232, 0.18) 88%,
+        rgba(253, 240, 232, 0.05) 100%
+      ),
+      url('images/macon-city-hall-banner.jpg');
+    background-size: cover, auto 120%;
+    background-position: center, right center;
+    background-repeat: no-repeat;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .location-banner-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .location-eyebrow {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--peach);
+  }
+
+  .location-line {
+    font-weight: 900;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+    max-width: 460px;
+  }
+
+  .location-sub {
+    font-size: var(--body);
+    color: var(--text-secondary);
+    max-width: 420px;
+    line-height: 1.5;
+  }
+
+  /* ============================================================
      RESULTS — the main event. Extreme type contrast.
      Goes full container width. Sits on a full-bleed divider band.
      ============================================================ */
@@ -419,39 +480,21 @@
   }
 
   /* ============================================================
-     WHY — confident block with Macon City Hall background.
-     Background image sits behind the section, anchored to
-     the right with a peach-tinted overlay that blends the
-     illustration into the section's pastel palette.
+     WHY — peach band. The City Hall anchor now lives in the
+     location banner above, so this section is pure copy.
      ============================================================ */
   .why {
-    position: relative;
     background-color: var(--peach-bg);
-    background-image:
-      linear-gradient(
-        to right,
-        var(--peach-bg) 0%,
-        var(--peach-bg) 32%,
-        rgba(253, 240, 232, 0.88) 55%,
-        rgba(253, 240, 232, 0.55) 80%,
-        rgba(253, 240, 232, 0.35) 100%
-      ),
-      url('images/macon-city-hall.jpg');
-    background-position: center, right center;
-    background-size: cover, auto 110%;
-    background-repeat: no-repeat;
     border-top: 1.5px solid var(--peach-pastel);
     border-bottom: 1.5px solid var(--peach-pastel);
-    overflow: hidden;
   }
 
   .why-inner {
-    position: relative;
     max-width: var(--content);
     margin: 0 auto;
-    padding: 96px var(--gutter) 104px;
+    padding: 80px var(--gutter);
     display: grid;
-    grid-template-columns: 6fr 6fr;
+    grid-template-columns: 5fr 7fr;
     gap: 56px;
     align-items: start;
   }
@@ -577,18 +620,21 @@
       gap: 16px;
     }
 
-    .why {
-      /* On tablet/mobile: text-prioritized overlay so words stay readable */
+    .location-banner {
+      height: 220px;
+    }
+    .location-banner {
+      /* On narrower widths, pull the overlay further across so
+         text-side stays readable */
       background-image:
         linear-gradient(
-          to bottom,
-          var(--peach-bg) 0%,
-          rgba(253, 240, 232, 0.92) 40%,
-          rgba(253, 240, 232, 0.78) 100%
+          to right,
+          rgba(253, 240, 232, 0.96) 0%,
+          rgba(253, 240, 232, 0.82) 45%,
+          rgba(253, 240, 232, 0.45) 80%,
+          rgba(253, 240, 232, 0.20) 100%
         ),
-        url('images/macon-city-hall.jpg');
-      background-position: center, center bottom;
-      background-size: cover, 140% auto;
+        url('images/macon-city-hall-banner.jpg');
     }
     .why-inner {
       grid-template-columns: 1fr;
@@ -651,6 +697,10 @@
     .why-title { font-size: 1.6rem; }
     .why-text { font-size: 0.95rem; }
 
+    .location-banner { height: 180px; }
+    .location-line { font-size: 1.4rem; }
+    .location-sub { font-size: 0.88rem; }
+
     .footer-inner {
       flex-direction: column;
       align-items: flex-start;
@@ -700,6 +750,15 @@
     <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
   </p>
 </section>
+
+<!-- Location banner -->
+<div class="location-banner">
+  <div class="location-banner-inner">
+    <span class="location-eyebrow">Tracking live from</span>
+    <div class="location-line">Macon-Bibb County, Georgia</div>
+    <p class="location-sub">The site of tonight's District 5 Special Election Runoff.</p>
+  </div>
+</div>
 
 <!-- Results -->
 <div class="results-band">
