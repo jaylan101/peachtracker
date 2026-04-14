@@ -113,7 +113,7 @@
       ),
       url('images/macon-city-hall-banner.jpg');
     background-size: cover, auto 130%;
-    background-position: center, 110% center;
+    background-position: center, 100% center;
     background-repeat: no-repeat;
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -679,6 +679,72 @@
       gap: 14px;
     }
   }
+
+  /* ============================================================
+     SCROLL ANIMATIONS — subtle fade + rise as elements enter view.
+     Honors prefers-reduced-motion.
+     ============================================================ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger children inside a reveal container */
+  .reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-stagger.is-visible > *        { opacity: 1; transform: translateY(0); }
+  .reveal-stagger.is-visible > *:nth-child(1) { transition-delay:   0ms; }
+  .reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 140ms; }
+  .reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 260ms; }
+  .reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 380ms; }
+  .reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 500ms; }
+
+  /* Hero gets a gentle entrance on first paint */
+  .hero .hero-meta,
+  .hero .hero-title,
+  .hero .hero-desc {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: heroRise 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero .hero-meta  { animation-delay: 120ms; }
+  .hero .hero-title { animation-delay: 260ms; }
+  .hero .hero-desc  { animation-delay: 420ms; }
+
+  @keyframes heroRise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Slow parallax drift on the hero background */
+  .hero-band {
+    transition: background-position 120ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal-stagger > *,
+    .hero .hero-meta,
+    .hero .hero-title,
+    .hero .hero-desc {
+      opacity: 1 !important;
+      transform: none !important;
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -713,10 +779,6 @@
 <div class="hero-band">
   <section class="hero">
     <div>
-      <div class="hero-meta">
-        <span class="hero-eyebrow">Macon-Bibb County · Georgia</span>
-        <span class="hero-rule"></span>
-      </div>
       <h1 class="hero-title">Live election results, reported by the community.</h1>
       <p class="hero-desc">
         <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
@@ -727,7 +789,7 @@
 
 <!-- Results -->
 <div class="results-band">
-  <section class="results">
+  <section class="results reveal">
     <div class="results-head">
       <div class="results-head-title" id="js-race"></div>
       <div class="results-head-meta">
@@ -738,7 +800,7 @@
     </div>
 
     <!-- Candidate row -->
-    <div class="cand-row">
+    <div class="cand-row reveal-stagger reveal">
       <div class="cand cand-a" id="js-cand-a">
         <div class="cand-photo"><img id="js-photo-a" alt=""></div>
         <div class="cand-info">
@@ -792,7 +854,7 @@
 </div>
 
 <!-- Editorial: how we do it -->
-<section class="editorial">
+<section class="editorial reveal">
   <span class="editorial-label">On the ground</span>
   <p class="editorial-body">
     We're on-site at the Macon-Bibb Board of Elections on election night, entering vote totals into this page by hand as each precinct reports. <strong>No algorithm, no estimate</strong> — just the numbers posted in the lobby, delivered to you in minutes instead of hours.
@@ -800,7 +862,7 @@
 </section>
 
 <!-- Why PeachTracker -->
-<section class="why">
+<section class="why reveal">
   <div class="why-inner">
     <h2 class="why-title">Because Macon <em>deserves to know.</em></h2>
     <div>
@@ -815,7 +877,7 @@
 </section>
 
 <!-- Disclaimer -->
-<section class="disclaimer-band">
+<section class="disclaimer-band reveal">
   <div class="disclaimer">
     <div class="disclaimer-label">A note on these results</div>
     <div class="disclaimer-body">
@@ -893,6 +955,72 @@
     document.getElementById("js-precincts-stat").textContent =
       d.precinctsReporting.reported + " / " + d.precinctsReporting.total;
     document.getElementById("js-updated-2").textContent = d.lastUpdated;
+  })();
+
+  // ============================================================
+  // SCROLL REVEAL — fade + rise sections as they enter the viewport.
+  // ============================================================
+  (function scrollReveal() {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const targets = document.querySelectorAll('.reveal');
+
+    if (prefersReduced || !('IntersectionObserver' in window)) {
+      targets.forEach(el => el.classList.add('is-visible'));
+      return;
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -60px 0px'
+    });
+
+    targets.forEach(el => io.observe(el));
+  })();
+
+  // ============================================================
+  // HERO PARALLAX — gently drift the city-hall background on scroll.
+  // ============================================================
+  (function heroParallax() {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    const band = document.querySelector('.hero-band');
+    if (!band) return;
+
+    // Only apply on wider viewports where the building is visible beside text
+    const mq = window.matchMedia('(min-width: 961px)');
+    let ticking = false;
+
+    function update() {
+      if (!mq.matches) {
+        band.style.backgroundPosition = '';
+        ticking = false;
+        return;
+      }
+      const rect = band.getBoundingClientRect();
+      // Progress goes from 0 (top of band at top of viewport) to 1 (band scrolled past)
+      const progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
+      // Drift the image Y position a bit as the user scrolls
+      const yShift = 50 + progress * 12; // 50% → 62%
+      band.style.backgroundPosition = `center, 100% ${yShift}%`;
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
   })();
 </script>
 
