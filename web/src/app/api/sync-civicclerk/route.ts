@@ -1,26 +1,20 @@
-// CivicClerk sync — fetches Board of Commissioners events from the public
-// Macon-Bibb CivicClerk API and upserts them into the Supabase `meetings` table.
+// CivicClerk sync — fetches Board of Commissioners events + full meeting data
+// (agenda items, vote records, commissioner names) from the public Macon-Bibb
+// CivicClerk API and upserts everything into Supabase.
 //
-// What this syncs (no auth needed):
-//   - Meeting date, type, CivicClerk event ID, agenda URL when available
+// ALL of this is available without a bearer token. The key insight:
+//   - Events endpoint gives eventId + agendaId
+//   - Meetings/{agendaId} returns the full agenda with items + votes
 //
-// What this can't sync without a bearer token from the city:
-//   - Agenda items (titles, ELI5 summaries)
-//   - Commissioner votes
-//
-// Run from /admin via the "Sync meetings from CivicClerk" button.
+// Commissioner rows must exist in the `commissioners` table first.
+// If a commissioner name isn't found, the vote is stored without linking.
 
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 const CIVICCLERK_BASE = "https://maconbibbcoga.api.civicclerk.com/v1";
+const COMMISSION_CATEGORIES = ["Board of Commissioners"];
 
-// Only sync these categories — skip pension boards, special districts, etc.
-const COMMISSION_CATEGORIES = [
-  "Board of Commissioners",
-];
-
-// Map CivicClerk event names to our meeting_type enum
 function toMeetingType(eventName: string): string {
   const lower = eventName.toLowerCase();
   if (lower.includes("pre-commission") || lower.includes("pre commission")) return "work_session";
@@ -30,106 +24,225 @@ function toMeetingType(eventName: string): string {
   return "regular";
 }
 
+function toVote(vote: string | null | undefined): "yes" | "no" | "abstain" | "absent" {
+  if (!vote) return "absent";
+  const v = vote.toLowerCase();
+  if (v === "yes" || v === "aye") return "yes";
+  if (v === "no" || v === "nay") return "no";
+  if (v === "abstain") return "abstain";
+  return "absent";
+}
+
 export async function POST() {
-  // Verify caller is an authenticated admin
   const supabase = await createClient();
+
+  // Auth check
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { data: isAdminResult } = await supabase.rpc("is_admin");
-  if (!isAdminResult) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Fetch all events with agendas from CivicClerk (last 2 years + upcoming)
-  const params = new URLSearchParams({
-    "$orderby": "startDateTime desc",
-    "$top": "100",
-    "$filter": "hasAgenda eq true",
-  });
-
-  let civicEvents: CivicClerkEvent[] = [];
-  try {
-    const res = await fetch(`${CIVICCLERK_BASE}/Events?${params}`, {
-      headers: { Accept: "application/json" },
-      next: { revalidate: 0 },
-    });
-    if (!res.ok) throw new Error(`CivicClerk returned ${res.status}`);
-    const json = await res.json();
-    civicEvents = (json.value ?? []) as CivicClerkEvent[];
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 502 });
-  }
-
-  // Filter to commission-related meetings only
-  const commissionEvents = civicEvents.filter((e) =>
-    COMMISSION_CATEGORIES.includes(e.categoryName),
+  // Load existing commissioners into a name→id map
+  const { data: commissionerRows } = await supabase
+    .from("commissioners")
+    .select("id, name")
+    .eq("active", true);
+  const commissionerMap = new Map<string, string>(
+    (commissionerRows ?? []).map((c) => [c.name.toLowerCase(), c.id]),
   );
 
-  // Upsert each into the meetings table.
-  // We store the CivicClerk event ID in a text column so we can avoid dupes.
-  // Since the schema doesn't have a civicclerk_id column yet we use a combination
-  // of meeting_date + meeting_type as the uniqueness key for now.
-  let synced = 0;
-  let skipped = 0;
+  // Fetch all events with agendas from CivicClerk
+  const eventsRes = await fetch(
+    `${CIVICCLERK_BASE}/Events?$filter=hasAgenda eq true&$orderby=startDateTime desc&$top=100`,
+    { headers: { Accept: "application/json" }, next: { revalidate: 0 } },
+  );
+  if (!eventsRes.ok) {
+    return NextResponse.json({ error: `Events fetch failed: ${eventsRes.status}` }, { status: 502 });
+  }
+  const eventsJson = await eventsRes.json();
+  const allEvents: CivicEvent[] = eventsJson.value ?? [];
+  const commEvents = allEvents.filter((e) => COMMISSION_CATEGORIES.includes(e.categoryName));
+
+  let meetingsSynced = 0;
+  let itemsSynced = 0;
+  let votesSynced = 0;
   const errors: string[] = [];
 
-  for (const event of commissionEvents) {
-    const meetingDate = event.startDateTime.split("T")[0]; // YYYY-MM-DD
+  for (const event of commEvents) {
+    if (!event.agendaId) continue;
+
+    // 1. Upsert the meeting row
+    const meetingDate = event.startDateTime.split("T")[0];
     const meetingType = toMeetingType(event.eventName);
+    const agendaUrl = `https://maconbibbcoga.portal.civicclerk.com/event/${event.id}/files`;
 
-    // Build the agenda URL if CivicClerk has one published
-    const agendaUrl = event.agendaId
-      ? `https://maconbibbcoga.portal.civicclerk.com/event/${event.id}/files`
-      : null;
-
-    const { error } = await supabase
+    const { data: meetingRow, error: meetingErr } = await supabase
       .from("meetings")
       .upsert(
         {
           civicclerk_event_id: event.id,
-          civicclerk_agenda_id: event.agendaId || null,
+          civicclerk_agenda_id: event.agendaId,
           meeting_date: meetingDate,
           meeting_type: meetingType,
           agenda_url: agendaUrl,
         },
-        { onConflict: "civicclerk_event_id", ignoreDuplicates: false },
-      );
+        { onConflict: "civicclerk_event_id" },
+      )
+      .select("id")
+      .maybeSingle();
 
-    if (error) {
-      // Likely a conflict that couldn't be resolved — skip gracefully
-      if (error.code === "23505" || error.message?.includes("conflict")) {
-        skipped++;
-      } else {
-        errors.push(`${event.eventName} (${meetingDate}): ${error.message}`);
+    if (meetingErr) {
+      errors.push(`Meeting ${event.eventName}: ${meetingErr.message}`);
+      continue;
+    }
+    if (!meetingRow) continue;
+    meetingsSynced++;
+
+    // 2. Fetch full meeting detail (agenda items + votes) — no auth needed
+    let meetingDetail: CivicMeetingDetail | null = null;
+    try {
+      const detailRes = await fetch(`${CIVICCLERK_BASE}/Meetings/${event.agendaId}`, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 0 },
+      });
+      if (detailRes.ok) {
+        meetingDetail = await detailRes.json();
       }
-    } else {
-      synced++;
+    } catch {
+      // Meeting detail unavailable — skip agenda items for this meeting
+    }
+    if (!meetingDetail) continue;
+
+    // Collect all agenda items (top-level sections have children)
+    const allItems = collectItems(meetingDetail);
+
+    // 3. Upsert agenda items
+    for (const item of allItems) {
+      if (!item.agendaObjectItemName?.trim()) continue;
+
+      // Skip purely structural items (Call to Order, Prayer, etc.)
+      const name = item.agendaObjectItemName.trim();
+      if (["call to order", "prayer", "pledge of allegiance"].some((s) =>
+        name.toLowerCase().startsWith(s),
+      )) continue;
+
+      // Use sortOrder as item_number for stable upsert deduplication
+      const itemNum = item.sortOrder ?? 0;
+
+      const { data: itemRow, error: itemErr } = await supabase
+        .from("agenda_items")
+        .upsert(
+          {
+            meeting_id: meetingRow.id,
+            item_number: itemNum,
+            title: name,
+            full_text: item.agendaObjectItemDescription ?? null,
+            // summary_eli5 left null — to be filled manually or via AI later
+          },
+          { onConflict: "meeting_id,item_number" },
+        )
+        .select("id")
+        .maybeSingle();
+
+      if (itemErr) {
+        errors.push(`Item "${name.slice(0, 40)}": ${itemErr.message}`);
+        continue;
+      }
+      if (!itemRow) continue;
+      itemsSynced++;
+
+      // 4. Upsert votes for this item
+      const votes = item.minutesItemVotes ?? [];
+      for (const vote of votes) {
+        const allVoters = [
+          ...(vote.yesVotes ?? []).map((n) => ({ name: n, vote: "yes" as const })),
+          ...(vote.noVotes ?? []).map((n) => ({ name: n, vote: "no" as const })),
+          ...(vote.abstainVotes ?? []).map((n) => ({ name: n, vote: "abstain" as const })),
+        ];
+
+        for (const v of allVoters) {
+          // Try to match commissioner by name (case-insensitive)
+          const commId = commissionerMap.get(v.name.toLowerCase()) ??
+            // Try last name match
+            [...commissionerMap.entries()].find(([k]) =>
+              k.split(" ").pop() === v.name.toLowerCase().split(" ").pop(),
+            )?.[1];
+
+          if (!commId) continue; // Skip unmatched names
+
+          const { error: voteErr } = await supabase
+            .from("commission_votes")
+            .upsert(
+              {
+                agenda_item_id: itemRow.id,
+                commissioner_id: commId,
+                vote: v.vote,
+                notes: vote.motionName ?? null,
+              },
+              { onConflict: "agenda_item_id,commissioner_id" },
+            );
+
+          if (!voteErr) votesSynced++;
+        }
+      }
     }
   }
 
   return NextResponse.json({
     ok: true,
-    total: commissionEvents.length,
-    synced,
-    skipped,
+    meetingsSynced,
+    itemsSynced,
+    votesSynced,
     errors: errors.length > 0 ? errors : undefined,
   });
 }
 
-interface CivicClerkEvent {
+// Flatten the nested item/childItems tree into a single list
+function collectItems(detail: CivicMeetingDetail): CivicAgendaItem[] {
+  const items: CivicAgendaItem[] = [];
+  function walk(list: CivicAgendaItem[] | undefined) {
+    if (!list) return;
+    for (const item of list) {
+      items.push(item);
+      walk(item.childItems);
+    }
+  }
+  walk(detail.items);
+  return items;
+}
+
+// ---- Types (verified against live API response) ----
+
+interface CivicEvent {
   id: number;
   eventName: string;
   startDateTime: string;
   agendaId: number;
   categoryName: string;
   hasAgenda: boolean;
-  hasMedia: boolean;
-  eventLocation?: {
-    address1?: string;
-    address2?: string;
-    city?: string;
-    state?: string;
-  };
+}
+
+interface CivicMeetingDetail {
+  items?: CivicAgendaItem[]; // top-level field is "items" not "agendaItems"
+}
+
+interface CivicAgendaItem {
+  agendaObjectItemName?: string;
+  agendaObjectItemNumber?: string | number; // sometimes a string like "2026-241"
+  agendaObjectItemOutlineNumber?: string;   // display position e.g. "1.", "a."
+  agendaObjectItemDescription?: string;
+  minutesItemVotes?: CivicMinuteVote[];     // "minutesItemVotes" not "minuteVotes"
+  childItems?: CivicAgendaItem[];           // "childItems" not "children"
+  sortOrder?: number;
+}
+
+interface CivicMinuteVote {
+  motionName?: string;
+  initiatedBy?: string;
+  secondedBy?: string;
+  passFail?: number | string; // 1 = pass
+  yesVotes?: string[];        // array of commissioner name strings
+  noVotes?: string[];
+  abstainVotes?: string[];
+  // absent commissioners don't get a record — they're simply not listed
 }
