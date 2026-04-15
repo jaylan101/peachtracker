@@ -33,6 +33,22 @@ export default async function Home() {
       <SiteNav />
 
       <div className="hero-band">
+        {/* Autoplay aerial Macon footage. Muted + playsInline so iOS will
+            actually start it without user interaction. mp4 first (smaller,
+            broadly supported); .mov fallback for environments that prefer it. */}
+        <video
+          className="hero-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="/images/macon-city-hall-banner.jpg"
+        >
+          {/* Compressed mp4 (~7.5MB) — broad browser support, fast on mobile. */}
+          <source src="/images/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div className="hero-gradient" aria-hidden />
         <section className="hero">
           <div>
             <h1 className="hero-title">
