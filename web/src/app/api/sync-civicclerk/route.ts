@@ -104,7 +104,9 @@ export async function POST(request: Request) {
     let votesSynced = 0;
 
     for (const item of allItems) {
-      const name = item.agendaObjectItemName?.trim();
+      // Strip HTML tags that CivicClerk embeds in item names
+      const rawName = item.agendaObjectItemName?.trim() ?? "";
+      const name = rawName.replace(/<[^>]*>/g, "").trim();
       if (!name) continue;
       if (["call to order", "prayer", "pledge of allegiance"].some((s) =>
         name.toLowerCase().startsWith(s))) continue;
