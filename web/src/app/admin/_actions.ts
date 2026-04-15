@@ -137,6 +137,27 @@ export async function updateElectionSettings(formData: FormData) {
   revalidatePath("/");
 }
 
+// -------- Password reset (sends magic link to admin email) --------
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) {
+    redirect(`/admin/login?error=${encodeURIComponent("Enter your email address")}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://peachtracker.vercel.app"}/admin/reset-password`,
+  });
+
+  if (error) {
+    redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  // Always show success to avoid email enumeration
+  redirect("/admin/login?reset=sent");
+}
+
 // -------- Change password --------
 
 export async function changePassword(formData: FormData) {

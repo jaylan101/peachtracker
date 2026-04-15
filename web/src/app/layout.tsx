@@ -10,10 +10,28 @@ const outfit = Outfit({
   display: "swap",
 });
 
+const BASE_URL = "https://peachtracker.vercel.app";
+
 export const metadata: Metadata = {
   title: "PeachTracker — Macon-Bibb civic tracker",
   description:
-    "Election results, commission votes, and civic news for Macon-Bibb County.",
+    "Live election results, commission votes, and civic news for Macon-Bibb County, Georgia.",
+  openGraph: {
+    title: "PeachTracker — Macon-Bibb civic tracker",
+    description:
+      "Live election results for Macon-Bibb County, Georgia, reported by the community.",
+    url: BASE_URL,
+    siteName: "PeachTracker",
+    images: [{ url: `${BASE_URL}/api/og`, width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PeachTracker — Macon-Bibb civic tracker",
+    description:
+      "Live election results for Macon-Bibb County, Georgia, reported by the community.",
+    images: [`${BASE_URL}/api/og`],
+  },
 };
 
 export default function RootLayout({

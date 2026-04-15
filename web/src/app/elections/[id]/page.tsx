@@ -1,9 +1,51 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
 import { ElectionLive } from "./_components/election-live";
+import { ElectionTimeline } from "./_components/timeline";
 import type { Candidate, Election, Race, UnopposedRace } from "@/lib/supabase/types";
+
+const BASE_URL = "https://peachtracker.vercel.app";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: e } = await supabase
+    .from("elections")
+    .select("name, status, election_date")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!e) return {};
+
+  const statusStr =
+    e.status === "live"
+      ? "Live now — "
+      : e.status === "upcoming"
+        ? "Upcoming — "
+        : "Results — ";
+  const title = `${statusStr}${e.name} · PeachTracker`;
+  const description = `${e.name} results for Macon-Bibb County, ${e.election_date}. Reported live by the community.`;
+  const ogImage = `${BASE_URL}/api/og?election=${id}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/elections/${id}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+  };
+}
 
 // Statewide link-outs for the May 19 primary. Georgia SoS handles everything
 // outside Macon-Bibb. These are static — they don't change between elections.
@@ -29,6 +71,8 @@ export default async function ElectionPage({
     { data: races, error: racesErr },
     { data: candidates, error: candidatesErr },
     { data: unopposed, error: unopposedErr },
+    // Snapshots for the election-night timeline (only used on past elections)
+    { data: snapshots },
     // Grab a few other elections for the cross-link section.
     // We don't know the current election's status yet, so we fetch both
     // upcoming and past and let the render logic pick the right slice.
@@ -50,6 +94,11 @@ export default async function ElectionPage({
       .select("*")
       .eq("election_id", id)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("result_snapshots")
+      .select("race_id, candidate_id, votes, precincts_reporting, note, recorded_at, candidates!inner(name, sort_order, races!inner(election_id))")
+      .eq("candidates.races.election_id", id)
+      .order("recorded_at", { ascending: true }),
     supabase
       .from("elections")
       .select("id, name, election_date, status")
@@ -76,6 +125,40 @@ export default async function ElectionPage({
   // If current election is past → surface upcoming ones ("what's coming up").
   // If current election is upcoming/live → surface past ones ("recent results").
   const isPast = ["final", "certified"].includes(election.status);
+
+  // Build grouped timeline points from raw snapshots (only for past elections)
+  // Group by recorded_at timestamp → each point has all candidates' votes at that moment
+  type TimelinePoint = {
+    recorded_at: string;
+    precincts_reporting: number;
+    note: string | null;
+    candidates: { name: string; votes: number }[];
+  };
+  const timelinePoints: TimelinePoint[] = [];
+  if (isPast && snapshots && snapshots.length > 0) {
+    const byTime = new Map<string, TimelinePoint>();
+    for (const s of snapshots as unknown as Array<{
+      recorded_at: string;
+      precincts_reporting: number;
+      note: string | null;
+      votes: number;
+      candidates: { name: string; sort_order: number }[];
+    }>) {
+      const key = s.recorded_at;
+      if (!byTime.has(key)) {
+        byTime.set(key, { recorded_at: key, precincts_reporting: s.precincts_reporting, note: s.note, candidates: [] });
+      }
+      const candName = Array.isArray(s.candidates) ? s.candidates[0]?.name : (s.candidates as unknown as { name: string }).name;
+      byTime.get(key)!.candidates.push({ name: candName ?? "", votes: s.votes });
+    }
+    // Sort candidates within each point by sort_order (Cooke first, Foster second)
+    for (const [, point] of byTime) {
+      // snapshot rows already come ordered by recorded_at; candidates inherit sort from query
+      timelinePoints.push(point);
+    }
+  }
+  // Total precincts for the single-race D5 election (for "FINAL" detection)
+  const timelineTotalPrecincts = contestedRaces[0]?.total_precincts ?? 6;
   const crossLinkElections = ((allElections ?? []) as Pick<Election, "id" | "name" | "election_date" | "status">[])
     .filter((e) =>
       isPast
@@ -132,6 +215,16 @@ export default async function ElectionPage({
 
       {/* Statewide link-out — only when there are state legislature races */}
       {showStatewide && <StatewideSection />}
+
+      {/* Election night timeline — only for certified/final elections with snapshots */}
+      {isPast && timelinePoints.length > 0 && (
+        <div style={{ background: "var(--bg)", paddingBottom: 48, paddingTop: 32 }}>
+          <ElectionTimeline
+            snapshots={timelinePoints}
+            totalPrecincts={timelineTotalPrecincts}
+          />
+        </div>
+      )}
 
       {/* Contextual cross-link — only renders when there are relevant elections */}
       {crossLinkElections.length > 0 && (

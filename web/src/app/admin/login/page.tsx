@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signIn } from "../_actions";
+import { signIn, requestPasswordReset } from "../_actions";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; reset?: string }>;
 }) {
-  const { error, next } = await searchParams;
+  const { error, next, reset } = await searchParams;
 
   // If already signed in, skip the form
   const supabase = await createClient();
@@ -23,6 +23,11 @@ export default async function LoginPage({
         <div className="login-sub">PeachTracker election tools</div>
 
         {error && <div className="admin-error">{error}</div>}
+        {reset === "sent" && (
+          <div className="admin-ok" style={{ marginBottom: 12 }}>
+            Check your email — a reset link is on its way to jaylan@jaylanscott.com.
+          </div>
+        )}
 
         <form action={signIn}>
           <input type="hidden" name="next" value={next ?? "/admin"} />
@@ -59,6 +64,24 @@ export default async function LoginPage({
             style={{ width: "100%", padding: "12px 18px", marginTop: 8 }}
           >
             Sign in
+          </button>
+        </form>
+
+        <form action={requestPasswordReset} style={{ marginTop: 16, textAlign: "center" }}>
+          <input type="hidden" name="email" value="jaylan@jaylanscott.com" />
+          <button
+            type="submit"
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-secondary)",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              textDecoration: "underline",
+            }}
+          >
+            Forgot password? Send reset link
           </button>
         </form>
       </div>
