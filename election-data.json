@@ -1,0 +1,171 @@
+{
+  "currentElection": {
+    "name": "Georgia Primary & Nonpartisan General",
+    "date": "May 19, 2026",
+    "location": "Macon-Bibb County",
+    "lastUpdated": "",
+    "totalPrecincts": 38,
+    "status": "upcoming",
+    "categories": [
+      {
+        "id": "education",
+        "name": "Board of Education",
+        "races": [
+          {
+            "id": "boe-post7",
+            "name": "Board of Education Post 7 (At-Large)",
+            "type": "nonpartisan",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 38,
+            "candidates": [
+              { "name": "Amy Hamrick Morton", "votes": 0, "incumbent": false, "image": "candidates/boe-post7-morton.jpg" },
+              { "name": "Kerry Warren Hatcher", "votes": 0, "incumbent": false, "image": "candidates/boe-post7-hatcher.jpg" }
+            ]
+          },
+          {
+            "id": "boe-post8",
+            "name": "Board of Education Post 8 (At-Large)",
+            "type": "nonpartisan",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 38,
+            "candidates": [
+              { "name": "Lisa Williams Garrett-Boyd", "votes": 0, "incumbent": true, "image": "candidates/boe-post8-garrett-boyd.jpg" },
+              { "name": "Carlos Antonio McCloud", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-mccloud.jpg" },
+              { "name": "Jonathan Paul Fisher", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-fisher.jpg" },
+              { "name": "Nola McFadden", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-mcfadden.jpg" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "water-authority",
+        "name": "Water Authority",
+        "races": [
+          {
+            "id": "water-atlarge",
+            "name": "Water Authority At-Large",
+            "type": "nonpartisan",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 38,
+            "candidates": [
+              { "name": "Gary Floyd Bechtel", "votes": 0, "incumbent": true, "image": "candidates/water-atlarge-bechtel.jpg" },
+              { "name": "Desmond Denois Brown", "votes": 0, "incumbent": false, "image": "candidates/water-atlarge-brown.jpg" }
+            ]
+          },
+          {
+            "id": "water-d2",
+            "name": "Water Authority District 2",
+            "type": "nonpartisan",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 6,
+            "candidates": [
+              { "name": "Marshall Talley", "votes": 0, "incumbent": false, "image": "candidates/water-d2-talley.jpg" },
+              { "name": "Renoalda Latis Scott", "votes": 0, "incumbent": false, "image": "candidates/water-d2-scott.jpg" },
+              { "name": "Ronald Edward Lemon", "votes": 0, "incumbent": false, "image": "candidates/water-d2-lemon.jpg" },
+              { "name": "Sharif Robbins-Brinson", "votes": 0, "incumbent": false, "image": "candidates/water-d2-robbins-brinson.jpg" }
+            ]
+          },
+          {
+            "id": "water-d4",
+            "name": "Water Authority District 4",
+            "type": "nonpartisan",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 6,
+            "candidates": [
+              { "name": "Deron D. Rogers", "votes": 0, "incumbent": false, "image": "candidates/water-d4-rogers.jpg" },
+              { "name": "Frank K. Patterson Jr.", "votes": 0, "incumbent": false, "image": "candidates/water-d4-patterson.jpg" },
+              { "name": "Michael Arrish McKeever", "votes": 0, "incumbent": false, "image": "candidates/water-d4-mckeever.jpg" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "state-legislature",
+        "name": "State Legislature",
+        "races": [
+          {
+            "id": "house-142-d",
+            "name": "State House District 142",
+            "type": "democratic",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 10,
+            "candidates": [
+              { "name": "Miriam Lucas Paris", "votes": 0, "incumbent": true, "image": "candidates/house-142-paris.jpg" },
+              { "name": "George Elton Thomas Jr.", "votes": 0, "incumbent": false, "image": "candidates/house-142-thomas.jpg" }
+            ]
+          },
+          {
+            "id": "senate-18-r",
+            "name": "State Senate District 18",
+            "type": "republican",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 20,
+            "candidates": [
+              { "name": "Steven Royce McNeel", "votes": 0, "incumbent": true, "image": "candidates/senate-18-mcneel.jpg" },
+              { "name": "Eugene Allison", "votes": 0, "incumbent": false, "image": "candidates/senate-18-allison.jpg" }
+            ]
+          },
+          {
+            "id": "senate-26-r",
+            "name": "State Senate District 26",
+            "type": "republican",
+            "called": false,
+            "winner": null,
+            "precinctsReporting": 0,
+            "totalPrecincts": 20,
+            "candidates": [
+              { "name": "Nancy Hicks", "votes": 0, "incumbent": false, "image": "candidates/senate-26-hicks.jpg" },
+              { "name": "Tracy Conkle Wheeler", "votes": 0, "incumbent": false, "image": "candidates/senate-26-wheeler.jpg" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "statewideLinks": [
+    { "name": "Governor", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
+    { "name": "U.S. Senate", "url": "https://results.enr.clarityelections.com/GA/", "note": "Jon Ossoff (D) incumbent" },
+    { "name": "Lieutenant Governor", "url": "https://results.enr.clarityelections.com/GA/", "note": "Open seat" },
+    { "name": "Secretary of State", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
+    { "name": "Attorney General", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
+    { "name": "All Statewide Results", "url": "https://results.enr.clarityelections.com/GA/", "note": "Georgia Secretary of State" }
+  ],
+  "history": [
+    {
+      "id": "district5-runoff-2026-04-14",
+      "name": "District 5 Special Election Runoff",
+      "date": "April 14, 2026",
+      "status": "certified",
+      "precinctsReporting": 6,
+      "totalPrecincts": 6,
+      "winner": "Andrea Cooke",
+      "note": "Results unofficial pending provisional ballot review",
+      "candidates": [
+        { "name": "Andrea Cooke", "votes": 746, "winner": true, "image": "andrea-cooke.jpg" },
+        { "name": "Edward Foster", "votes": 313, "winner": false, "image": "edward-foster.jpg" }
+      ],
+      "timeline": [
+        { "time": "7:12 PM", "precincts": "0 / 6", "note": "Early vote", "votes": { "Andrea Cooke": 203, "Edward Foster": 97 } },
+        { "time": "7:24 PM", "precincts": "0 / 6", "note": "Early vote + absentee", "votes": { "Andrea Cooke": 210, "Edward Foster": 113 } },
+        { "time": "7:55 PM", "precincts": "1 / 6", "note": "First precinct in", "votes": { "Andrea Cooke": 339, "Edward Foster": 136 } },
+        { "time": "8:29 PM", "precincts": "4 / 6", "note": "", "votes": { "Andrea Cooke": 652, "Edward Foster": 243 } },
+        { "time": "8:39 PM", "precincts": "5 / 6", "note": "", "votes": { "Andrea Cooke": 714, "Edward Foster": 277 } },
+        { "time": "8:50 PM", "precincts": "6 / 6", "note": "Final — race called for Cooke", "votes": { "Andrea Cooke": 746, "Edward Foster": 313 } }
+      ]
+    }
+  ]
+}

@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PeachTracker — Live Election Results for Macon-Bibb County</title>
-<meta name="description" content="Live election results for Macon-Bibb County, Georgia, reported by the community as they're announced at the Board of Elections.">
+<meta name="description" content="Live election results for Macon-Bibb County, Georgia. Board of Education, Water Authority, and State Legislature races — reported by the community as they're announced at the Board of Elections.">
 
 <!-- OpenGraph / Social -->
 <meta property="og:title" content="PeachTracker — Live Election Results for Macon-Bibb County">
-<meta property="og:description" content="Live election results for Macon-Bibb County, Georgia, reported by the community.">
+<meta property="og:description" content="Live election results for Macon-Bibb County, Georgia. Board of Education, Water Authority, and State Legislature races.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://peachtracker.vercel.app/og-image.png">
 <meta property="og:url" content="https://peachtracker.vercel.app/">
@@ -16,7 +16,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="PeachTracker — Live Election Results for Macon-Bibb County">
-<meta name="twitter:description" content="Live election results for Macon-Bibb County, Georgia, reported by the community.">
+<meta name="twitter:description" content="Live election results for Macon-Bibb County, Georgia.">
 <meta name="twitter:image" content="https://peachtracker.vercel.app/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,6 +41,10 @@
     --text: #2A2725;
     --text-secondary: #87817A;
     --text-light: #B5AFA8;
+    --dem-bg: #EAF0F8;
+    --dem-text: #3B6FA0;
+    --rep-bg: #F8EAEA;
+    --rep-text: #A03B3B;
 
     /* Type scale — deliberate contrast */
     --kicker: 0.68rem;       /* eyebrow / section labels */
@@ -85,7 +89,7 @@
     margin: 0 auto;
     padding: 16px var(--gutter);
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
   }
 
@@ -93,6 +97,18 @@
     display: block;
     height: 56px;
     width: auto;
+  }
+
+  .nav-history {
+    font-size: var(--body);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 200ms ease;
+  }
+
+  .nav-history:hover {
+    color: var(--text);
   }
 
   /* ============================================================
@@ -180,66 +196,159 @@
   }
 
   /* ============================================================
-     RESULTS — the main event. Extreme type contrast.
-     Goes full container width. Sits on a full-bleed divider band.
+     CATEGORY SUB-NAV — sticky, horizontal scroll on mobile
      ============================================================ */
-  .results-band {
-    /* full-bleed separator: a thin dark rule across the page */
+  .category-nav {
+    position: sticky;
+    top: 90px;
+    background: var(--card);
+    border-bottom: 1.5px solid var(--border);
+    z-index: 99;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-nav-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    display: flex;
+    gap: 32px;
+    min-width: min-content;
+  }
+
+  .category-tab {
+    flex-shrink: 0;
+    padding: 16px 0;
+    font-size: var(--body);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all 200ms ease;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+
+  .category-tab:hover {
+    color: var(--text);
+  }
+
+  .category-tab.active {
+    color: var(--peach);
+    border-bottom-color: var(--peach);
+  }
+
+  /* ============================================================
+     RACES SECTION — category-based grouping
+     ============================================================ */
+  .races-band {
     border-top: 1px solid var(--border);
     background: var(--bg);
   }
 
-  .results {
+  .races {
     max-width: var(--content);
     margin: 0 auto;
     padding: 56px var(--gutter) 64px;
   }
 
-  .results-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 28px;
-    gap: 24px;
-    border-bottom: 2px solid var(--text);
-    padding-bottom: 16px;
+  .race-category {
+    margin-bottom: 64px;
   }
 
-  .results-head-title {
+  .race-category:last-child {
+    margin-bottom: 0;
+  }
+
+  .race-category-header {
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 16px;
+    margin-bottom: 32px;
+  }
+
+  .race-category-title {
     font-weight: 800;
     font-size: 1.35rem;
     letter-spacing: -0.015em;
   }
 
-  .results-head-meta {
-    display: flex;
-    gap: 24px;
-    font-size: var(--kicker);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-secondary);
-    white-space: nowrap;
+  .race-card {
+    margin-bottom: 48px;
   }
 
-  .results-head-meta span strong {
-    display: block;
-    font-size: 0.85rem;
-    letter-spacing: -0.01em;
-    text-transform: none;
-    color: var(--text);
+  /* ---- TWO-CANDIDATE RACE LAYOUT ---- */
+  .race-two-candidate {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+  }
+
+  .race-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 28px;
+    border-bottom: 1.5px solid var(--border);
+    gap: 16px;
+  }
+
+  .race-name {
     font-weight: 700;
-    margin-top: 2px;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .race-type-badge {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 6px 12px;
+    display: inline-block;
+  }
+
+  .race-type-badge.nonpartisan {
+    background: #F0F0EC;
+    color: #666;
+  }
+
+  .race-type-badge.democratic {
+    background: var(--dem-bg);
+    color: var(--dem-text);
+  }
+
+  .race-type-badge.republican {
+    background: var(--rep-bg);
+    color: var(--rep-text);
+  }
+
+  .race-meta {
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--micro);
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .race-status {
+    padding: 12px 28px;
+    font-size: var(--micro);
+    color: var(--text-secondary);
+    font-weight: 600;
   }
 
   /* Candidate row — two column grid, photo outside, numbers inside */
   .cand-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    border-bottom: none;
-    overflow: hidden;  /* clip any giant-type overflow within the card */
+    overflow: hidden;
   }
 
   .cand {
@@ -271,6 +380,19 @@
     transition: filter 0.4s ease;
   }
 
+  .cand-photo-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 3.2rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: white;
+  }
+
   .cand-a .cand-photo img { object-position: 55% 25%; }
   .cand-b .cand-photo img { object-position: 50% 20%; }
 
@@ -283,7 +405,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-width: 0;  /* prevent flex/grid blowout from large numbers */
+    min-width: 0;
     overflow: hidden;
   }
 
@@ -311,8 +433,18 @@
     line-height: 1.1;
     margin-bottom: 18px;
   }
+
   .cand-a .cand-name { color: var(--peach); }
   .cand-b .cand-name { color: var(--green); }
+
+  .cand-incumbent {
+    font-size: var(--kicker);
+    color: var(--text-secondary);
+    font-weight: 600;
+    display: inline-block;
+    margin-top: -12px;
+    margin-bottom: 12px;
+  }
 
   .cand-pct {
     font-weight: 900;
@@ -409,8 +541,176 @@
     font-weight: 700;
   }
 
+  /* ---- MULTI-CANDIDATE RACE LAYOUT ---- */
+  .race-multi-candidate {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+  }
+
+  .cand-stacked {
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .cand-stacked:last-of-type {
+    border-bottom: none;
+  }
+
+  .cand-photo-circle {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.8rem;
+    letter-spacing: -0.04em;
+    color: white;
+  }
+
+  .cand-photo-circle.position-1 {
+    background: var(--peach);
+  }
+
+  .cand-photo-circle.position-2 {
+    background: var(--green);
+  }
+
+  .cand-photo-circle.position-3-plus {
+    background: #C8C3BE;
+  }
+
+  .cand-photo-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cand-stacked-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cand-stacked-name {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .cand-stacked-incumbent {
+    display: inline;
+    font-size: var(--kicker);
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  .cand-stacked-bar {
+    height: 32px;
+    background: #EFEFEA;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .cand-stacked-bar-fill {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    color: white;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cand-stacked-bar-fill.position-1 {
+    background: var(--peach);
+  }
+
+  .cand-stacked-bar-fill.position-2 {
+    background: var(--green);
+  }
+
+  .cand-stacked-bar-fill.position-3-plus {
+    background: #C8C3BE;
+  }
+
+  .cand-stacked-votes {
+    font-size: var(--micro);
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
   /* ============================================================
-     EDITORIAL — "How we do this" as a single line, not 3 boxes
+     STATEWIDE SECTION — link-out list
+     ============================================================ */
+  .statewide-band {
+    background: var(--green-bg);
+    border-top: 1.5px solid var(--green-pastel);
+    border-bottom: 1.5px solid var(--green-pastel);
+  }
+
+  .statewide {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 56px var(--gutter);
+  }
+
+  .statewide-header {
+    margin-bottom: 28px;
+  }
+
+  .statewide-title {
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+
+  .statewide-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .statewide-link {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    padding: 20px 24px;
+    text-decoration: none;
+    transition: all 200ms ease;
+  }
+
+  .statewide-link:hover {
+    border-color: var(--green);
+  }
+
+  .statewide-link-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .statewide-link-note {
+    font-size: var(--micro);
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     EDITORIAL — "How we do this"
      ============================================================ */
   .editorial {
     max-width: var(--content);
@@ -447,8 +747,7 @@
   }
 
   /* ============================================================
-     WHY — peach band. The City Hall anchor now lives in the
-     location banner above, so this section is pure copy.
+     WHY — peach band.
      ============================================================ */
   .why {
     background-color: var(--peach-bg);
@@ -559,6 +858,103 @@
   }
 
   /* ============================================================
+     RACE CALL BANNER
+     ============================================================ */
+  .call-band {
+    background: var(--peach);
+    padding: 20px var(--gutter);
+  }
+
+  .call-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+
+  .call-flag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+  }
+
+  .call-winner {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* ============================================================
+     SCROLL ANIMATIONS
+     ============================================================ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal-stagger.is-visible > * { opacity: 1; transform: translateY(0); }
+  .reveal-stagger.is-visible > *:nth-child(1) { transition-delay:   0ms; }
+  .reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 140ms; }
+  .reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 260ms; }
+  .reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 380ms; }
+  .reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 500ms; }
+
+  .hero .hero-meta,
+  .hero .hero-title,
+  .hero .hero-desc {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: heroRise 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero .hero-meta  { animation-delay: 120ms; }
+  .hero .hero-title { animation-delay: 260ms; }
+  .hero .hero-desc  { animation-delay: 420ms; }
+
+  @keyframes heroRise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-band {
+    transition: background-position 120ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .reveal-stagger > *,
+    .hero .hero-meta,
+    .hero .hero-title,
+    .hero .hero-desc {
+      opacity: 1 !important;
+      transform: none !important;
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ============================================================
      RESPONSIVE
      ============================================================ */
   @media (max-width: 960px) {
@@ -588,8 +984,6 @@
     }
 
     .hero-band {
-      /* On narrower widths, pull the overlay across so the
-         text-side stays readable even when the building shrinks */
       background-image:
         linear-gradient(
           to right,
@@ -600,6 +994,7 @@
         ),
         url('images/macon-city-hall-banner.jpg');
     }
+
     .why-inner {
       grid-template-columns: 1fr;
       gap: 24px;
@@ -610,6 +1005,14 @@
       grid-template-columns: 1fr;
       gap: 12px;
     }
+
+    .category-nav-inner {
+      gap: 24px;
+    }
+
+    .statewide-links {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 560px) {
@@ -619,14 +1022,12 @@
     .hero-title { font-size: 2rem; }
     .hero-desc { font-size: 0.95rem; }
 
-    .results { padding: 40px var(--gutter) 48px; }
+    .races { padding: 40px var(--gutter) 48px; }
 
-    .results-head { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .results-head-meta { gap: 16px; flex-wrap: wrap; }
+    .race-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .race-meta { gap: 16px; flex-wrap: wrap; }
 
-    /* Stack candidates vertically */
     .cand-row { grid-template-columns: 1fr; }
-
     .cand {
       grid-template-columns: 1fr;
       min-height: 0;
@@ -643,7 +1044,6 @@
     }
 
     .cand-photo { height: 220px; }
-
     .cand-pct { font-size: 4.4rem; }
 
     .split-bar { height: 64px; }
@@ -663,7 +1063,6 @@
     .why-text { font-size: 0.95rem; }
 
     .hero-band {
-      /* On mobile: building fades further — text side is fully opaque */
       background-image:
         linear-gradient(
           to bottom,
@@ -681,124 +1080,27 @@
       align-items: flex-start;
       gap: 14px;
     }
-  }
 
-  /* ============================================================
-     RACE CALL BANNER
-     ============================================================ */
-  .call-band {
-    background: var(--peach);
-    padding: 20px var(--gutter);
-  }
-  .call-inner {
-    max-width: var(--content);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 6px;
-  }
-  .call-flag {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: rgba(255,255,255,0.85);
-    white-space: nowrap;
-  }
-  .call-winner {
-    font-size: clamp(1.3rem, 3vw, 1.8rem);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    color: #fff;
-    line-height: 1;
-  }
+    .category-nav-inner {
+      gap: 16px;
+      padding: 0 var(--gutter);
+    }
 
-  /* ============================================================
-     SCROLL ANIMATIONS — subtle fade + rise as elements enter view.
-     Honors prefers-reduced-motion.
-     ============================================================ */
-  .reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition:
-      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, transform;
-  }
-  .reveal.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    .category-tab {
+      font-size: 0.9rem;
+    }
 
-  /* Stagger children inside a reveal container */
-  .reveal-stagger > * {
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .reveal-stagger.is-visible > *        { opacity: 1; transform: translateY(0); }
-  .reveal-stagger.is-visible > *:nth-child(1) { transition-delay:   0ms; }
-  .reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 140ms; }
-  .reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 260ms; }
-  .reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 380ms; }
-  .reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 500ms; }
+    .statewide-links {
+      grid-template-columns: 1fr;
+    }
 
-  /* Hero gets a gentle entrance on first paint */
-  .hero .hero-meta,
-  .hero .hero-title,
-  .hero .hero-desc {
-    opacity: 0;
-    transform: translateY(18px);
-    animation: heroRise 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-  .hero .hero-meta  { animation-delay: 120ms; }
-  .hero .hero-title { animation-delay: 260ms; }
-  .hero .hero-desc  { animation-delay: 420ms; }
-
-  @keyframes heroRise {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Slow parallax drift on the hero background */
-  .hero-band {
-    transition: background-position 120ms linear;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal,
-    .reveal-stagger > *,
-    .hero .hero-meta,
-    .hero .hero-title,
-    .hero .hero-desc {
-      opacity: 1 !important;
-      transform: none !important;
-      animation: none !important;
-      transition: none !important;
+    .race-category-title {
+      font-size: 1.1rem;
     }
   }
 </style>
 </head>
 <body>
-
-<!-- ============================================================
-     RACE DATA — EDIT ME ON ELECTION NIGHT
-     ============================================================ -->
-<script>
-  const RACE_DATA = {
-    race: "District 5 Special Election Runoff",
-    date: "April 14, 2026",
-    lastUpdated: "6 of 6 precincts · FINAL",
-    precinctsReporting: { reported: 6, total: 6 },
-    candidates: [
-      { name: "Andrea Cooke",  votes: 746, color: "peach", photo: "images/andrea-cooke.jpg"  },
-      { name: "Edward Foster", votes: 313, color: "green", photo: "images/edward-foster.jpg" }
-    ]
-  };
-</script>
 
 <!-- Top accent bar -->
 <div class="accent-bar"></div>
@@ -807,93 +1109,40 @@
 <nav class="nav">
   <div class="nav-inner">
     <img class="nav-logo" src="images/peachlogo2-remove-bg-io.png" alt="PeachTracker">
+    <a href="history.html" class="nav-history">History</a>
   </div>
 </nav>
+
+<!-- Category sub-nav -->
+<div class="category-nav">
+  <div class="category-nav-inner">
+    <button class="category-tab active" data-category="education">Board of Education</button>
+    <button class="category-tab" data-category="water-authority">Water Authority</button>
+    <button class="category-tab" data-category="state-legislature">State Legislature</button>
+    <button class="category-tab" data-category="statewide">Statewide</button>
+  </div>
+</div>
 
 <!-- Hero (with Macon City Hall as background) -->
 <div class="hero-band">
   <section class="hero">
     <div>
-      <h1 class="hero-title">Live election results, reported by the community.</h1>
+      <div class="hero-meta">
+        <span class="hero-eyebrow">May 19, 2026</span>
+        <div class="hero-rule"></div>
+      </div>
+      <h1 class="hero-title">8 local races.<br>One night.<br>Reported by the <em>community.</em></h1>
       <p class="hero-desc">
-        <strong>PeachTracker</strong> posts real-time vote totals from the Macon-Bibb County Board of Elections, entered by hand as precincts report on election night.
+        <strong>PeachTracker</strong> covers the May 19th Georgia Primary for Macon-Bibb County — Board of Education, Water Authority, and State Legislature races — live from the Board of Elections.
       </p>
     </div>
   </section>
 </div>
 
-<!-- Race call banner -->
-<div class="call-band">
-  <div class="call-inner">
-    <span class="call-flag">🍑 PeachTracker calls this race</span>
-    <span class="call-winner">Andrea Cooke wins District 5</span>
-  </div>
-</div>
-
-<!-- Results -->
-<div class="results-band">
-  <section class="results reveal">
-    <div class="results-head">
-      <div class="results-head-title" id="js-race"></div>
-      <div class="results-head-meta">
-        <span>Date<strong id="js-date"></strong></span>
-        <span>Precincts<strong id="js-precincts"></strong></span>
-        <span>Updated<strong id="js-updated"></strong></span>
-      </div>
-    </div>
-
-    <!-- Candidate row -->
-    <div class="cand-row reveal-stagger reveal">
-      <div class="cand cand-a" id="js-cand-a">
-        <div class="cand-photo"><img id="js-photo-a" alt=""></div>
-        <div class="cand-info">
-          <div class="cand-tag" id="js-tag-a"></div>
-          <div class="cand-name" id="js-name-a"></div>
-          <div class="cand-pct" id="js-pct-a"></div>
-          <div class="cand-votes" id="js-votes-a"></div>
-        </div>
-      </div>
-      <div class="cand cand-b" id="js-cand-b">
-        <div class="cand-photo"><img id="js-photo-b" alt=""></div>
-        <div class="cand-info">
-          <div class="cand-tag" id="js-tag-b"></div>
-          <div class="cand-name" id="js-name-b"></div>
-          <div class="cand-pct" id="js-pct-b"></div>
-          <div class="cand-votes" id="js-votes-b"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Split bar -->
-    <div class="split-bar">
-      <div class="split-peach" id="js-split-a">
-        <span class="split-label" id="js-split-label-a"></span>
-      </div>
-      <div class="split-green" id="js-split-b">
-        <span class="split-label" id="js-split-label-b"></span>
-      </div>
-    </div>
-
-    <!-- Stats strip -->
-    <div class="stats">
-      <div class="stat-first">
-        <div class="stat-label"><span id="js-leader-name"></span> leading by</div>
-        <div class="stat-value"><span id="js-margin"></span> <span style="font-size:0.9rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);">votes</span></div>
-      </div>
-      <div>
-        <div class="stat-label">Total Votes</div>
-        <div class="stat-value" id="js-total"></div>
-      </div>
-      <div>
-        <div class="stat-label">Precincts In</div>
-        <div class="stat-value" id="js-precincts-stat"></div>
-      </div>
-      <div class="stat-timestamp">
-        Source: Macon-Bibb Board of Elections<br>
-        Last updated <strong id="js-updated-2"></strong><br>
-        <span id="js-refresh-note">This page refreshes automatically every 5 minutes.</span>
-      </div>
-    </div>
+<!-- Races -->
+<div class="races-band">
+  <section class="races" id="races-container">
+    <!-- Dynamically populated by JavaScript -->
   </section>
 </div>
 
@@ -925,7 +1174,7 @@
   <div class="disclaimer">
     <div class="disclaimer-label">A note on these results</div>
     <div class="disclaimer-body">
-      PeachTracker is not affiliated with Macon-Bibb County government. Results displayed here are <strong>unofficial until certified</strong> by the Macon-Bibb County Board of Elections. A small number of provisional ballots remain to be counted but are not expected to change the outcome.
+      PeachTracker is not affiliated with Macon-Bibb County government. Results displayed here are <strong>unofficial until certified</strong> by the Macon-Bibb County Board of Elections.
     </div>
   </div>
 </section>
@@ -940,76 +1189,338 @@
 
 <script>
   // ============================================================
-  // RENDER — derives percentages, margin, leading/trailing from votes
+  // MAIN RENDERER — fetch election data and render all races
   // ============================================================
-  (function render() {
-    const d = RACE_DATA;
-    const [c1, c2] = d.candidates;
-    const total = c1.votes + c2.votes;
+  let electionData = null;
 
-    const pct1Raw = total > 0 ? (c1.votes / total) * 100 : 50;
+  async function loadData() {
+    try {
+      const response = await fetch('election-data.json');
+      electionData = await response.json();
+      renderAll();
+    } catch (error) {
+      console.error('Failed to load election data:', error);
+    }
+  }
+
+  function getInitials(name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return (name[0] || '?').toUpperCase();
+  }
+
+  function renderRaceCard(race) {
+    const totalVotes = race.candidates.reduce((sum, c) => sum + c.votes, 0);
+    const isTwoCandidates = race.candidates.length === 2;
+    const isUpcoming = electionData.currentElection.status === 'upcoming';
+
+    let html = '';
+
+    // Call banner if race is called
+    if (race.called && race.winner) {
+      html += `
+        <div class="call-band">
+          <div class="call-inner">
+            <span class="call-flag">PeachTracker calls this race</span>
+            <span class="call-winner">${race.winner} wins</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (isTwoCandidates) {
+      html += renderTwoCandidateRace(race, totalVotes, isUpcoming);
+    } else {
+      html += renderMultiCandidateRace(race, totalVotes, isUpcoming);
+    }
+
+    return html;
+  }
+
+  function renderTwoCandidateRace(race, totalVotes, isUpcoming) {
+    const [c1, c2] = race.candidates;
+    const pct1Raw = totalVotes > 0 ? (c1.votes / totalVotes) * 100 : 50;
     const pct1 = Math.round(pct1Raw * 10) / 10;
     const pct2 = Math.round((100 - pct1) * 10) / 10;
 
     const margin = Math.abs(c1.votes - c2.votes);
+    const c1Leading = c1.votes >= c2.votes;
+    const leaderName = c1Leading ? c1.name : c2.name;
 
-    // Map peach candidate to slot A, green to slot B
-    const a = c1.color === "peach" ? c1 : c2;
-    const b = c1.color === "peach" ? c2 : c1;
-    const aPct = a === c1 ? pct1 : pct2;
-    const bPct = b === c1 ? pct1 : pct2;
-    const aLeading = a.votes >= b.votes;
+    const typeClass = race.type === 'nonpartisan' ? 'nonpartisan' : race.type === 'democratic' ? 'democratic' : 'republican';
 
-    // Header
-    document.getElementById("js-race").textContent = d.race;
-    document.getElementById("js-date").textContent = d.date;
-    document.getElementById("js-updated").textContent = d.lastUpdated;
-    document.getElementById("js-precincts").textContent =
-      d.precinctsReporting.reported + " of " + d.precinctsReporting.total;
+    let html = `
+      <div class="race-card">
+        <div class="race-two-candidate">
+          <div class="race-header">
+            <div class="race-name">${race.name}</div>
+            <div class="race-type-badge ${typeClass}">${race.type}</div>
+          </div>
+          <div class="race-meta">
+            <span>${race.precinctsReporting} of ${race.totalPrecincts} precincts</span>
+            <span id="last-updated-${race.id}">-</span>
+          </div>
+    `;
 
-    // Photos + trailing class
-    const imgA = document.getElementById("js-photo-a");
-    const imgB = document.getElementById("js-photo-b");
-    imgA.src = a.photo; imgA.alt = a.name;
-    imgB.src = b.photo; imgB.alt = b.name;
-    document.getElementById("js-cand-a").classList.toggle("trailing", !aLeading);
-    document.getElementById("js-cand-b").classList.toggle("trailing",  aLeading);
-
-    // Candidate A
-    document.getElementById("js-tag-a").textContent   = aLeading ? "Leading" : "Trailing";
-    document.getElementById("js-name-a").textContent  = a.name;
-    document.getElementById("js-pct-a").textContent   = aPct.toFixed(1) + "%";
-    document.getElementById("js-votes-a").textContent = a.votes.toLocaleString() + " votes";
-
-    // Candidate B
-    document.getElementById("js-tag-b").textContent   = aLeading ? "Trailing" : "Leading";
-    document.getElementById("js-name-b").textContent  = b.name;
-    document.getElementById("js-pct-b").textContent   = bPct.toFixed(1) + "%";
-    document.getElementById("js-votes-b").textContent = b.votes.toLocaleString() + " votes";
-
-    // Split bar
-    document.getElementById("js-split-a").style.width = aPct + "%";
-    document.getElementById("js-split-b").style.width = bPct + "%";
-    document.getElementById("js-split-label-a").textContent = aPct.toFixed(1) + "%";
-    document.getElementById("js-split-label-b").textContent = bPct.toFixed(1) + "%";
-
-    // Stats strip
-    document.getElementById("js-margin").textContent  = margin.toLocaleString();
-    const leaderEl = document.getElementById("js-leader-name");
-    if (leaderEl) {
-      leaderEl.textContent = aLeading ? a.name : b.name;
-      leaderEl.style.color = aLeading ? "var(--peach)" : "var(--green)";
+    if (isUpcoming) {
+      html += '<div class="race-status">Polls open May 19th</div>';
     }
-    document.getElementById("js-total").textContent   = total.toLocaleString();
-    document.getElementById("js-precincts-stat").textContent =
-      d.precinctsReporting.reported + " / " + d.precinctsReporting.total;
-    document.getElementById("js-updated-2").textContent = d.lastUpdated;
-  })();
+
+    html += `
+          <div class="cand-row reveal-stagger">
+            <div class="cand cand-a ${c1Leading ? '' : 'trailing'}">
+              <div class="cand-photo">
+                <img src="images/${race.candidates[0].image}" alt="${c1.name}" onerror="handleImageError(this, '${getInitials(c1.name)}', 'position-1')">
+              </div>
+              <div class="cand-info">
+                <div class="cand-tag">${c1Leading ? 'Leading' : 'Trailing'}</div>
+                <div class="cand-name">${c1.name}</div>
+                ${c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : ''}
+                <div class="cand-pct">${isUpcoming ? '—' : pct1.toFixed(1) + '%'}</div>
+                <div class="cand-votes">${isUpcoming ? '' : c1.votes.toLocaleString() + ' votes'}</div>
+              </div>
+            </div>
+            <div class="cand cand-b ${c1Leading ? 'trailing' : ''}">
+              <div class="cand-photo">
+                <img src="images/${race.candidates[1].image}" alt="${c2.name}" onerror="handleImageError(this, '${getInitials(c2.name)}', 'position-2')">
+              </div>
+              <div class="cand-info">
+                <div class="cand-tag">${c1Leading ? 'Trailing' : 'Leading'}</div>
+                <div class="cand-name">${c2.name}</div>
+                ${c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : ''}
+                <div class="cand-pct">${isUpcoming ? '—' : pct2.toFixed(1) + '%'}</div>
+                <div class="cand-votes">${isUpcoming ? '' : c2.votes.toLocaleString() + ' votes'}</div>
+              </div>
+            </div>
+          </div>
+    `;
+
+    if (!isUpcoming) {
+      html += `
+          <div class="split-bar">
+            <div class="split-peach" style="width: ${pct1}%">
+              <span class="split-label">${pct1.toFixed(1)}%</span>
+            </div>
+            <div class="split-green" style="width: ${pct2}%">
+              <span class="split-label">${pct2.toFixed(1)}%</span>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat-first">
+              <div class="stat-label">${leaderName} leading by</div>
+              <div class="stat-value">${margin.toLocaleString()} <span style="font-size:0.9rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);">votes</span></div>
+            </div>
+            <div>
+              <div class="stat-label">Total Votes</div>
+              <div class="stat-value">${totalVotes.toLocaleString()}</div>
+            </div>
+            <div>
+              <div class="stat-label">Precincts In</div>
+              <div class="stat-value">${race.precinctsReporting} / ${race.totalPrecincts}</div>
+            </div>
+            <div class="stat-timestamp">
+              Source: Macon-Bibb Board of Elections<br>
+              <span id="refresh-note-${race.id}">This page refreshes automatically every 3 minutes.</span>
+            </div>
+          </div>
+      `;
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    return html;
+  }
+
+  function renderMultiCandidateRace(race, totalVotes, isUpcoming) {
+    const typeClass = race.type === 'nonpartisan' ? 'nonpartisan' : race.type === 'democratic' ? 'democratic' : 'republican';
+    const sorted = [...race.candidates].sort((a, b) => b.votes - a.votes);
+
+    let html = `
+      <div class="race-card">
+        <div class="race-multi-candidate">
+          <div class="race-header">
+            <div class="race-name">${race.name}</div>
+            <div class="race-type-badge ${typeClass}">${race.type}</div>
+          </div>
+          <div class="race-meta">
+            <span>${race.precinctsReporting} of ${race.totalPrecincts} precincts</span>
+            <span id="last-updated-${race.id}">-</span>
+          </div>
+    `;
+
+    if (isUpcoming) {
+      html += '<div class="race-status">Polls open May 19th</div>';
+    }
+
+    sorted.forEach((cand, idx) => {
+      const position = idx + 1;
+      const pctRaw = totalVotes > 0 ? (cand.votes / totalVotes) * 100 : 0;
+      const pct = Math.round(pctRaw * 10) / 10;
+      const posClass = position === 1 ? 'position-1' : position === 2 ? 'position-2' : 'position-3-plus';
+
+      html += `
+        <div class="cand-stacked">
+          <div class="cand-photo-circle ${posClass}">
+            <img src="images/${cand.image}" alt="${cand.name}" onerror="handleImageError(this.parentElement, '${getInitials(cand.name)}', '${posClass}')">
+          </div>
+          <div class="cand-stacked-info">
+            <div class="cand-stacked-name">
+              ${cand.name}
+              ${cand.incumbent ? '<span class="cand-stacked-incumbent">(Incumbent)</span>' : ''}
+            </div>
+            <div class="cand-stacked-bar">
+              <div class="cand-stacked-bar-fill ${posClass}" style="width: ${isUpcoming ? '0%' : pct + '%'}">
+                ${isUpcoming ? '' : pct.toFixed(1) + '%'}
+              </div>
+            </div>
+            <div class="cand-stacked-votes">${isUpcoming ? '—' : cand.votes.toLocaleString() + ' votes'}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    return html;
+  }
+
+  function handleImageError(imgOrContainer, initials, posClass) {
+    // If called from img onerror, replace the img with initials div
+    if (imgOrContainer.tagName === 'IMG') {
+      const container = imgOrContainer.parentElement;
+      container.innerHTML = `<div class="cand-photo-fallback" style="background: ${getBackgroundColor(posClass)}">${initials}</div>`;
+    } else {
+      // Called from multi-candidate, container is the photo-circle div
+      imgOrContainer.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em; color: white; background: ${getBackgroundColor(posClass)}">${initials}</div>`;
+    }
+  }
+
+  function getBackgroundColor(posClass) {
+    if (posClass === 'position-1') return 'var(--peach)';
+    if (posClass === 'position-2') return 'var(--green)';
+    return '#C8C3BE';
+  }
+
+  function renderAll() {
+    if (!electionData) return;
+
+    const container = document.getElementById('races-container');
+    let html = '';
+
+    // Render each category
+    electionData.currentElection.categories.forEach(category => {
+      html += `
+        <div class="race-category" id="category-${category.id}">
+          <div class="race-category-header">
+            <h2 class="race-category-title">${category.name}</h2>
+          </div>
+      `;
+
+      category.races.forEach(race => {
+        html += renderRaceCard(race);
+      });
+
+      html += '</div>';
+    });
+
+    // Statewide section
+    html += `
+      <div class="statewide-band" id="category-statewide" style="margin-top: 64px; margin-left: -${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 40}px; margin-right: -${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--gutter')) || 40}px;">
+        <div class="statewide">
+          <div class="statewide-header">
+            <h2 class="statewide-title">Statewide Races</h2>
+          </div>
+          <div class="statewide-links">
+    `;
+
+    electionData.statewideLinks.forEach(link => {
+      html += `
+        <a href="${link.url}" target="_blank" rel="noopener" class="statewide-link">
+          <span class="statewide-link-name">${link.name}</span>
+          <div class="statewide-link-note">${link.note}</div>
+        </a>
+      `;
+    });
+
+    html += `
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    setupScrollReveal();
+    setupCategoryNav();
+    setupHeroParallax();
+  }
+
+  // ============================================================
+  // CATEGORY NAB INTERACTION
+  // ============================================================
+  function setupCategoryNav() {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const categoryId = tab.dataset.category;
+        const section = document.getElementById(`category-${categoryId}`);
+        if (section) {
+          const navHeight = document.querySelector('.nav').offsetHeight;
+          const categoryNavHeight = document.querySelector('.category-nav').offsetHeight;
+          const offset = navHeight + categoryNavHeight;
+          window.scrollTo({
+            top: section.offsetTop - offset,
+            behavior: 'smooth'
+          });
+        }
+        updateActiveTab();
+      });
+    });
+
+    // Update active tab on scroll
+    if ('IntersectionObserver' in window) {
+      const categories = document.querySelectorAll('[id^="category-"]');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const categoryId = entry.target.id.replace('category-', '');
+            updateActiveTabTo(categoryId);
+          }
+        });
+      }, {
+        threshold: 0.2,
+        rootMargin: `-${document.querySelector('.nav').offsetHeight + document.querySelector('.category-nav').offsetHeight}px 0px 0px 0px`
+      });
+
+      categories.forEach(cat => io.observe(cat));
+    }
+  }
+
+  function updateActiveTab() {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    // Just update to currently visible
+  }
+
+  function updateActiveTabTo(categoryId) {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.category === categoryId);
+    });
+  }
 
   // ============================================================
   // SCROLL REVEAL — fade + rise sections as they enter the viewport.
   // ============================================================
-  (function scrollReveal() {
+  function setupScrollReveal() {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const targets = document.querySelectorAll('.reveal');
 
@@ -1031,19 +1542,18 @@
     });
 
     targets.forEach(el => io.observe(el));
-  })();
+  }
 
   // ============================================================
-  // HERO PARALLAX — gently drift the city-hall background on scroll.
+  // HERO PARALLAX
   // ============================================================
-  (function heroParallax() {
+  function setupHeroParallax() {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) return;
 
     const band = document.querySelector('.hero-band');
     if (!band) return;
 
-    // Only apply on wider viewports where the building is visible beside text
     const mq = window.matchMedia('(min-width: 961px)');
     let ticking = false;
 
@@ -1054,10 +1564,8 @@
         return;
       }
       const rect = band.getBoundingClientRect();
-      // Progress goes from 0 (top of band at top of viewport) to 1 (band scrolled past)
       const progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
-      // Drift the image Y position a bit as the user scrolls
-      const yShift = 50 + progress * 12; // 50% → 62%
+      const yShift = 50 + progress * 12;
       band.style.backgroundPosition = `center, 100% ${yShift}%`;
       ticking = false;
     }
@@ -1070,32 +1578,41 @@
     }, { passive: true });
     window.addEventListener('resize', update);
     update();
-  })();
-</script>
+  }
 
-
-<script defer src="/_vercel/insights/script.js"></script>
-<script>
-  // Auto-refresh every 60 seconds so visitors always see the latest results
-  (function autoRefresh() {
-    const INTERVAL_MS = 5 * 60 * 1000;
+  // ============================================================
+  // AUTO-REFRESH every 3 minutes
+  // ============================================================
+  function setupAutoRefresh() {
+    const INTERVAL_MS = 3 * 60 * 1000;
     let countdown = INTERVAL_MS / 1000;
 
     const baseTitle = document.title;
-    const note = document.getElementById('js-refresh-note');
     setInterval(function () {
       countdown--;
       if (countdown <= 0) {
         window.location.reload();
       } else if (countdown <= 30) {
         document.title = "Refreshing in " + countdown + "s — PeachTracker";
-        if (note) note.textContent = "Refreshing in " + countdown + "s…";
+        const notes = document.querySelectorAll('[id^="refresh-note-"]');
+        notes.forEach(note => {
+          note.textContent = "Refreshing in " + countdown + "s…";
+        });
       } else {
         document.title = baseTitle;
-        if (note) note.textContent = "This page refreshes automatically every 5 minutes.";
+        const notes = document.querySelectorAll('[id^="refresh-note-"]');
+        notes.forEach(note => {
+          note.textContent = "This page refreshes automatically every 3 minutes.";
+        });
       }
     }, 1000);
-  })();
+  }
+
+  // Initialize
+  loadData();
+  setupAutoRefresh();
 </script>
+
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
