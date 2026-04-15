@@ -693,6 +693,73 @@
   /* ============================================================
      STATEWIDE SECTION — link-out list
      ============================================================ */
+  /* ---- UNOPPOSED SECTION ---- */
+  .unopposed-section {
+    margin-top: 56px;
+  }
+
+  .race-category-subtitle {
+    font-size: var(--body);
+    color: var(--text-secondary);
+    font-weight: 450;
+    margin-top: 8px;
+    max-width: 680px;
+    line-height: 1.55;
+  }
+
+  .unopposed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border: 1.5px solid var(--border);
+    margin-top: 20px;
+  }
+
+  .unopposed-card {
+    background: var(--card);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .unopposed-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .unopposed-card-race {
+    font-size: var(--body);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .unopposed-card-candidate {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .unopposed-incumbent {
+    font-size: var(--kicker);
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .unopposed-card-badge {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-light);
+  }
+
   .statewide-band {
     background: var(--green-bg);
     border-top: 1.5px solid var(--green-pastel);
@@ -1247,6 +1314,7 @@
     <button class="category-tab active" data-category="education">Board of Education</button>
     <button class="category-tab" data-category="water-authority">Water Authority</button>
     <button class="category-tab" data-category="state-legislature">State Legislature</button>
+    <button class="category-tab" data-category="unopposed">Unopposed</button>
     <button class="category-tab" data-category="statewide">Statewide</button>
   </div>
 </div>
@@ -1414,6 +1482,16 @@
       { name: "Secretary of State",   url: "https://results.enr.clarityelections.com/GA/", note: "Democratic & Republican primaries" },
       { name: "Attorney General",     url: "https://results.enr.clarityelections.com/GA/", note: "Democratic & Republican primaries" },
       { name: "All Statewide Results",url: "https://results.enr.clarityelections.com/GA/", note: "Georgia Secretary of State" }
+    ],
+    unopposedRaces: [
+      { race: "Water Authority District 1",           type: "nonpartisan",  candidate: "Elaine H. Lucas",        incumbent: true  },
+      { race: "State Senate District 26",             type: "democratic",   candidate: "David Eugene Lucas",     incumbent: true  },
+      { race: "State House District 142",             type: "republican",   candidate: "Calvin Dennis Palmer",   incumbent: false },
+      { race: "State House District 143",             type: "democratic",   candidate: "Anissa Monique Jones",   incumbent: true  },
+      { race: "State House District 144",             type: "republican",   candidate: "Roy Dale Washburn Jr.",  incumbent: true  },
+      { race: "State House District 145",             type: "democratic",   candidate: "Tangie Herring",         incumbent: true  },
+      { race: "State House District 145",             type: "republican",   candidate: "Eric Shannon Wilson",    incumbent: false },
+      { race: "State House District 134",             type: "republican",   candidate: "Robert Dickey",          incumbent: true  }
     ]
   };
 
@@ -1617,6 +1695,24 @@
     });
 
     // Statewide section
+    // Unopposed races section
+    html += '<div class="unopposed-section" id="category-unopposed">' +
+      '<div class="race-category-header"><h2 class="race-category-title">Unopposed Races</h2>' +
+      '<p class="race-category-subtitle">These races are on your Macon-Bibb ballot but have no challenger. No results to report — one candidate filed and won by default.</p></div>' +
+      '<div class="unopposed-grid">';
+    ELECTION.unopposedRaces.forEach(function(r) {
+      var partyLabel = r.type === 'democratic' ? 'Democratic' : r.type === 'republican' ? 'Republican' : 'Nonpartisan';
+      html += '<div class="unopposed-card">' +
+        '<div class="unopposed-card-header">' +
+          '<div class="unopposed-card-race">' + r.race + '</div>' +
+          '<span class="race-type-badge ' + r.type + '">' + partyLabel + '</span>' +
+        '</div>' +
+        '<div class="unopposed-card-candidate">' + r.candidate + (r.incumbent ? ' <span class="unopposed-incumbent">(Incumbent)</span>' : '') + '</div>' +
+        '<div class="unopposed-card-badge">Unopposed</div>' +
+      '</div>';
+    });
+    html += '</div></div>';
+
     html += '<div class="statewide-band" id="category-statewide"><div class="statewide">' +
       '<div class="statewide-header"><h2 class="statewide-title">Statewide Races</h2></div>' +
       '<div class="statewide-links">';
