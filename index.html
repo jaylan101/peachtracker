@@ -1190,534 +1190,308 @@
 <script>
   // ============================================================
   // ELECTION DATA — single source of truth.
-  // On election night, update vote counts, precinctsReporting,
-  // lastUpdated, and status fields only. Never hardcode derived values.
+  // On election night: update votes, precinctsReporting, lastUpdated, status only.
   // ============================================================
-  const electionData = {
-  "currentElection": {
-    "name": "Georgia Primary & Nonpartisan General",
-    "date": "May 19, 2026",
-    "location": "Macon-Bibb County",
-    "lastUpdated": "",
-    "totalPrecincts": 38,
-    "status": "upcoming",
-    "categories": [
+  const ELECTION = {
+    status: "upcoming",
+    name: "Georgia Primary & Nonpartisan General",
+    date: "May 19, 2026",
+    lastUpdated: "",
+    categories: [
       {
-        "id": "education",
-        "name": "Board of Education",
-        "races": [
-          {
-            "id": "boe-post7",
-            "name": "Board of Education Post 7 (At-Large)",
-            "type": "nonpartisan",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 38,
-            "candidates": [
-              { "name": "Amy Hamrick Morton", "votes": 0, "incumbent": false, "image": "candidates/boe-post7-morton.jpg" },
-              { "name": "Kerry Warren Hatcher", "votes": 0, "incumbent": false, "image": "candidates/boe-post7-hatcher.jpg" }
+        id: "education", name: "Board of Education",
+        races: [
+          { id: "boe-post7", name: "Board of Education Post 7 (At-Large)", type: "nonpartisan", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 38,
+            candidates: [
+              { name: "Amy Hamrick Morton",   votes: 0, incumbent: false, image: "candidates/boe-post7-morton.jpg" },
+              { name: "Kerry Warren Hatcher", votes: 0, incumbent: false, image: "candidates/boe-post7-hatcher.jpg" }
             ]
           },
-          {
-            "id": "boe-post8",
-            "name": "Board of Education Post 8 (At-Large)",
-            "type": "nonpartisan",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 38,
-            "candidates": [
-              { "name": "Lisa Williams Garrett-Boyd", "votes": 0, "incumbent": true, "image": "candidates/boe-post8-garrett-boyd.jpg" },
-              { "name": "Carlos Antonio McCloud", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-mccloud.jpg" },
-              { "name": "Jonathan Paul Fisher", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-fisher.jpg" },
-              { "name": "Nola McFadden", "votes": 0, "incumbent": false, "image": "candidates/boe-post8-mcfadden.jpg" }
+          { id: "boe-post8", name: "Board of Education Post 8 (At-Large)", type: "nonpartisan", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 38,
+            candidates: [
+              { name: "Lisa Williams Garrett-Boyd",  votes: 0, incumbent: true,  image: "candidates/boe-post8-garrett-boyd.jpg" },
+              { name: "Carlos Antonio McCloud",      votes: 0, incumbent: false, image: "candidates/boe-post8-mccloud.jpg" },
+              { name: "Jonathan Paul Fisher",        votes: 0, incumbent: false, image: "candidates/boe-post8-fisher.jpg" },
+              { name: "Nola McFadden",               votes: 0, incumbent: false, image: "candidates/boe-post8-mcfadden.jpg" }
             ]
           }
         ]
       },
       {
-        "id": "water-authority",
-        "name": "Water Authority",
-        "races": [
-          {
-            "id": "water-atlarge",
-            "name": "Water Authority At-Large",
-            "type": "nonpartisan",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 38,
-            "candidates": [
-              { "name": "Gary Floyd Bechtel", "votes": 0, "incumbent": true, "image": "candidates/water-atlarge-bechtel.jpg" },
-              { "name": "Desmond Denois Brown", "votes": 0, "incumbent": false, "image": "candidates/water-atlarge-brown.jpg" }
+        id: "water-authority", name: "Water Authority",
+        races: [
+          { id: "water-atlarge", name: "Water Authority At-Large", type: "nonpartisan", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 38,
+            candidates: [
+              { name: "Gary Floyd Bechtel",    votes: 0, incumbent: true,  image: "candidates/water-atlarge-bechtel.jpg" },
+              { name: "Desmond Denois Brown",  votes: 0, incumbent: false, image: "candidates/water-atlarge-brown.jpg" }
             ]
           },
-          {
-            "id": "water-d2",
-            "name": "Water Authority District 2",
-            "type": "nonpartisan",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 6,
-            "candidates": [
-              { "name": "Marshall Talley", "votes": 0, "incumbent": false, "image": "candidates/water-d2-talley.jpg" },
-              { "name": "Renoalda Latis Scott", "votes": 0, "incumbent": false, "image": "candidates/water-d2-scott.jpg" },
-              { "name": "Ronald Edward Lemon", "votes": 0, "incumbent": false, "image": "candidates/water-d2-lemon.jpg" },
-              { "name": "Sharif Robbins-Brinson", "votes": 0, "incumbent": false, "image": "candidates/water-d2-robbins-brinson.jpg" }
+          { id: "water-d2", name: "Water Authority District 2", type: "nonpartisan", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 6,
+            candidates: [
+              { name: "Marshall Talley",         votes: 0, incumbent: false, image: "candidates/water-d2-talley.jpg" },
+              { name: "Renoalda Latis Scott",    votes: 0, incumbent: false, image: "candidates/water-d2-scott.jpg" },
+              { name: "Ronald Edward Lemon",     votes: 0, incumbent: false, image: "candidates/water-d2-lemon.jpg" },
+              { name: "Sharif Robbins-Brinson",  votes: 0, incumbent: false, image: "candidates/water-d2-robbins-brinson.jpg" }
             ]
           },
-          {
-            "id": "water-d4",
-            "name": "Water Authority District 4",
-            "type": "nonpartisan",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 6,
-            "candidates": [
-              { "name": "Deron D. Rogers", "votes": 0, "incumbent": false, "image": "candidates/water-d4-rogers.jpg" },
-              { "name": "Frank K. Patterson Jr.", "votes": 0, "incumbent": false, "image": "candidates/water-d4-patterson.jpg" },
-              { "name": "Michael Arrish McKeever", "votes": 0, "incumbent": false, "image": "candidates/water-d4-mckeever.jpg" }
+          { id: "water-d4", name: "Water Authority District 4", type: "nonpartisan", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 6,
+            candidates: [
+              { name: "Deron D. Rogers",          votes: 0, incumbent: false, image: "candidates/water-d4-rogers.jpg" },
+              { name: "Frank K. Patterson Jr.",   votes: 0, incumbent: false, image: "candidates/water-d4-patterson.jpg" },
+              { name: "Michael Arrish McKeever",  votes: 0, incumbent: false, image: "candidates/water-d4-mckeever.jpg" }
             ]
           }
         ]
       },
       {
-        "id": "state-legislature",
-        "name": "State Legislature",
-        "races": [
-          {
-            "id": "house-142-d",
-            "name": "State House District 142",
-            "type": "democratic",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 10,
-            "candidates": [
-              { "name": "Miriam Lucas Paris", "votes": 0, "incumbent": true, "image": "candidates/house-142-paris.jpg" },
-              { "name": "George Elton Thomas Jr.", "votes": 0, "incumbent": false, "image": "candidates/house-142-thomas.jpg" }
+        id: "state-legislature", name: "State Legislature",
+        races: [
+          { id: "house-142-d", name: "State House District 142", type: "democratic", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 10,
+            candidates: [
+              { name: "Miriam Lucas Paris",       votes: 0, incumbent: true,  image: "candidates/house-142-paris.jpg" },
+              { name: "George Elton Thomas Jr.",  votes: 0, incumbent: false, image: "candidates/house-142-thomas.jpg" }
             ]
           },
-          {
-            "id": "senate-18-r",
-            "name": "State Senate District 18",
-            "type": "republican",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 20,
-            "candidates": [
-              { "name": "Steven Royce McNeel", "votes": 0, "incumbent": true, "image": "candidates/senate-18-mcneel.jpg" },
-              { "name": "Eugene Allison", "votes": 0, "incumbent": false, "image": "candidates/senate-18-allison.jpg" }
+          { id: "senate-18-r", name: "State Senate District 18", type: "republican", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 20,
+            candidates: [
+              { name: "Steven Royce McNeel",  votes: 0, incumbent: true,  image: "candidates/senate-18-mcneel.jpg" },
+              { name: "Eugene Allison",       votes: 0, incumbent: false, image: "candidates/senate-18-allison.jpg" }
             ]
           },
-          {
-            "id": "senate-26-r",
-            "name": "State Senate District 26",
-            "type": "republican",
-            "called": false,
-            "winner": null,
-            "precinctsReporting": 0,
-            "totalPrecincts": 20,
-            "candidates": [
-              { "name": "Nancy Hicks", "votes": 0, "incumbent": false, "image": "candidates/senate-26-hicks.jpg" },
-              { "name": "Tracy Conkle Wheeler", "votes": 0, "incumbent": false, "image": "candidates/senate-26-wheeler.jpg" }
+          { id: "senate-26-r", name: "State Senate District 26", type: "republican", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 20,
+            candidates: [
+              { name: "Nancy Hicks",           votes: 0, incumbent: false, image: "candidates/senate-26-hicks.jpg" },
+              { name: "Tracy Conkle Wheeler",  votes: 0, incumbent: false, image: "candidates/senate-26-wheeler.jpg" }
             ]
           }
         ]
       }
+    ],
+    statewideLinks: [
+      { name: "Governor",             url: "https://results.enr.clarityelections.com/GA/", note: "Democratic & Republican primaries" },
+      { name: "U.S. Senate",          url: "https://results.enr.clarityelections.com/GA/", note: "Jon Ossoff (D) incumbent" },
+      { name: "Lieutenant Governor",  url: "https://results.enr.clarityelections.com/GA/", note: "Open seat" },
+      { name: "Secretary of State",   url: "https://results.enr.clarityelections.com/GA/", note: "Democratic & Republican primaries" },
+      { name: "Attorney General",     url: "https://results.enr.clarityelections.com/GA/", note: "Democratic & Republican primaries" },
+      { name: "All Statewide Results",url: "https://results.enr.clarityelections.com/GA/", note: "Georgia Secretary of State" }
     ]
-  },
-  "statewideLinks": [
-    { "name": "Governor", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
-    { "name": "U.S. Senate", "url": "https://results.enr.clarityelections.com/GA/", "note": "Jon Ossoff (D) incumbent" },
-    { "name": "Lieutenant Governor", "url": "https://results.enr.clarityelections.com/GA/", "note": "Open seat" },
-    { "name": "Secretary of State", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
-    { "name": "Attorney General", "url": "https://results.enr.clarityelections.com/GA/", "note": "Democratic & Republican primaries" },
-    { "name": "All Statewide Results", "url": "https://results.enr.clarityelections.com/GA/", "note": "Georgia Secretary of State" }
-  ]
   };
 
-  function loadData() {
-    renderAll();
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  function initials(name) {
+    var parts = name.trim().split(/\s+/);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : (name[0] || '?').toUpperCase();
   }
 
-  function getInitials(name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return (name[0] || '?').toUpperCase();
+  function typeLabel(type) {
+    if (type === 'democratic') return 'Democratic';
+    if (type === 'republican') return 'Republican';
+    return 'Nonpartisan';
   }
 
-  function renderRaceCard(race) {
-    const totalVotes = race.candidates.reduce((sum, c) => sum + c.votes, 0);
-    const isTwoCandidates = race.candidates.length === 2;
-    const isUpcoming = electionData.currentElection.status === 'upcoming';
+  function imgOrInitials(cand, colorClass) {
+    var bg = colorClass === 'pos1' ? 'var(--peach)' : colorClass === 'pos2' ? 'var(--green)' : '#C8C3BE';
+    return '<img src="images/' + cand.image + '" alt="' + cand.name + '" ' +
+      'onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">' +
+      '<div class="initials-fallback" style="background:' + bg + ';display:none">' + initials(cand.name) + '</div>';
+  }
 
-    let html = '';
+  // ============================================================
+  // RENDER TWO-CANDIDATE RACE
+  // ============================================================
+  function renderTwo(race) {
+    var upcoming = ELECTION.status === 'upcoming';
+    var c1 = race.candidates[0], c2 = race.candidates[1];
+    var total = c1.votes + c2.votes;
+    var pct1 = total > 0 ? Math.round(c1.votes / total * 1000) / 10 : 50;
+    var pct2 = Math.round((100 - pct1) * 10) / 10;
+    var c1Leads = c1.votes >= c2.votes;
+    var margin = Math.abs(c1.votes - c2.votes);
+    var badge = '<span class="type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
 
-    // Call banner if race is called
+    var callBanner = '';
     if (race.called && race.winner) {
-      html += `
-        <div class="call-band">
-          <div class="call-inner">
-            <span class="call-flag">PeachTracker calls this race</span>
-            <span class="call-winner">${race.winner} wins</span>
-          </div>
-        </div>
-      `;
+      callBanner = '<div class="call-band"><div class="call-inner">' +
+        '<span class="call-flag">🍑 PeachTracker calls this race</span>' +
+        '<span class="call-winner">' + race.winner + ' wins</span></div></div>';
     }
 
-    if (isTwoCandidates) {
-      html += renderTwoCandidateRace(race, totalVotes, isUpcoming);
-    } else {
-      html += renderMultiCandidateRace(race, totalVotes, isUpcoming);
-    }
+    var trailingA = !c1Leads ? 'trailing' : '';
+    var trailingB = c1Leads ? 'trailing' : '';
 
-    return html;
+    var splitBar = upcoming ? '' :
+      '<div class="split-bar">' +
+        '<div class="split-peach" style="width:' + pct1 + '%"><span class="split-label">' + pct1.toFixed(1) + '%</span></div>' +
+        '<div class="split-green" style="width:' + pct2 + '%"><span class="split-label">' + pct2.toFixed(1) + '%</span></div>' +
+      '</div>';
+
+    var stats = upcoming ? '' :
+      '<div class="stats">' +
+        '<div class="stat-first"><div class="stat-label"><span style="color:' + (c1Leads ? 'var(--peach)' : 'var(--green)') + '">' + (c1Leads ? c1.name : c2.name) + '</span> leading by</div>' +
+        '<div class="stat-value">' + margin.toLocaleString() + ' <span style="font-size:.9rem;font-weight:600;text-transform:uppercase;color:var(--text-secondary)">votes</span></div></div>' +
+        '<div><div class="stat-label">Total Votes</div><div class="stat-value">' + total.toLocaleString() + '</div></div>' +
+        '<div><div class="stat-label">Precincts In</div><div class="stat-value">' + race.precinctsReporting + ' / ' + race.totalPrecincts + '</div></div>' +
+        '<div class="stat-timestamp">Source: Macon-Bibb Board of Elections' +
+        (ELECTION.lastUpdated ? '<br>Updated <strong>' + ELECTION.lastUpdated + '</strong>' : '') +
+        '<br><span class="refresh-note">Auto-refreshes every 3 minutes.</span></div>' +
+      '</div>';
+
+    return callBanner +
+      '<div class="race-card">' +
+        '<div class="race-header"><div class="race-name">' + race.name + '</div>' + badge + '</div>' +
+        '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
+          (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
+        (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
+        '<div class="cand-row">' +
+          '<div class="cand cand-a ' + trailingA + '">' +
+            '<div class="cand-photo">' + imgOrInitials(c1, 'pos1') + '</div>' +
+            '<div class="cand-info">' +
+              '<div class="cand-tag">' + (c1Leads ? 'Leading' : 'Trailing') + '</div>' +
+              '<div class="cand-name">' + c1.name + '</div>' +
+              (c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
+              '<div class="cand-pct">' + (upcoming ? '—' : pct1.toFixed(1) + '%') + '</div>' +
+              '<div class="cand-votes">' + (upcoming ? '' : c1.votes.toLocaleString() + ' votes') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cand cand-b ' + trailingB + '">' +
+            '<div class="cand-photo">' + imgOrInitials(c2, 'pos2') + '</div>' +
+            '<div class="cand-info">' +
+              '<div class="cand-tag">' + (c1Leads ? 'Trailing' : 'Leading') + '</div>' +
+              '<div class="cand-name">' + c2.name + '</div>' +
+              (c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
+              '<div class="cand-pct">' + (upcoming ? '—' : pct2.toFixed(1) + '%') + '</div>' +
+              '<div class="cand-votes">' + (upcoming ? '' : c2.votes.toLocaleString() + ' votes') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        splitBar + stats +
+      '</div>';
   }
 
-  function renderTwoCandidateRace(race, totalVotes, isUpcoming) {
-    const [c1, c2] = race.candidates;
-    const pct1Raw = totalVotes > 0 ? (c1.votes / totalVotes) * 100 : 50;
-    const pct1 = Math.round(pct1Raw * 10) / 10;
-    const pct2 = Math.round((100 - pct1) * 10) / 10;
+  // ============================================================
+  // RENDER MULTI-CANDIDATE RACE (3-4 candidates)
+  // ============================================================
+  function renderMulti(race) {
+    var upcoming = ELECTION.status === 'upcoming';
+    var total = race.candidates.reduce(function(s, c) { return s + c.votes; }, 0);
+    var sorted = race.candidates.slice().sort(function(a, b) { return b.votes - a.votes; });
+    var badge = '<span class="type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
 
-    const margin = Math.abs(c1.votes - c2.votes);
-    const c1Leading = c1.votes >= c2.votes;
-    const leaderName = c1Leading ? c1.name : c2.name;
-
-    const typeClass = race.type === 'nonpartisan' ? 'nonpartisan' : race.type === 'democratic' ? 'democratic' : 'republican';
-
-    let html = `
-      <div class="race-card">
-        <div class="race-two-candidate">
-          <div class="race-header">
-            <div class="race-name">${race.name}</div>
-            <div class="race-type-badge ${typeClass}">${race.type}</div>
-          </div>
-          <div class="race-meta">
-            <span>${race.precinctsReporting} of ${race.totalPrecincts} precincts</span>
-            <span id="last-updated-${race.id}">-</span>
-          </div>
-    `;
-
-    if (isUpcoming) {
-      html += '<div class="race-status">Polls open May 19th</div>';
+    var callBanner = '';
+    if (race.called && race.winner) {
+      callBanner = '<div class="call-band"><div class="call-inner">' +
+        '<span class="call-flag">🍑 PeachTracker calls this race</span>' +
+        '<span class="call-winner">' + race.winner + ' wins</span></div></div>';
     }
 
-    html += `
-          <div class="cand-row reveal-stagger">
-            <div class="cand cand-a ${c1Leading ? '' : 'trailing'}">
-              <div class="cand-photo">
-                <img src="images/${race.candidates[0].image}" alt="${c1.name}" onerror="handleImageError(this, '${getInitials(c1.name)}', 'position-1')">
-              </div>
-              <div class="cand-info">
-                <div class="cand-tag">${c1Leading ? 'Leading' : 'Trailing'}</div>
-                <div class="cand-name">${c1.name}</div>
-                ${c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : ''}
-                <div class="cand-pct">${isUpcoming ? '—' : pct1.toFixed(1) + '%'}</div>
-                <div class="cand-votes">${isUpcoming ? '' : c1.votes.toLocaleString() + ' votes'}</div>
-              </div>
-            </div>
-            <div class="cand cand-b ${c1Leading ? 'trailing' : ''}">
-              <div class="cand-photo">
-                <img src="images/${race.candidates[1].image}" alt="${c2.name}" onerror="handleImageError(this, '${getInitials(c2.name)}', 'position-2')">
-              </div>
-              <div class="cand-info">
-                <div class="cand-tag">${c1Leading ? 'Trailing' : 'Leading'}</div>
-                <div class="cand-name">${c2.name}</div>
-                ${c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : ''}
-                <div class="cand-pct">${isUpcoming ? '—' : pct2.toFixed(1) + '%'}</div>
-                <div class="cand-votes">${isUpcoming ? '' : c2.votes.toLocaleString() + ' votes'}</div>
-              </div>
-            </div>
-          </div>
-    `;
+    var rows = sorted.map(function(cand, idx) {
+      var pct = total > 0 ? Math.round(cand.votes / total * 1000) / 10 : 0;
+      var posClass = idx === 0 ? 'pos1' : idx === 1 ? 'pos2' : 'pos3';
+      var barColor = idx === 0 ? 'var(--peach)' : idx === 1 ? 'var(--green)' : '#C8C3BE';
+      return '<div class="cand-stacked">' +
+        '<div class="cand-photo-circle">' + imgOrInitials(cand, posClass) + '</div>' +
+        '<div class="cand-stacked-info">' +
+          '<div class="cand-stacked-name">' + cand.name + (cand.incumbent ? ' <span class="cand-stacked-incumbent">(Incumbent)</span>' : '') + '</div>' +
+          '<div class="cand-stacked-bar"><div class="cand-stacked-bar-fill" style="width:' + (upcoming ? '0' : pct) + '%;background:' + barColor + '">' +
+            (upcoming || pct === 0 ? '' : pct.toFixed(1) + '%') +
+          '</div></div>' +
+          '<div class="cand-stacked-votes">' + (upcoming ? '—' : cand.votes.toLocaleString() + ' votes') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
 
-    if (!isUpcoming) {
-      html += `
-          <div class="split-bar">
-            <div class="split-peach" style="width: ${pct1}%">
-              <span class="split-label">${pct1.toFixed(1)}%</span>
-            </div>
-            <div class="split-green" style="width: ${pct2}%">
-              <span class="split-label">${pct2.toFixed(1)}%</span>
-            </div>
-          </div>
-
-          <div class="stats">
-            <div class="stat-first">
-              <div class="stat-label">${leaderName} leading by</div>
-              <div class="stat-value">${margin.toLocaleString()} <span style="font-size:0.9rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-secondary);">votes</span></div>
-            </div>
-            <div>
-              <div class="stat-label">Total Votes</div>
-              <div class="stat-value">${totalVotes.toLocaleString()}</div>
-            </div>
-            <div>
-              <div class="stat-label">Precincts In</div>
-              <div class="stat-value">${race.precinctsReporting} / ${race.totalPrecincts}</div>
-            </div>
-            <div class="stat-timestamp">
-              Source: Macon-Bibb Board of Elections<br>
-              <span id="refresh-note-${race.id}">This page refreshes automatically every 3 minutes.</span>
-            </div>
-          </div>
-      `;
-    }
-
-    html += `
-        </div>
-      </div>
-    `;
-
-    return html;
+    return callBanner +
+      '<div class="race-card">' +
+        '<div class="race-header"><div class="race-name">' + race.name + '</div>' + badge + '</div>' +
+        '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
+          (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
+        (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
+        rows +
+      '</div>';
   }
 
-  function renderMultiCandidateRace(race, totalVotes, isUpcoming) {
-    const typeClass = race.type === 'nonpartisan' ? 'nonpartisan' : race.type === 'democratic' ? 'democratic' : 'republican';
-    const sorted = [...race.candidates].sort((a, b) => b.votes - a.votes);
-
-    let html = `
-      <div class="race-card">
-        <div class="race-multi-candidate">
-          <div class="race-header">
-            <div class="race-name">${race.name}</div>
-            <div class="race-type-badge ${typeClass}">${race.type}</div>
-          </div>
-          <div class="race-meta">
-            <span>${race.precinctsReporting} of ${race.totalPrecincts} precincts</span>
-            <span id="last-updated-${race.id}">-</span>
-          </div>
-    `;
-
-    if (isUpcoming) {
-      html += '<div class="race-status">Polls open May 19th</div>';
-    }
-
-    sorted.forEach((cand, idx) => {
-      const position = idx + 1;
-      const pctRaw = totalVotes > 0 ? (cand.votes / totalVotes) * 100 : 0;
-      const pct = Math.round(pctRaw * 10) / 10;
-      const posClass = position === 1 ? 'position-1' : position === 2 ? 'position-2' : 'position-3-plus';
-
-      html += `
-        <div class="cand-stacked">
-          <div class="cand-photo-circle ${posClass}">
-            <img src="images/${cand.image}" alt="${cand.name}" onerror="handleImageError(this.parentElement, '${getInitials(cand.name)}', '${posClass}')">
-          </div>
-          <div class="cand-stacked-info">
-            <div class="cand-stacked-name">
-              ${cand.name}
-              ${cand.incumbent ? '<span class="cand-stacked-incumbent">(Incumbent)</span>' : ''}
-            </div>
-            <div class="cand-stacked-bar">
-              <div class="cand-stacked-bar-fill ${posClass}" style="width: ${isUpcoming ? '0%' : pct + '%'}">
-                ${isUpcoming ? '' : pct.toFixed(1) + '%'}
-              </div>
-            </div>
-            <div class="cand-stacked-votes">${isUpcoming ? '—' : cand.votes.toLocaleString() + ' votes'}</div>
-          </div>
-        </div>
-      `;
-    });
-
-    html += `
-        </div>
-      </div>
-    `;
-
-    return html;
-  }
-
-  function handleImageError(imgOrContainer, initials, posClass) {
-    // If called from img onerror, replace the img with initials div
-    if (imgOrContainer.tagName === 'IMG') {
-      const container = imgOrContainer.parentElement;
-      container.innerHTML = `<div class="cand-photo-fallback" style="background: ${getBackgroundColor(posClass)}">${initials}</div>`;
-    } else {
-      // Called from multi-candidate, container is the photo-circle div
-      imgOrContainer.innerHTML = `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.8rem; letter-spacing: -0.04em; color: white; background: ${getBackgroundColor(posClass)}">${initials}</div>`;
-    }
-  }
-
-  function getBackgroundColor(posClass) {
-    if (posClass === 'position-1') return 'var(--peach)';
-    if (posClass === 'position-2') return 'var(--green)';
-    return '#C8C3BE';
-  }
-
+  // ============================================================
+  // RENDER ALL
+  // ============================================================
   function renderAll() {
-    if (!electionData) return;
+    var container = document.getElementById('races-container');
+    if (!container) return;
+    var html = '';
 
-    const container = document.getElementById('races-container');
-    let html = '';
-
-    // Render each category
-    electionData.currentElection.categories.forEach(category => {
-      html += `
-        <div class="race-category" id="category-${category.id}">
-          <div class="race-category-header">
-            <h2 class="race-category-title">${category.name}</h2>
-          </div>
-      `;
-
-      category.races.forEach(race => {
-        html += renderRaceCard(race);
+    ELECTION.categories.forEach(function(cat) {
+      html += '<div class="race-category" id="category-' + cat.id + '">' +
+        '<div class="race-category-header"><h2 class="race-category-title">' + cat.name + '</h2></div>';
+      cat.races.forEach(function(race) {
+        html += race.candidates.length === 2 ? renderTwo(race) : renderMulti(race);
       });
-
       html += '</div>';
     });
 
     // Statewide section
-    html += `
-      <div class="statewide-band" id="category-statewide">
-        <div class="statewide">
-          <div class="statewide-header">
-            <h2 class="statewide-title">Statewide Races</h2>
-          </div>
-          <div class="statewide-links">
-    `;
-
-    electionData.statewideLinks.forEach(link => {
-      html += `
-        <a href="${link.url}" target="_blank" rel="noopener" class="statewide-link">
-          <span class="statewide-link-name">${link.name}</span>
-          <div class="statewide-link-note">${link.note}</div>
-        </a>
-      `;
+    html += '<div class="statewide-band" id="category-statewide"><div class="statewide">' +
+      '<div class="statewide-header"><h2 class="statewide-title">Statewide Races</h2></div>' +
+      '<div class="statewide-links">';
+    ELECTION.statewideLinks.forEach(function(link) {
+      html += '<a href="' + link.url + '" target="_blank" rel="noopener" class="statewide-link">' +
+        '<span class="statewide-link-name">' + link.name + '</span>' +
+        '<div class="statewide-link-note">' + link.note + '</div>' +
+      '</a>';
     });
-
-    html += `
-          </div>
-        </div>
-      </div>
-    `;
+    html += '</div></div></div>';
 
     container.innerHTML = html;
-    setupScrollReveal();
-    setupCategoryNav();
-    setupHeroParallax();
-  }
 
-  // ============================================================
-  // CATEGORY NAB INTERACTION
-  // ============================================================
-  function setupCategoryNav() {
-    const tabs = document.querySelectorAll('.category-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const categoryId = tab.dataset.category;
-        const section = document.getElementById(`category-${categoryId}`);
-        if (section) {
-          const navHeight = document.querySelector('.nav').offsetHeight;
-          const categoryNavHeight = document.querySelector('.category-nav').offsetHeight;
-          const offset = navHeight + categoryNavHeight;
-          window.scrollTo({
-            top: section.offsetTop - offset,
-            behavior: 'smooth'
-          });
-        }
-        updateActiveTab();
-      });
-    });
-
-    // Update active tab on scroll
+    // Scroll reveal
+    var targets = document.querySelectorAll('.race-card, .race-category, .statewide-band');
     if ('IntersectionObserver' in window) {
-      const categories = document.querySelectorAll('[id^="category-"]');
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const categoryId = entry.target.id.replace('category-', '');
-            updateActiveTabTo(categoryId);
-          }
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
         });
-      }, {
-        threshold: 0.2,
-        rootMargin: `-${document.querySelector('.nav').offsetHeight + document.querySelector('.category-nav').offsetHeight}px 0px 0px 0px`
-      });
-
-      categories.forEach(cat => io.observe(cat));
-    }
-  }
-
-  function updateActiveTab() {
-    const tabs = document.querySelectorAll('.category-tab');
-    tabs.forEach(t => t.classList.remove('active'));
-    // Just update to currently visible
-  }
-
-  function updateActiveTabTo(categoryId) {
-    const tabs = document.querySelectorAll('.category-tab');
-    tabs.forEach(t => {
-      t.classList.toggle('active', t.dataset.category === categoryId);
-    });
-  }
-
-  // ============================================================
-  // SCROLL REVEAL — fade + rise sections as they enter the viewport.
-  // ============================================================
-  function setupScrollReveal() {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const targets = document.querySelectorAll('.reveal');
-
-    if (prefersReduced || !('IntersectionObserver' in window)) {
-      targets.forEach(el => el.classList.add('is-visible'));
-      return;
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      targets.forEach(function(el) { el.classList.add('reveal'); io.observe(el); });
+    } else {
+      targets.forEach(function(el) { el.classList.add('reveal', 'is-visible'); });
     }
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
+    // Category nav active state
+    var tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var id = tab.dataset.category;
+        var section = document.getElementById('category-' + id);
+        if (section) {
+          var navH = (document.querySelector('.nav') || {}).offsetHeight || 0;
+          var catH = (document.querySelector('.category-nav') || {}).offsetHeight || 0;
+          window.scrollTo({ top: section.offsetTop - navH - catH, behavior: 'smooth' });
         }
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
       });
-    }, {
-      threshold: 0.15,
-      rootMargin: '0px 0px -60px 0px'
     });
-
-    targets.forEach(el => io.observe(el));
   }
 
   // ============================================================
   // HERO PARALLAX
   // ============================================================
-  function setupHeroParallax() {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
-
-    const band = document.querySelector('.hero-band');
+  function heroParallax() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var band = document.querySelector('.hero-band');
     if (!band) return;
-
-    const mq = window.matchMedia('(min-width: 961px)');
-    let ticking = false;
-
+    var mq = window.matchMedia('(min-width: 961px)');
+    var ticking = false;
     function update() {
-      if (!mq.matches) {
-        band.style.backgroundPosition = '';
-        ticking = false;
-        return;
-      }
-      const rect = band.getBoundingClientRect();
-      const progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
-      const yShift = 50 + progress * 12;
-      band.style.backgroundPosition = `center, 100% ${yShift}%`;
+      if (!mq.matches) { band.style.backgroundPosition = ''; return; }
+      var rect = band.getBoundingClientRect();
+      var progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
+      band.style.backgroundPosition = 'center, 100% ' + (50 + progress * 12) + '%';
       ticking = false;
     }
-
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        window.requestAnimationFrame(update);
-        ticking = true;
-      }
-    }, { passive: true });
+    window.addEventListener('scroll', function() { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
     window.addEventListener('resize', update);
     update();
   }
@@ -1725,35 +1499,32 @@
   // ============================================================
   // AUTO-REFRESH every 3 minutes
   // ============================================================
-  function setupAutoRefresh() {
-    const INTERVAL_MS = 3 * 60 * 1000;
-    let countdown = INTERVAL_MS / 1000;
-
-    const baseTitle = document.title;
-    setInterval(function () {
+  function autoRefresh() {
+    var MINS = 3 * 60;
+    var countdown = MINS;
+    var baseTitle = document.title;
+    setInterval(function() {
       countdown--;
-      if (countdown <= 0) {
-        window.location.reload();
-      } else if (countdown <= 30) {
-        document.title = "Refreshing in " + countdown + "s — PeachTracker";
-        const notes = document.querySelectorAll('[id^="refresh-note-"]');
-        notes.forEach(note => {
-          note.textContent = "Refreshing in " + countdown + "s…";
-        });
+      if (countdown <= 0) { window.location.reload(); }
+      else if (countdown <= 30) {
+        document.title = 'Refreshing in ' + countdown + 's — PeachTracker';
+        document.querySelectorAll('.refresh-note').forEach(function(el) { el.textContent = 'Refreshing in ' + countdown + 's…'; });
       } else {
         document.title = baseTitle;
-        const notes = document.querySelectorAll('[id^="refresh-note-"]');
-        notes.forEach(note => {
-          note.textContent = "This page refreshes automatically every 3 minutes.";
-        });
+        document.querySelectorAll('.refresh-note').forEach(function(el) { el.textContent = 'Auto-refreshes every 3 minutes.'; });
       }
     }, 1000);
   }
 
-  // Initialize
-  loadData();
-  setupAutoRefresh();
+  // ============================================================
+  // BOOT
+  // ============================================================
+  renderAll();
+  heroParallax();
+  autoRefresh();
 </script>
+
+
 
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
