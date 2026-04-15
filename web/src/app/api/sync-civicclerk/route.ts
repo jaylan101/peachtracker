@@ -94,12 +94,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, agendaId, itemsSynced: 0, votesSynced: 0, message: "No items in this meeting" });
     }
 
-    // Create or update the meeting row — use a placeholder date since the API
-    // doesn't return the date in the Meetings endpoint; admin can correct later.
-    // Use 'regular' type as default.
+    // Create or update the meeting row. We don't know the exact date from this
+    // endpoint, but the date+type unique constraint requires unique values.
+    // Use the agendaId to make a unique placeholder date (overridden when
+    // the auto-sync eventually picks this up via Events).
+    // Format: 2025-MM-DD where MM/DD encode the agendaId modulo to stay valid.
+    const placeholderMonth = String((agendaId % 12) + 1).padStart(2, "0");
+    const placeholderDay = String((agendaId % 28) + 1).padStart(2, "0");
+    const placeholderDate = `2025-${placeholderMonth}-${placeholderDay}`;
+
     await supabase.from("meetings").upsert(
-      { civicclerk_agenda_id: agendaId, meeting_date: "2025-01-01", meeting_type: "regular",
-        agenda_url: `https://maconbibbcoga.portal.civicclerk.com/event/0/files` },
+      { civicclerk_agenda_id: agendaId,
+        meeting_date: placeholderDate,
+        meeting_type: "regular",
+        agenda_url: `https://maconbibbcoga.portal.civicclerk.com/` },
       { onConflict: "civicclerk_agenda_id" },
     );
     const { data: meeting } = await supabase
