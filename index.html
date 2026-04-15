@@ -293,7 +293,35 @@
     padding: 20px 28px;
     border-bottom: 1.5px solid var(--border);
     gap: 16px;
+    cursor: pointer;
+    user-select: none;
   }
+  .race-header:hover { background: var(--bg); }
+
+  .race-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .race-collapse-icon {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    transition: transform 220ms ease;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .race-card.collapsed .race-collapse-icon { transform: rotate(-90deg); }
+
+  .race-body {
+    overflow: hidden;
+    transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 2000px; /* large enough for any card */
+  }
+  .race-card.collapsed .race-body { max-height: 0; }
+  .race-card.collapsed .race-header { border-bottom: none; }
 
   .race-name {
     font-weight: 700;
@@ -1354,35 +1382,43 @@
 
     return callBanner +
       '<div class="race-card">' +
-        '<div class="race-header"><div class="race-name">' + race.name + '</div>' + badge + '</div>' +
-        '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
-          (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
-        (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
-        '<div class="cand-row">' +
-          '<div class="cand cand-a ' + trailingA + '">' +
-            '<div class="cand-photo">' + imgOrInitials(c1, 'pos1') + '</div>' +
-            '<div class="cand-info">' +
-              '<div class="cand-tag">' + (c1Leads ? 'Leading' : 'Trailing') + '</div>' +
-              '<div class="cand-name">' + c1.name + '</div>' +
-              (c1.party ? '<div class="cand-party ' + c1.party + '">' + (c1.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
-              (c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
-              '<div class="cand-pct">' + (upcoming ? '—' : pct1.toFixed(1) + '%') + '</div>' +
-              '<div class="cand-votes">' + (upcoming ? '' : c1.votes.toLocaleString() + ' votes') + '</div>' +
-            '</div>' +
+        '<div class="race-header">' +
+          '<div class="race-header-left">' +
+            '<span class="race-collapse-icon">▼</span>' +
+            '<div class="race-name">' + race.name + '</div>' +
           '</div>' +
-          '<div class="cand cand-b ' + trailingB + '">' +
-            '<div class="cand-photo">' + imgOrInitials(c2, 'pos2') + '</div>' +
-            '<div class="cand-info">' +
-              '<div class="cand-tag">' + (c1Leads ? 'Trailing' : 'Leading') + '</div>' +
-              '<div class="cand-name">' + c2.name + '</div>' +
-              (c2.party ? '<div class="cand-party ' + c2.party + '">' + (c2.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
-              (c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
-              '<div class="cand-pct">' + (upcoming ? '—' : pct2.toFixed(1) + '%') + '</div>' +
-              '<div class="cand-votes">' + (upcoming ? '' : c2.votes.toLocaleString() + ' votes') + '</div>' +
-            '</div>' +
-          '</div>' +
+          badge +
         '</div>' +
-        splitBar + stats +
+        '<div class="race-body">' +
+          '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
+            (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
+          (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
+          '<div class="cand-row">' +
+            '<div class="cand cand-a ' + trailingA + '">' +
+              '<div class="cand-photo">' + imgOrInitials(c1, 'pos1') + '</div>' +
+              '<div class="cand-info">' +
+                '<div class="cand-tag">' + (c1Leads ? 'Leading' : 'Trailing') + '</div>' +
+                '<div class="cand-name">' + c1.name + '</div>' +
+                (c1.party ? '<div class="cand-party ' + c1.party + '">' + (c1.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
+                (c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
+                '<div class="cand-pct">' + (upcoming ? '—' : pct1.toFixed(1) + '%') + '</div>' +
+                '<div class="cand-votes">' + (upcoming ? '' : c1.votes.toLocaleString() + ' votes') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="cand cand-b ' + trailingB + '">' +
+              '<div class="cand-photo">' + imgOrInitials(c2, 'pos2') + '</div>' +
+              '<div class="cand-info">' +
+                '<div class="cand-tag">' + (c1Leads ? 'Trailing' : 'Leading') + '</div>' +
+                '<div class="cand-name">' + c2.name + '</div>' +
+                (c2.party ? '<div class="cand-party ' + c2.party + '">' + (c2.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
+                (c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
+                '<div class="cand-pct">' + (upcoming ? '—' : pct2.toFixed(1) + '%') + '</div>' +
+                '<div class="cand-votes">' + (upcoming ? '' : c2.votes.toLocaleString() + ' votes') + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          splitBar + stats +
+        '</div>' +
       '</div>';
   }
 
@@ -1420,11 +1456,19 @@
 
     return callBanner +
       '<div class="race-card">' +
-        '<div class="race-header"><div class="race-name">' + race.name + '</div>' + badge + '</div>' +
-        '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
-          (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
-        (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
-        rows +
+        '<div class="race-header">' +
+          '<div class="race-header-left">' +
+            '<span class="race-collapse-icon">▼</span>' +
+            '<div class="race-name">' + race.name + '</div>' +
+          '</div>' +
+          badge +
+        '</div>' +
+        '<div class="race-body">' +
+          '<div class="race-meta"><span>' + race.precinctsReporting + ' of ' + race.totalPrecincts + ' precincts</span>' +
+            (ELECTION.lastUpdated ? '<span>' + ELECTION.lastUpdated + '</span>' : '<span>May 19, 2026</span>') + '</div>' +
+          (upcoming ? '<div class="race-status">Polls open May 19th</div>' : '') +
+          rows +
+        '</div>' +
       '</div>';
   }
 
@@ -1458,6 +1502,14 @@
     html += '</div></div></div>';
 
     container.innerHTML = html;
+
+    // Collapse toggle — click race header to collapse/expand
+    document.querySelectorAll('.race-header').forEach(function(header) {
+      header.addEventListener('click', function() {
+        var card = header.closest('.race-card');
+        if (card) card.classList.toggle('collapsed');
+      });
+    });
 
     // Scroll reveal
     var targets = document.querySelectorAll('.race-card, .race-category, .statewide-band');
