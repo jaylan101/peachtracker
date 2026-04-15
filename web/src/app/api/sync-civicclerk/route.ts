@@ -206,7 +206,24 @@ export async function POST(request: Request) {
       if (!itemRow) continue;
       itemsSynced++;
 
-      for (const vote of item.minutesItemVotes ?? []) {
+      // Get votes: prefer GetMeetingItemMinutesVotes per item (more reliable than
+      // embedded minutesItemVotes in Meetings/{id} which can be empty for recent meetings).
+      // Falls back to embedded votes if the dedicated endpoint returns nothing.
+      let voteSources: CivicMinuteVote[] = item.minutesItemVotes ?? [];
+      if (item.id && voteSources.length === 0) {
+        try {
+          const vr: Response = await fetch(
+            `${CIVICCLERK_BASE}/Meetings/GetMeetingItemMinutesVotes(id=${item.id})`,
+            { headers: { Accept: "application/json" } },
+          );
+          if (vr.ok) {
+            const vd: { value?: CivicMinuteVote[] } = await vr.json();
+            voteSources = vd.value ?? [];
+          }
+        } catch { /* skip if endpoint errors */ }
+      }
+
+      for (const vote of voteSources) {
         const allVoters = [
           ...(vote.yesVotes ?? []).map((n) => ({ name: n, vote: "yes" as const })),
           ...(vote.noVotes ?? []).map((n) => ({ name: n, vote: "no" as const })),
@@ -238,7 +255,12 @@ export async function POST(request: Request) {
   // Fetch all CivicClerk Event pages, upsert meeting rows. Fast (~5s total).
   const allEvents = await fetchAllEvents();
   const commEvents = allEvents.filter(
-    (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda && e.agendaId,
+    // Include published events even when hasAgenda=false — some 2025/2026 meetings
+    // have minutes in the API but hasAgenda isn't set to true yet. The Meetings
+    // endpoint works by agendaId regardless.
+    (e) => COMMISSION_CATEGORIES.includes(e.categoryName) &&
+      (e.hasAgenda || e.isPublished === "Published") &&
+      e.agendaId,
   );
 
   let meetingsSynced = 0;
@@ -297,9 +319,11 @@ function collectItems(detail: CivicMeetingDetail): CivicAgendaItem[] {
 interface CivicEvent {
   id: number; eventName: string; startDateTime: string;
   agendaId: number; categoryName: string; hasAgenda: boolean;
+  isPublished?: string;
 }
 interface CivicMeetingDetail { items?: CivicAgendaItem[]; }
 interface CivicAgendaItem {
+  id?: number;                           // agenda item ID for GetMeetingItemMinutesVotes
   agendaObjectItemName?: string; agendaObjectItemNumber?: string | number;
   agendaObjectItemOutlineNumber?: string; agendaObjectItemDescription?: string;
   minutesItemVotes?: CivicMinuteVote[]; childItems?: CivicAgendaItem[]; sortOrder?: number;
