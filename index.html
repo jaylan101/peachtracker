@@ -764,14 +764,6 @@
     background: var(--green-bg);
     border-top: 1.5px solid var(--green-pastel);
     border-bottom: 1.5px solid var(--green-pastel);
-    /* Break out of the constrained .races container to span full viewport width */
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-    margin-top: 56px;
   }
 
   .statewide {
@@ -1362,6 +1354,9 @@
   </section>
 </div>
 
+<!-- Statewide band — rendered outside races-container so it can be full-bleed -->
+<div id="statewide-container"></div>
+
 <!-- Editorial: how we do it -->
 <section class="editorial reveal">
   <span class="editorial-label">On the ground</span>
@@ -1721,18 +1716,23 @@
     });
     html += '</div></div>';
 
-    html += '<div class="statewide-band" id="category-statewide"><div class="statewide">' +
-      '<div class="statewide-header"><h2 class="statewide-title">Statewide Races</h2></div>' +
-      '<div class="statewide-links">';
-    ELECTION.statewideLinks.forEach(function(link) {
-      html += '<a href="' + link.url + '" target="_blank" rel="noopener" class="statewide-link">' +
-        '<span class="statewide-link-name">' + link.name + '</span>' +
-        '<div class="statewide-link-note">' + link.note + '</div>' +
-      '</a>';
-    });
-    html += '</div></div></div>';
-
     container.innerHTML = html;
+
+    // Render statewide band into its own container outside #races-container
+    var statewideContainer = document.getElementById('statewide-container');
+    if (statewideContainer) {
+      var statewideHtml = '<div class="statewide-band reveal" id="category-statewide"><div class="statewide">' +
+        '<div class="statewide-header"><h2 class="statewide-title">Statewide Races</h2></div>' +
+        '<div class="statewide-links">';
+      ELECTION.statewideLinks.forEach(function(link) {
+        statewideHtml += '<a href="' + link.url + '" target="_blank" rel="noopener" class="statewide-link">' +
+          '<span class="statewide-link-name">' + link.name + '</span>' +
+          '<div class="statewide-link-note">' + link.note + '</div>' +
+        '</a>';
+      });
+      statewideHtml += '</div></div></div>';
+      statewideContainer.innerHTML = statewideHtml;
+    }
 
     // Collapse toggle — click race header to collapse/expand
     document.querySelectorAll('.race-header').forEach(function(header) {
