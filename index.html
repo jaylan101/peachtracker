@@ -446,6 +446,17 @@
     margin-bottom: 12px;
   }
 
+  .cand-party {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: -10px;
+    margin-bottom: 12px;
+  }
+  .cand-party.democratic { color: var(--dem-text); }
+  .cand-party.republican { color: var(--rep-text); }
+
   .cand-pct {
     font-weight: 900;
     font-size: clamp(4.5rem, 8vw, 6rem);
@@ -1248,20 +1259,20 @@
         races: [
           { id: "house-142-d", name: "State House District 142", type: "democratic", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 10,
             candidates: [
-              { name: "Miriam Lucas Paris",       votes: 0, incumbent: true,  image: "candidates/house-142-paris.jpg" },
-              { name: "George Elton Thomas Jr.",  votes: 0, incumbent: false, image: "candidates/house-142-thomas.jpg" }
+              { name: "Miriam Lucas Paris",       votes: 0, incumbent: true,  party: "democratic", image: "candidates/house-142-paris.jpg" },
+              { name: "George Elton Thomas Jr.",  votes: 0, incumbent: false, party: "democratic", image: "candidates/house-142-thomas.jpg" }
             ]
           },
           { id: "senate-18-r", name: "State Senate District 18", type: "republican", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 20,
             candidates: [
-              { name: "Steven Royce McNeel",  votes: 0, incumbent: true,  image: "candidates/senate-18-mcneel.jpg" },
-              { name: "Eugene Allison",       votes: 0, incumbent: false, image: "candidates/senate-18-allison.jpg" }
+              { name: "Steven Royce McNeel",  votes: 0, incumbent: true,  party: "republican", image: "candidates/senate-18-mcneel.jpg" },
+              { name: "Eugene Allison",       votes: 0, incumbent: false, party: "republican", image: "candidates/senate-18-allison.jpg" }
             ]
           },
           { id: "senate-26-r", name: "State Senate District 26", type: "republican", called: false, winner: null, precinctsReporting: 0, totalPrecincts: 20,
             candidates: [
-              { name: "Nancy Hicks",           votes: 0, incumbent: false, image: "candidates/senate-26-hicks.jpg" },
-              { name: "Tracy Conkle Wheeler",  votes: 0, incumbent: false, image: "candidates/senate-26-wheeler.jpg" }
+              { name: "Nancy Hicks",           votes: 0, incumbent: false, party: "republican", image: "candidates/senate-26-hicks.jpg" },
+              { name: "Tracy Conkle Wheeler",  votes: 0, incumbent: false, party: "republican", image: "candidates/senate-26-wheeler.jpg" }
             ]
           }
         ]
@@ -1352,6 +1363,7 @@
             '<div class="cand-info">' +
               '<div class="cand-tag">' + (c1Leads ? 'Leading' : 'Trailing') + '</div>' +
               '<div class="cand-name">' + c1.name + '</div>' +
+              (c1.party ? '<div class="cand-party ' + c1.party + '">' + (c1.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
               (c1.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
               '<div class="cand-pct">' + (upcoming ? '—' : pct1.toFixed(1) + '%') + '</div>' +
               '<div class="cand-votes">' + (upcoming ? '' : c1.votes.toLocaleString() + ' votes') + '</div>' +
@@ -1362,6 +1374,7 @@
             '<div class="cand-info">' +
               '<div class="cand-tag">' + (c1Leads ? 'Trailing' : 'Leading') + '</div>' +
               '<div class="cand-name">' + c2.name + '</div>' +
+              (c2.party ? '<div class="cand-party ' + c2.party + '">' + (c2.party === 'democratic' ? 'Democrat' : 'Republican') + '</div>' : '') +
               (c2.incumbent ? '<div class="cand-incumbent">(Incumbent)</div>' : '') +
               '<div class="cand-pct">' + (upcoming ? '—' : pct2.toFixed(1) + '%') + '</div>' +
               '<div class="cand-votes">' + (upcoming ? '' : c2.votes.toLocaleString() + ' votes') + '</div>' +
