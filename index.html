@@ -1323,7 +1323,7 @@
     var pct2 = Math.round((100 - pct1) * 10) / 10;
     var c1Leads = c1.votes >= c2.votes;
     var margin = Math.abs(c1.votes - c2.votes);
-    var badge = '<span class="type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
+    var badge = '<span class="race-type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
 
     var callBanner = '';
     if (race.called && race.winner) {
@@ -1393,7 +1393,7 @@
     var upcoming = ELECTION.status === 'upcoming';
     var total = race.candidates.reduce(function(s, c) { return s + c.votes; }, 0);
     var sorted = race.candidates.slice().sort(function(a, b) { return b.votes - a.votes; });
-    var badge = '<span class="type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
+    var badge = '<span class="race-type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
 
     var callBanner = '';
     if (race.called && race.winner) {
