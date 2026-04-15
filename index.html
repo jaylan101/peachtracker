@@ -123,13 +123,14 @@
       linear-gradient(
         to right,
         rgba(253, 240, 232, 1) 0%,
-        rgba(253, 240, 232, 1) 25%,
-        rgba(253, 240, 232, 0.0) 50%,
+        rgba(253, 240, 232, 1) 42%,
+        rgba(253, 240, 232, 0.5) 58%,
+        rgba(253, 240, 232, 0.1) 80%,
         rgba(253, 240, 232, 0.0) 100%
       ),
       url('images/macon-city-hall-banner.jpg');
     background-size: cover, auto 130%;
-    background-position: center, 50% center;
+    background-position: center, right center;
     background-repeat: no-repeat;
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -1784,7 +1785,7 @@
       if (!mq.matches) { band.style.backgroundPosition = ''; return; }
       var rect = band.getBoundingClientRect();
       var progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
-      band.style.backgroundPosition = 'center, 50% ' + (50 + progress * 12) + '%';
+      band.style.backgroundPosition = 'center, right ' + (50 + progress * 12) + '%';
       ticking = false;
     }
     window.addEventListener('scroll', function() { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
