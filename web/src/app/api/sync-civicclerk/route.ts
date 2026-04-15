@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   const debug = url.searchParams.get("debug");
   if (!debug) return NextResponse.json({ error: "Add ?debug=1" }, { status: 400 });
 
-  const res = await fetch(`${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$top=200`, {
+  const res = await fetch(`${CIVICCLERK_BASE}/Events?$top=200`, {
     headers: { Accept: "application/json" },
   });
   const json = await res.json();
@@ -79,8 +79,10 @@ export async function POST() {
   // Fetch all events from CivicClerk — no $filter (OData filters cause 500s).
   // We filter client-side by category and hasAgenda.
   console.log("[sync] fetching CivicClerk Events...");
+  // No $orderby — default order appears to include past meetings.
+  // $top=500 to ensure we get all historical meetings with agendas.
   const eventsRes = await fetch(
-    `${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$top=200`,
+    `${CIVICCLERK_BASE}/Events?$top=500`,
     { headers: { Accept: "application/json" } },
   );
   console.log(`[sync] Events response: ${eventsRes.status}`);
