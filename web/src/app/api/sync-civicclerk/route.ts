@@ -69,6 +69,79 @@ export async function POST(request: Request) {
   const phase = searchParams.get("phase") ?? "meetings";
   const targetMeetingId = searchParams.get("id"); // Supabase meeting UUID for items phase
 
+  // ── PHASE: sync-by-agendaid ───────────────────────────────────────────────
+  // Fetch a specific CivicClerk agenda by its numeric ID (not Supabase UUID).
+  // Useful for meetings that exist in Meetings API but aren't exposed via Events.
+  if (phase === "sync-by-agendaid") {
+    const agendaId = parseInt(searchParams.get("agendaid") ?? "", 10);
+    if (!agendaId) return NextResponse.json({ error: "Missing agendaid" }, { status: 400 });
+
+    // Load commissioners
+    const { data: commRows } = await supabase
+      .from("commissioners").select("id, name").eq("active", true);
+    const commMap = new Map<string, string>(
+      (commRows ?? []).map((c) => [c.name.toLowerCase(), c.id]),
+    );
+
+    const r: Response = await fetch(`${CIVICCLERK_BASE}/Meetings/${agendaId}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!r.ok) return NextResponse.json({ error: `Meetings/${agendaId} returned ${r.status}` }, { status: 502 });
+    const detail: CivicMeetingDetail = await r.json();
+    const allItems = collectItems(detail);
+
+    if (allItems.length === 0) {
+      return NextResponse.json({ ok: true, agendaId, itemsSynced: 0, votesSynced: 0, message: "No items in this meeting" });
+    }
+
+    // Create or update the meeting row — use a placeholder date since the API
+    // doesn't return the date in the Meetings endpoint; admin can correct later.
+    // Use 'regular' type as default.
+    await supabase.from("meetings").upsert(
+      { civicclerk_agenda_id: agendaId, meeting_date: "2025-01-01", meeting_type: "regular",
+        agenda_url: `https://maconbibbcoga.portal.civicclerk.com/event/0/files` },
+      { onConflict: "civicclerk_agenda_id" },
+    );
+    const { data: meeting } = await supabase
+      .from("meetings").select("id").eq("civicclerk_agenda_id", agendaId).maybeSingle();
+    if (!meeting) return NextResponse.json({ error: "Failed to upsert meeting row" }, { status: 500 });
+
+    let itemsSynced = 0, votesSynced = 0;
+    for (const item of allItems) {
+      const rawName = item.agendaObjectItemName?.trim() ?? "";
+      const name = rawName.replace(/<[^>]*>/g, "").trim();
+      if (!name) continue;
+      if (["call to order", "prayer", "pledge"].some((s) => name.toLowerCase().startsWith(s))) continue;
+
+      const { data: itemRow } = await supabase.from("agenda_items")
+        .upsert({ meeting_id: meeting.id, item_number: item.sortOrder ?? 0, title: name,
+          full_text: item.agendaObjectItemDescription ?? null },
+          { onConflict: "meeting_id,item_number" })
+        .select("id").maybeSingle();
+      if (!itemRow) continue;
+      itemsSynced++;
+
+      for (const vote of item.minutesItemVotes ?? []) {
+        const allVoters = [
+          ...(vote.yesVotes ?? []).map((n) => ({ name: n, vote: "yes" as const })),
+          ...(vote.noVotes ?? []).map((n) => ({ name: n, vote: "no" as const })),
+          ...(vote.abstainVotes ?? []).map((n) => ({ name: n, vote: "abstain" as const })),
+        ];
+        for (const v of allVoters) {
+          const commId = commMap.get(v.name.toLowerCase()) ??
+            [...commMap.entries()].find(([k]) => k.split(" ").pop() === v.name.toLowerCase().split(" ").pop())?.[1];
+          if (!commId) continue;
+          const { error } = await supabase.from("commission_votes").upsert(
+            { agenda_item_id: itemRow.id, commissioner_id: commId, vote: v.vote, notes: vote.motionName ?? null },
+            { onConflict: "agenda_item_id,commissioner_id" },
+          );
+          if (!error) votesSynced++;
+        }
+      }
+    }
+    return NextResponse.json({ ok: true, agendaId, meetingId: meeting.id, itemsSynced, votesSynced });
+  }
+
   // ── PHASE: items ─────────────────────────────────────────────────────────────
   // Fetch agenda items + votes for one meeting. Called per-meeting from the UI.
   if (phase === "items" && targetMeetingId) {

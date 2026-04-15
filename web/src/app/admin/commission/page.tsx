@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SyncCivicClerkButton } from "./_components/sync-button";
+import { ManualSyncButton } from "./_components/manual-sync-button";
 import { addAgendaItem, addVote } from "./_actions";
 
 // Commission admin — shows synced meetings and lets you add agenda items
@@ -33,7 +34,7 @@ export default async function CommissionAdminPage() {
         until the city grants API access for that data.
       </p>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <SyncCivicClerkButton />
         <a
           href="https://maconbibbcoga.portal.civicclerk.com/events"
@@ -43,6 +44,16 @@ export default async function CommissionAdminPage() {
         >
           Open CivicClerk portal ↗
         </a>
+      </div>
+
+      {/* Manual sync by agenda ID — for meetings not in Events API */}
+      <div className="admin-card" style={{ marginBottom: 28 }}>
+        <div className="admin-card-title" style={{ marginBottom: 8 }}>Sync specific meeting by agenda ID</div>
+        <p style={{ fontSize: "var(--body)", color: "var(--text-secondary)", marginBottom: 12 }}>
+          For meetings with published minutes that don&rsquo;t appear in the auto-sync (e.g. 2025 meetings).
+          Find the agenda ID in the CivicClerk URL: <code style={{ fontSize: "0.8rem" }}>portal.civicclerk.com/event/<strong>[eventId]</strong>/overview</code> — use the number after <code>/event/</code>. Known 2025 IDs with data: 2011, 2012, 2013, 2014, 2017, 2018, 2019.
+        </p>
+        <ManualSyncButton />
       </div>
 
       {commissioners && commissioners.length === 0 && (
