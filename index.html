@@ -1296,7 +1296,7 @@
   function imgOrInitials(cand, colorClass) {
     var bg = colorClass === 'pos1' ? 'var(--peach)' : colorClass === 'pos2' ? 'var(--green)' : '#C8C3BE';
     return '<img src="images/' + cand.image + '" alt="' + cand.name + '" ' +
-      'onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">' +
+      'onerror="this.style.display=&quot;none&quot;;this.nextElementSibling.style.display=&quot;flex&quot;">' +
       '<div class="initials-fallback" style="background:' + bg + ';display:none">' + initials(cand.name) + '</div>';
   }
 
