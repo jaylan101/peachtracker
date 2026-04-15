@@ -787,6 +787,94 @@
   }
 
   /* ============================================================
+     COVERAGE — transparency section between hero and races.
+     ============================================================ */
+  .coverage-band {
+    background: var(--card);
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .coverage-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    padding: 40px var(--gutter);
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .coverage-label {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--peach);
+    padding-top: 4px;
+    border-top: 2px solid var(--peach);
+    padding-top: 10px;
+  }
+
+  .coverage-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .coverage-body p {
+    font-size: var(--body);
+    color: var(--text);
+    line-height: 1.6;
+    font-weight: 450;
+  }
+
+  .coverage-body strong {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Unopposed race state */
+  .race-unopposed {
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg);
+    border-top: 1.5px solid var(--border);
+  }
+
+  .race-unopposed-badge {
+    font-size: var(--kicker);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    background: var(--border);
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
+
+  .race-unopposed-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .race-unopposed-note {
+    font-size: var(--micro);
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  @media (max-width: 760px) {
+    .coverage-inner {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 32px var(--gutter);
+    }
+  }
+
+  /* ============================================================
      WHY — peach band.
      ============================================================ */
   .why {
@@ -1179,6 +1267,18 @@
   </section>
 </div>
 
+<!-- What We Cover -->
+<section class="coverage-band">
+  <div class="coverage-inner">
+    <div class="coverage-label">What PeachTracker covers</div>
+    <div class="coverage-body">
+      <p>We track every <strong>contested local race</strong> on the May 19th ballot in Macon-Bibb County — Board of Education, Water Authority, and State Legislature primaries. We show up to the Board of Elections on election night and enter results by hand as precincts report.</p>
+      <p>Some races on your ballot are <strong>unopposed</strong> — one candidate filed and no one challenged them. Those races have no results to report, so we note them below but don't track vote totals. For statewide races like Governor and U.S. Senate, we link out to the Georgia Secretary of State's official results page.</p>
+      <p>If a race you care about isn't here, it's either unopposed or outside Macon-Bibb County. We'd rather be honest about our scope than pretend to cover everything.</p>
+    </div>
+  </div>
+</section>
+
 <!-- Races -->
 <div class="races-band">
   <section class="races" id="races-container">
@@ -1341,6 +1441,33 @@
   }
 
   // ============================================================
+  // RENDER UNOPPOSED RACE
+  // ============================================================
+  function renderUnopposed(race) {
+    var badge = '<span class="race-type-badge ' + race.type + '">' + typeLabel(race.type) + '</span>';
+    var candidates = race.candidates.map(function(c) {
+      return '<div class="race-unopposed">' +
+        '<div>' +
+          '<div class="race-unopposed-name">' + c.name + (c.incumbent ? ' <span style="font-size:var(--kicker);color:var(--text-light);font-weight:600">(Incumbent)</span>' : '') + '</div>' +
+          '<div class="race-unopposed-note">No challenger filed</div>' +
+        '</div>' +
+        '<span class="race-unopposed-badge">Unopposed</span>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="race-card">' +
+      '<div class="race-header">' +
+        '<div class="race-header-left">' +
+          '<span class="race-collapse-icon">▼</span>' +
+          '<div class="race-name">' + race.name + '</div>' +
+        '</div>' +
+        badge +
+      '</div>' +
+      '<div class="race-body">' + candidates + '</div>' +
+    '</div>';
+  }
+
+  // ============================================================
   // RENDER TWO-CANDIDATE RACE
   // ============================================================
   function renderTwo(race) {
@@ -1484,7 +1611,7 @@
       html += '<div class="race-category" id="category-' + cat.id + '">' +
         '<div class="race-category-header"><h2 class="race-category-title">' + cat.name + '</h2></div>';
       cat.races.forEach(function(race) {
-        html += race.candidates.length === 2 ? renderTwo(race) : renderMulti(race);
+        html += race.unopposed ? renderUnopposed(race) : (race.candidates.length === 2 ? renderTwo(race) : renderMulti(race));
       });
       html += '</div>';
     });
