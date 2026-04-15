@@ -166,7 +166,9 @@ export async function POST(request: Request) {
     const meetingType = toMeetingType(event.eventName);
     const agendaUrl = `https://maconbibbcoga.portal.civicclerk.com/event/${event.id}/files`;
 
-    const { data: row } = await supabase
+    // Upsert then fetch separately — chained .select() after upsert is
+    // unreliable when the row already exists (Supabase returns null on conflict).
+    await supabase
       .from("meetings")
       .upsert({
         civicclerk_event_id: event.id,
@@ -174,8 +176,12 @@ export async function POST(request: Request) {
         meeting_date: meetingDate,
         meeting_type: meetingType,
         agenda_url: agendaUrl,
-      }, { onConflict: "civicclerk_event_id" })
+      }, { onConflict: "civicclerk_event_id" });
+
+    const { data: row } = await supabase
+      .from("meetings")
       .select("id")
+      .eq("civicclerk_event_id", event.id)
       .maybeSingle();
 
     if (row) {
