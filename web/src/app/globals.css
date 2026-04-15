@@ -1,0 +1,713 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   PEACHTRACKER — newsroom / civic data aesthetic
+   Flat. Sharp edges. Pastels. Extreme type contrast.
+   Ported verbatim from the production site so the Next rewrite
+   matches pixel-for-pixel.
+   ============================================================ */
+:root {
+  --peach: #E0956E;
+  --peach-pastel: #F5D5C3;
+  --peach-bg: #FDF0E8;
+  --green: #5E9470;
+  --green-pastel: #C3DECA;
+  --green-bg: #EBF3ED;
+  --bg: #F7F5F2;
+  --card: #FFFFFF;
+  --border: #E0DCD6;
+  --text: #2A2725;
+  --text-secondary: #87817A;
+  --text-light: #B5AFA8;
+
+  --kicker: 0.68rem;
+  --micro:  0.72rem;
+  --body:   0.92rem;
+  --lead:   1.05rem;
+
+  --content: 1120px;
+  --gutter: 40px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { background: var(--bg); }
+
+body {
+  font-family: 'Outfit', var(--font-outfit), system-ui, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* Kill default border-radius — PeachTracker is sharp-edged */
+button, input, select, textarea { border-radius: 0; }
+
+/* ---- ACCENT BAR ---- */
+.accent-bar { height: 5px; background: var(--peach); }
+
+/* ---- NAV ---- */
+.nav {
+  background: var(--card);
+  border-bottom: 2px solid var(--text);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 16px var(--gutter);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+.nav-logo {
+  display: block;
+  height: 56px;
+  width: auto;
+}
+.nav-logo-link {
+  display: inline-block;
+  line-height: 0;
+}
+
+/* ============================================================
+   HERO — Macon City Hall background, peach gradient from the left
+   ============================================================ */
+.hero-band {
+  position: relative;
+  background-color: var(--peach-bg);
+  background-image:
+    linear-gradient(
+      to right,
+      rgba(253, 240, 232, 1) 0%,
+      rgba(253, 240, 232, 1) 42%,
+      rgba(253, 240, 232, 0.78) 58%,
+      rgba(253, 240, 232, 0.28) 82%,
+      rgba(253, 240, 232, 0.08) 100%
+    ),
+    url('/images/macon-city-hall-banner.jpg');
+  background-size: cover, auto 130%;
+  background-position: center, 100% center;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  transition: background-position 120ms linear;
+}
+.hero {
+  position: relative;
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 112px var(--gutter) 128px;
+  display: grid;
+  grid-template-columns: minmax(0, 620px) 1fr;
+  gap: 56px;
+  align-items: center;
+}
+.hero-title {
+  font-weight: 900;
+  font-size: clamp(2.4rem, 4.6vw, 3.6rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+.hero-title em { font-style: normal; color: var(--peach); }
+.hero-desc {
+  font-size: var(--lead);
+  color: var(--text);
+  line-height: 1.55;
+  font-weight: 450;
+  margin-top: 24px;
+  max-width: 520px;
+}
+.hero-desc strong { color: var(--text); font-weight: 700; }
+
+/* Home-only: "Next election" card inside the hero */
+.hero-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  padding: 24px 28px;
+  max-width: 420px;
+  margin-top: 28px;
+}
+.hero-card-label {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--peach);
+  margin-bottom: 6px;
+}
+.hero-card-title {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  line-height: 1.2;
+}
+.hero-card-meta {
+  font-size: var(--micro);
+  color: var(--text-secondary);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+.hero-card-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 2px solid var(--peach);
+  padding-bottom: 3px;
+}
+.hero-card-link:hover { color: var(--peach); }
+
+/* ============================================================
+   RESULTS — 2-candidate head-to-head layout (production site)
+   ============================================================ */
+.results-band {
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.results {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 56px var(--gutter) 64px;
+}
+.results-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  gap: 24px;
+  border-bottom: 2px solid var(--text);
+  padding-bottom: 16px;
+}
+.results-head-title {
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.015em;
+}
+.results-head-meta {
+  display: flex;
+  gap: 24px;
+  font-size: var(--kicker);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.results-head-meta span strong {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--text);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Head-to-head candidate row */
+.cand-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  overflow: hidden;
+}
+.cand {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 320px;
+  padding: 0;
+  min-width: 0;
+}
+.cand.cand-a { background: var(--peach-bg); }
+.cand.cand-b {
+  background: var(--green-bg);
+  grid-template-columns: minmax(0, 1fr) 220px;
+  border-left: 1.5px solid var(--border);
+}
+.cand-photo {
+  overflow: hidden;
+  position: relative;
+  background: var(--border);
+}
+.cand-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.4s ease;
+}
+.cand-a .cand-photo img { object-position: 55% 25%; }
+.cand-b .cand-photo img { object-position: 50% 20%; }
+.cand.trailing .cand-photo img {
+  filter: grayscale(35%) brightness(0.96);
+}
+.cand-info {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.cand.cand-b .cand-info {
+  order: -1;
+  text-align: right;
+  padding-right: 40px;
+}
+.cand-tag {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 14px;
+}
+.cand-a .cand-tag { color: var(--peach); }
+.cand-b .cand-tag { color: var(--green); }
+.cand-name {
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin-bottom: 18px;
+}
+.cand-a .cand-name { color: var(--peach); }
+.cand-b .cand-name { color: var(--green); }
+.cand-pct {
+  font-weight: 900;
+  font-size: clamp(4.5rem, 8vw, 6rem);
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-feature-settings: "tnum" 1;
+}
+.cand-a .cand-pct { color: var(--peach); }
+.cand-b .cand-pct { color: var(--green); }
+.cand-votes {
+  font-size: var(--micro);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-top: 10px;
+  letter-spacing: 0.02em;
+}
+
+/* Split bar */
+.split-bar {
+  display: flex;
+  height: 88px;
+  border-left: 1.5px solid var(--border);
+  border-right: 1.5px solid var(--border);
+}
+.split-peach {
+  background: var(--peach);
+  display: flex;
+  align-items: center;
+  padding-left: 28px;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.split-green {
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 28px;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.split-label {
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+/* Stats strip */
+.stats {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  align-items: end;
+  gap: 40px;
+  padding: 28px 32px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-top: none;
+}
+.stat-label {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-feature-settings: "tnum" 1;
+}
+.stat-first .stat-value { color: var(--peach); }
+.stat-suffix {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.stat-timestamp {
+  text-align: right;
+  font-size: var(--micro);
+  color: var(--text-light);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.stat-timestamp strong { color: var(--text); font-weight: 700; }
+
+/* ---- Race call banner ---- */
+.call-band {
+  background: var(--peach);
+  padding: 20px var(--gutter);
+}
+.call-inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.call-flag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+}
+.call-winner {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ---- Realtime indicator chip (new — doesn't exist on the static site) ---- */
+.rt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+}
+.rt-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--text-light);
+}
+.rt-dot.is-live {
+  background: var(--green);
+  animation: rt-pulse 1.6s ease-in-out infinite;
+}
+@keyframes rt-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ============================================================
+   UNOPSECTION — seats with no contested race on the ballot
+   ============================================================ */
+.unop-section {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 48px var(--gutter) 8px;
+}
+.unop-head {
+  border-top: 2px solid var(--text);
+  padding-top: 16px;
+  margin-bottom: 18px;
+}
+.unop-label {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--peach);
+  margin-bottom: 6px;
+}
+.unop-title {
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.015em;
+}
+.unop-note {
+  font-size: var(--body);
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-weight: 450;
+  max-width: 680px;
+  line-height: 1.55;
+}
+.unop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5px;
+  background: var(--border);
+  border: 1.5px solid var(--border);
+  margin-top: 18px;
+}
+.unop-card {
+  background: var(--card);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.unop-race {
+  font-size: var(--body);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.unop-candidate {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.unop-incumbent {
+  font-size: var(--kicker);
+  font-weight: 600;
+  color: var(--text-light);
+  margin-left: 6px;
+}
+.unop-badge {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-light);
+}
+.unop-badge.dem { color: var(--dem, #2563EB); }
+.unop-badge.rep { color: var(--rep, #DC2626); }
+
+/* ============================================================
+   EDITORIAL / WHY / DISCLAIMER / FOOTER
+   ============================================================ */
+.editorial {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 24px var(--gutter) 80px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.editorial-label {
+  font-size: var(--kicker);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--peach);
+  padding-top: 6px;
+  border-top: 2px solid var(--peach);
+  display: inline-block;
+}
+.editorial-body {
+  font-size: 1.15rem;
+  font-weight: 450;
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 680px;
+  letter-spacing: -0.005em;
+}
+.editorial-body strong { font-weight: 700; }
+
+.why {
+  background-color: var(--peach-bg);
+  border-top: 1.5px solid var(--peach-pastel);
+  border-bottom: 1.5px solid var(--peach-pastel);
+}
+.why-inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 80px var(--gutter);
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 56px;
+  align-items: start;
+}
+.why-title {
+  font-weight: 900;
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--text);
+}
+.why-title em { font-style: normal; color: var(--peach); }
+.why-text {
+  font-size: var(--lead);
+  color: var(--text);
+  line-height: 1.55;
+  font-weight: 450;
+  max-width: 560px;
+}
+.why-text + .why-text { margin-top: 14px; }
+
+.disclaimer-band {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 56px var(--gutter) 24px;
+}
+.disclaimer {
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.disclaimer-label {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-light);
+}
+.disclaimer-body {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.55;
+  font-weight: 500;
+}
+.disclaimer-body strong { font-weight: 700; }
+
+.site-footer {
+  border-top: 2px solid var(--text);
+  margin-top: 24px;
+}
+.footer-inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 28px var(--gutter) 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.footer-logo { display: block; height: 42px; width: auto; }
+.footer-meta {
+  font-size: var(--micro);
+  color: var(--text-light);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 960px) {
+  :root { --gutter: 28px; }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 72px var(--gutter) 88px;
+    align-items: start;
+  }
+  .hero-desc { max-width: 560px; }
+  .cand { grid-template-columns: 180px 1fr; }
+  .cand.cand-b { grid-template-columns: 1fr 180px; }
+  .stats { grid-template-columns: 1fr 1fr; gap: 24px 32px; }
+  .stat-timestamp { grid-column: 1 / -1; text-align: left; }
+  .editorial { grid-template-columns: 1fr; gap: 16px; }
+  .hero-band {
+    background-image:
+      linear-gradient(
+        to right,
+        rgba(253, 240, 232, 0.98) 0%,
+        rgba(253, 240, 232, 0.92) 55%,
+        rgba(253, 240, 232, 0.55) 85%,
+        rgba(253, 240, 232, 0.25) 100%
+      ),
+      url('/images/macon-city-hall-banner.jpg');
+  }
+  .why-inner { grid-template-columns: 1fr; gap: 24px; padding: 56px var(--gutter); }
+  .disclaimer { grid-template-columns: 1fr; gap: 12px; }
+}
+
+@media (max-width: 560px) {
+  :root { --gutter: 20px; }
+  .hero { padding: 56px var(--gutter) 64px; }
+  .hero-title { font-size: 2rem; }
+  .hero-desc { font-size: 0.95rem; }
+  .results { padding: 40px var(--gutter) 48px; }
+  .results-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .results-head-meta { gap: 16px; flex-wrap: wrap; }
+  .cand-row { grid-template-columns: 1fr; }
+  .cand { grid-template-columns: 1fr; min-height: 0; }
+  .cand.cand-a { border-bottom: 1.5px solid var(--border); }
+  .cand.cand-b { grid-template-columns: 1fr; border-left: none; }
+  .cand.cand-b .cand-info { order: 1; text-align: left; padding-right: 32px; }
+  .cand-photo { height: 220px; }
+  .cand-pct { font-size: 4.4rem; }
+  .split-bar { height: 64px; }
+  .split-label { font-size: 1.1rem; }
+  .stats { grid-template-columns: 1fr 1fr; padding: 22px 24px; gap: 20px 24px; }
+  .editorial { padding: 16px var(--gutter) 56px; }
+  .editorial-body { font-size: 1rem; }
+  .why-inner { padding: 44px var(--gutter); }
+  .why-title { font-size: 1.6rem; }
+  .why-text { font-size: 0.95rem; }
+  .hero-band {
+    background-image:
+      linear-gradient(
+        to bottom,
+        rgba(253, 240, 232, 0.96) 0%,
+        rgba(253, 240, 232, 0.92) 55%,
+        rgba(253, 240, 232, 0.80) 100%
+      ),
+      url('/images/macon-city-hall-banner.jpg');
+    background-size: cover, 200% auto;
+    background-position: center, center bottom;
+  }
+  .footer-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+/* Hero entrance animation */
+.hero-title, .hero-desc, .hero-card {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: heroRise 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hero-title { animation-delay: 200ms; }
+.hero-desc  { animation-delay: 360ms; }
+.hero-card  { animation-delay: 520ms; }
+
+@keyframes heroRise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-title, .hero-desc, .hero-card {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .split-peach, .split-green { transition: none !important; }
+  .rt-dot.is-live { animation: none; }
+}
