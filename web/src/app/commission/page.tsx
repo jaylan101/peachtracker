@@ -1,25 +1,34 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
 
 export default async function CommissionPage() {
   const supabase = await createClient();
 
-  const { data: meetings } = await supabase
-    .from("meetings")
-    .select(`
-      id, meeting_date, meeting_type, agenda_url,
-      agenda_items (
-        id, item_number, title, summary_eli5, category,
-        commission_votes (
-          id, vote, notes,
-          commissioners ( id, name, district )
+  const [{ data: meetings }, { data: commissioners }] = await Promise.all([
+    supabase
+      .from("meetings")
+      .select(`
+        id, meeting_date, meeting_type, agenda_url,
+        agenda_items (
+          id, item_number, title, summary_eli5, category,
+          commission_votes (
+            id, vote, notes,
+            commissioners ( id, name, district )
+          )
         )
-      )
-    `)
-    .order("meeting_date", { ascending: false })
-    .limit(12);
-
-  const hasMeetings = meetings && meetings.length > 0;
+      `)
+      .order("meeting_date", { ascending: false })
+      .limit(12),
+    supabase
+      .from("commissioners")
+      .select(`
+        id, name, district,
+        commission_votes ( id, vote )
+      `)
+      .eq("active", true)
+      .order("district"),
+  ]);
 
   return (
     <>
@@ -38,17 +47,53 @@ export default async function CommissionPage() {
             Meeting dates sync automatically from{" "}
             <a href="https://maconbibbcoga.portal.civicclerk.com" target="_blank" rel="noopener" style={{ color: "var(--peach)", fontWeight: 600 }}>
               CivicClerk
-            </a>. Agenda items and votes are added as meetings happen.
+            </a>. Agenda items and votes are added as meetings are published.
           </p>
         </header>
 
-        {!hasMeetings && (
+        {/* Commissioner cards */}
+        {commissioners && commissioners.length > 0 && (
+          <section style={{ marginBottom: 56 }}>
+            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
+              Commissioners
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1.5px", background: "var(--border)", border: "1.5px solid var(--border)" }}>
+              {(commissioners as CommissionerRow[]).map((c) => {
+                const total = c.commission_votes?.length ?? 0;
+                const yes = c.commission_votes?.filter((v) => v.vote === "yes").length ?? 0;
+                const pct = total > 0 ? Math.round((yes / total) * 100) : null;
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/commission/${c.id}`}
+                    style={{ background: "var(--card)", padding: "16px 20px", textDecoration: "none", display: "block" }}
+                  >
+                    <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", marginBottom: 4 }}>
+                      {c.district}
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text)", letterSpacing: "-0.01em" }}>
+                      {c.name}
+                    </div>
+                    {pct !== null && (
+                      <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", marginTop: 6, fontWeight: 500 }}>
+                        {pct}% yes · {total} votes
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Meeting list */}
+        {(!meetings || meetings.length === 0) && (
           <div style={{ padding: "40px 0", color: "var(--text-secondary)" }}>
             No meetings yet — check back after the next sync.
           </div>
         )}
 
-        {hasMeetings && (meetings as unknown as MeetingRow[]).map((m) => (
+        {(meetings as unknown as MeetingRow[] ?? []).map((m) => (
           <MeetingCard key={m.id} meeting={m} />
         ))}
       </main>
@@ -105,7 +150,6 @@ function AgendaItemRow({ item }: { item: AgendaItemRow }) {
   const yes = votes.filter((v) => v.vote === "yes").length;
   const no = votes.filter((v) => v.vote === "no").length;
   const abstain = votes.filter((v) => v.vote === "abstain").length;
-  const absent = votes.filter((v) => v.vote === "absent").length;
   const hasVotes = votes.length > 0;
 
   return (
@@ -113,11 +157,7 @@ function AgendaItemRow({ item }: { item: AgendaItemRow }) {
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text)" }}>
-            {item.item_number && (
-              <span style={{ color: "var(--text-light)", fontWeight: 500, marginRight: 8, fontSize: "var(--body)" }}>
-                {item.item_number}.
-              </span>
-            )}
+            {item.item_number && <span style={{ color: "var(--text-light)", fontWeight: 500, marginRight: 8, fontSize: "var(--body)" }}>{item.item_number}.</span>}
             {item.title}
           </div>
           {item.summary_eli5 && (
@@ -131,23 +171,24 @@ function AgendaItemRow({ item }: { item: AgendaItemRow }) {
             </span>
           )}
         </div>
-
         {hasVotes && (
           <div style={{ display: "flex", gap: 6, alignItems: "flex-start", flexWrap: "wrap" }}>
             {yes > 0 && <VotePill label={`${yes} Yes`} color="var(--green)" />}
             {no > 0 && <VotePill label={`${no} No`} color="#DC2626" />}
             {abstain > 0 && <VotePill label={`${abstain} Abstain`} color="var(--text-secondary)" />}
-            {absent > 0 && <VotePill label={`${absent} Absent`} color="var(--text-light)" />}
           </div>
         )}
       </div>
-
       {hasVotes && (
         <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
           {votes.map((v) => v.commissioners && (
-            <span key={v.id} style={{ fontSize: "var(--micro)", fontWeight: 600, padding: "3px 8px", background: voteBackground(v.vote), color: voteColor(v.vote) }}>
+            <Link
+              key={v.id}
+              href={`/commission/${v.commissioners.id}`}
+              style={{ fontSize: "var(--micro)", fontWeight: 600, padding: "3px 8px", background: voteBackground(v.vote), color: voteColor(v.vote), textDecoration: "none" }}
+            >
               {v.commissioners.name.split(" ").slice(-1)[0]} — {v.vote}
-            </span>
+            </Link>
           ))}
         </div>
       )}
@@ -163,17 +204,9 @@ function VotePill({ label, color }: { label: string; color: string }) {
   );
 }
 
-function voteBackground(vote: string): string {
-  if (vote === "yes") return "var(--green-bg)";
-  if (vote === "no") return "#fef2f2";
-  return "var(--bg)";
-}
-function voteColor(vote: string): string {
-  if (vote === "yes") return "var(--green)";
-  if (vote === "no") return "#DC2626";
-  return "var(--text-secondary)";
-}
-function meetingLabel(type: string): string {
+function voteBackground(vote: string) { return vote === "yes" ? "var(--green-bg)" : vote === "no" ? "#fef2f2" : "var(--bg)"; }
+function voteColor(vote: string) { return vote === "yes" ? "var(--green)" : vote === "no" ? "#DC2626" : "var(--text-secondary)"; }
+function meetingLabel(type: string) {
   if (type === "regular") return "Commission Meeting";
   if (type === "work_session") return "Pre-Commission / Work Session";
   if (type === "special") return "Special Called Meeting";
@@ -184,5 +217,6 @@ function meetingLabel(type: string): string {
 type VoteRow = { id: string; vote: string; notes: string | null; commissioners: { id: string; name: string; district: string } | null };
 type AgendaItemRow = { id: string; item_number: number; title: string; summary_eli5: string | null; category: string | null; commission_votes: VoteRow[] };
 type MeetingRow = { id: string; meeting_date: string; meeting_type: string; agenda_url: string | null; agenda_items: AgendaItemRow[] };
+type CommissionerRow = { id: string; name: string; district: string; commission_votes: { id: string; vote: string }[] };
 
 export const dynamic = "force-dynamic";

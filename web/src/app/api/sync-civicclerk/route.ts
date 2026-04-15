@@ -26,7 +26,7 @@ async function fetchAllEvents(): Promise<CivicEvent[]> {
   const all: CivicEvent[] = [];
   let nextUrl: string | null = `${CIVICCLERK_BASE}/Events?$top=100`;
   let page = 0;
-  while (nextUrl && page < 30) {
+  while (nextUrl && page < 150) { // 150 pages × 100 = up to 15,000 events covers full history
     const r: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
     if (!r.ok) break;
     const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
