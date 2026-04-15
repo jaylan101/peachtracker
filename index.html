@@ -59,7 +59,7 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body { background: var(--bg); }
+  html, body { background: var(--bg); overflow-x: hidden; }
 
   body {
     font-family: 'Outfit', system-ui, sans-serif;
@@ -123,14 +123,14 @@
       linear-gradient(
         to right,
         rgba(253, 240, 232, 1) 0%,
-        rgba(253, 240, 232, 1) 42%,
-        rgba(253, 240, 232, 0.78) 58%,
-        rgba(253, 240, 232, 0.28) 82%,
-        rgba(253, 240, 232, 0.08) 100%
+        rgba(253, 240, 232, 1) 38%,
+        rgba(253, 240, 232, 0.55) 55%,
+        rgba(253, 240, 232, 0.15) 78%,
+        rgba(253, 240, 232, 0.05) 100%
       ),
       url('images/macon-city-hall-banner.jpg');
     background-size: cover, auto 130%;
-    background-position: center, 100% center;
+    background-position: center, 75% center;
     background-repeat: no-repeat;
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -253,7 +253,7 @@
   .races {
     max-width: var(--content);
     margin: 0 auto;
-    padding: 56px var(--gutter) 64px;
+    padding: 56px var(--gutter) 0;
   }
 
   .race-category {
@@ -764,6 +764,14 @@
     background: var(--green-bg);
     border-top: 1.5px solid var(--green-pastel);
     border-bottom: 1.5px solid var(--green-pastel);
+    /* Break out of the constrained .races container to span full viewport width */
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: 56px;
   }
 
   .statewide {
@@ -1777,7 +1785,7 @@
       if (!mq.matches) { band.style.backgroundPosition = ''; return; }
       var rect = band.getBoundingClientRect();
       var progress = Math.min(1, Math.max(0, -rect.top / (rect.height || 1)));
-      band.style.backgroundPosition = 'center, 100% ' + (50 + progress * 12) + '%';
+      band.style.backgroundPosition = 'center, 75% ' + (50 + progress * 12) + '%';
       ticking = false;
     }
     window.addEventListener('scroll', function() { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
