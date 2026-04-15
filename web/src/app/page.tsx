@@ -60,18 +60,35 @@ export default async function Home() {
               happening in its own backyard.
             </p>
 
-            {next && (
-              <div className="hero-card">
-                <div className="hero-card-label">Next on the calendar</div>
-                <div className="hero-card-title">{next.name}</div>
-                <div className="hero-card-meta">
-                  {formatDate(next.election_date)} · {next.location}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 28 }}>
+              {next && (
+                <div className="hero-card" style={{ marginTop: 0 }}>
+                  <div className="hero-card-label">Next on the calendar</div>
+                  <div className="hero-card-title">{next.name}</div>
+                  <div className="hero-card-meta">
+                    {formatDate(next.election_date)} · {next.location}
+                  </div>
+                  <Link href={`/elections/${next.id}`} className="hero-card-link">
+                    {next.status === "live" ? "Live now →" : "See what\u2019s on the ballot →"}
+                  </Link>
                 </div>
-                <Link href={`/elections/${next.id}`} className="hero-card-link">
-                  {next.status === "live" ? "Live now →" : "See what\u2019s on the ballot →"}
-                </Link>
-              </div>
-            )}
+              )}
+              {past && (
+                <div className="hero-card" style={{ marginTop: 0 }}>
+                  <div className="hero-card-label" style={{ color: "var(--text-secondary)" }}>
+                    Latest results
+                  </div>
+                  <div className="hero-card-title">{past.name}</div>
+                  <div className="hero-card-meta">
+                    {formatDate(past.election_date)} · {past.location} ·{" "}
+                    <span style={{ textTransform: "capitalize" }}>{past.status}</span>
+                  </div>
+                  <Link href={`/elections/${past.id}`} className="hero-card-link">
+                    View results →
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </div>
@@ -82,19 +99,6 @@ export default async function Home() {
           We show up at the Macon-Bibb Board of Elections on election night and post vote
           totals as each precinct reports. <strong>No algorithm, no estimate</strong> —
           just the numbers as they come in, delivered to you in minutes instead of hours.
-          {past && (
-            <>
-              {" "}
-              See the{" "}
-              <Link
-                href={`/elections/${past.id}`}
-                style={{ color: "var(--peach)", fontWeight: 700 }}
-              >
-                latest results
-              </Link>
-              .
-            </>
-          )}
         </p>
       </section>
 

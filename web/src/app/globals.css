@@ -441,6 +441,104 @@ button, input, select, textarea { border-radius: 0; }
 }
 
 /* ============================================================
+   COVERAGE BAND — transparency section above the race results
+   ============================================================ */
+.coverage-band {
+  background: var(--card);
+  border-bottom: 1.5px solid var(--border);
+}
+.coverage-inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 40px var(--gutter);
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+.coverage-label {
+  font-size: var(--kicker);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--peach);
+  border-top: 2px solid var(--peach);
+  padding-top: 10px;
+}
+.coverage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.coverage-body p {
+  font-size: var(--body);
+  color: var(--text);
+  line-height: 1.6;
+  font-weight: 450;
+}
+.coverage-body strong { font-weight: 700; color: var(--text); }
+
+/* ============================================================
+   STATEWIDE BAND — green link-out section for GA SoS results
+   ============================================================ */
+.statewide-band {
+  background: var(--green-bg);
+  border-top: 1.5px solid var(--green-pastel);
+  border-bottom: 1.5px solid var(--green-pastel);
+}
+.statewide {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 56px var(--gutter);
+}
+.statewide-header { margin-bottom: 28px; }
+.statewide-title {
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.statewide-note {
+  font-size: var(--body);
+  color: var(--text-secondary);
+  font-weight: 450;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.statewide-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.statewide-link {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  padding: 20px 24px;
+  text-decoration: none;
+  display: block;
+  transition: border-color 200ms ease;
+}
+.statewide-link:hover { border-color: var(--green); }
+.statewide-link-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  display: block;
+  margin-bottom: 8px;
+}
+.statewide-link-note {
+  font-size: var(--micro);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  .coverage-inner { grid-template-columns: 1fr; gap: 20px; padding: 32px var(--gutter); }
+  .statewide-links { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    UNOPSECTION — seats with no contested race on the ballot
    ============================================================ */
 .unop-section {
