@@ -40,16 +40,26 @@ export async function GET(request: Request) {
   const debug = url.searchParams.get("debug");
   if (!debug) return NextResponse.json({ error: "Add ?debug=1" }, { status: 400 });
 
-  const res = await fetch(`${CIVICCLERK_BASE}/Events?$top=200`, {
-    headers: { Accept: "application/json" },
-  });
-  const json = await res.json();
-  const events: CivicEvent[] = json.value ?? [];
+  // Paginate to get all events
+  const events: CivicEvent[] = [];
+  let nextUrl: string | null = `${CIVICCLERK_BASE}/Events?$top=100`;
+  let pages = 0;
+  while (nextUrl && pages < 30) {
+    // eslint-disable-next-line no-await-in-loop
+    const r: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
+    if (!r.ok) break;
+    // eslint-disable-next-line no-await-in-loop
+    const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
+    events.push(...(d.value ?? []));
+    nextUrl = d["@odata.nextLink"] ?? null;
+    pages++;
+  }
   const commission = events.filter(
     (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda,
   );
   return NextResponse.json({
     total: events.length,
+    pages,
     commissionWithAgenda: commission.length,
     sample: commission.slice(0, 5).map((e) => ({
       id: e.id, eventName: e.eventName, date: e.startDateTime, agendaId: e.agendaId, category: e.categoryName,
@@ -76,29 +86,29 @@ export async function POST() {
     (commissionerRows ?? []).map((c) => [c.name.toLowerCase(), c.id]),
   );
 
-  // Fetch all events from CivicClerk — no $filter (OData filters cause 500s).
-  // We filter client-side by category and hasAgenda.
-  console.log("[sync] fetching CivicClerk Events...");
-  // No $orderby — default order appears to include past meetings.
-  // $top=500 to ensure we get all historical meetings with agendas.
-  const eventsRes = await fetch(
-    `${CIVICCLERK_BASE}/Events?$top=500`,
-    { headers: { Accept: "application/json" } },
-  );
-  console.log(`[sync] Events response: ${eventsRes.status}`);
-  if (!eventsRes.ok) {
-    const text = await eventsRes.text();
-    console.error(`[sync] Events error body: ${text.slice(0, 200)}`);
-    return NextResponse.json({ error: `Events fetch failed: ${eventsRes.status}` }, { status: 502 });
+  // Fetch ALL events from CivicClerk following OData pagination via @odata.nextLink.
+  // The API ignores $top values > ~100 and always paginates, so we must follow
+  // nextLink until exhausted to get all historical meetings with agendas.
+  console.log("[sync] fetching CivicClerk Events (paginated)...");
+  const allEvents: CivicEvent[] = [];
+  let nextUrl: string | null = `${CIVICCLERK_BASE}/Events?$top=100`;
+  let pageCount = 0;
+  while (nextUrl && pageCount < 30) { // safety cap
+    // eslint-disable-next-line no-await-in-loop
+    const r: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
+    if (!r.ok) { console.error(`[sync] page ${pageCount} failed: ${r.status}`); break; }
+    // eslint-disable-next-line no-await-in-loop
+    const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
+    allEvents.push(...(d.value ?? []));
+    nextUrl = d["@odata.nextLink"] ?? null;
+    pageCount++;
+    console.log(`[sync] page ${pageCount}: ${d.value?.length ?? 0} events, more: ${!!nextUrl}`);
   }
-  const eventsJson = await eventsRes.json();
-  const allEvents: CivicEvent[] = eventsJson.value ?? [];
-  console.log(`[sync] total events returned: ${allEvents.length}`);
-  // Filter client-side: commission category + has an agenda
+  console.log(`[sync] total events across all pages: ${allEvents.length}`);
   const commEvents = allEvents.filter(
     (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda && e.agendaId,
   );
-  console.log(`[sync] commission events with agenda: ${commEvents.length}`, commEvents.map(e => `${e.eventName} (${e.startDateTime.slice(0,10)}, agendaId=${e.agendaId})`));
+  console.log(`[sync] commission events with agenda: ${commEvents.length}`);
 
   let meetingsSynced = 0;
   let itemsSynced = 0;
