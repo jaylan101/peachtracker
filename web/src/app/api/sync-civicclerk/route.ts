@@ -33,6 +33,31 @@ function toVote(vote: string | null | undefined): "yes" | "no" | "abstain" | "ab
   return "absent";
 }
 
+// GET: debug endpoint — returns raw CivicClerk events without touching DB
+// Only in non-production or when a debug param is passed
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const debug = url.searchParams.get("debug");
+  if (!debug) return NextResponse.json({ error: "Add ?debug=1" }, { status: 400 });
+
+  const res = await fetch(`${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$top=200`, {
+    headers: { Accept: "application/json" },
+  });
+  const json = await res.json();
+  const events: CivicEvent[] = json.value ?? [];
+  const commission = events.filter(
+    (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda,
+  );
+  return NextResponse.json({
+    total: events.length,
+    commissionWithAgenda: commission.length,
+    sample: commission.slice(0, 5).map((e) => ({
+      id: e.id, eventName: e.eventName, date: e.startDateTime, agendaId: e.agendaId, category: e.categoryName,
+    })),
+    allCategories: [...new Set(events.map((e) => e.categoryName))].sort(),
+  });
+}
+
 export async function POST() {
   const supabase = await createClient();
 
@@ -51,21 +76,27 @@ export async function POST() {
     (commissionerRows ?? []).map((c) => [c.name.toLowerCase(), c.id]),
   );
 
-  // Fetch all events from CivicClerk — no $filter (OData filters cause 500s
-  // on this endpoint). We filter client-side by category and hasAgenda.
+  // Fetch all events from CivicClerk — no $filter (OData filters cause 500s).
+  // We filter client-side by category and hasAgenda.
+  console.log("[sync] fetching CivicClerk Events...");
   const eventsRes = await fetch(
     `${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$top=200`,
-    { headers: { Accept: "application/json" }, next: { revalidate: 0 } },
+    { headers: { Accept: "application/json" } },
   );
+  console.log(`[sync] Events response: ${eventsRes.status}`);
   if (!eventsRes.ok) {
+    const text = await eventsRes.text();
+    console.error(`[sync] Events error body: ${text.slice(0, 200)}`);
     return NextResponse.json({ error: `Events fetch failed: ${eventsRes.status}` }, { status: 502 });
   }
   const eventsJson = await eventsRes.json();
   const allEvents: CivicEvent[] = eventsJson.value ?? [];
+  console.log(`[sync] total events returned: ${allEvents.length}`);
   // Filter client-side: commission category + has an agenda
   const commEvents = allEvents.filter(
     (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda && e.agendaId,
   );
+  console.log(`[sync] commission events with agenda: ${commEvents.length}`, commEvents.map(e => `${e.eventName} (${e.startDateTime.slice(0,10)}, agendaId=${e.agendaId})`));
 
   let meetingsSynced = 0;
   let itemsSynced = 0;

@@ -12,7 +12,15 @@ export function SyncCivicClerkButton() {
       const res = await fetch("/api/sync-civicclerk", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Sync failed");
-      setResult(`Synced ${data.synced} meetings (${data.skipped} already up to date)`);
+      const details = [
+        `${data.meetingsSynced ?? 0} meetings`,
+        data.itemsSynced ? `${data.itemsSynced} agenda items` : null,
+        data.votesSynced ? `${data.votesSynced} votes` : null,
+      ].filter(Boolean).join(", ");
+      setResult(`Synced: ${details}`);
+      if (data.errors?.length) {
+        console.warn("Sync errors:", data.errors);
+      }
       setStatus("done");
     } catch (e) {
       setResult(String(e));
