@@ -49,7 +49,10 @@ export default async function AdminDashboard() {
         </div>
       ))}
 
-      <div style={{ marginTop: 32 }}>
+      <div style={{ marginTop: 32, display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link href="/admin/commission" className="admin-btn admin-btn-ghost">
+          Commission tracker
+        </Link>
         <Link href="/admin/account" className="admin-btn admin-btn-ghost">
           Change password
         </Link>
