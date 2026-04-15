@@ -684,6 +684,37 @@
   }
 
   /* ============================================================
+     RACE CALL BANNER
+     ============================================================ */
+  .call-band {
+    background: var(--peach);
+    padding: 20px var(--gutter);
+  }
+  .call-inner {
+    max-width: var(--content);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .call-flag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+  }
+  .call-winner {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* ============================================================
      SCROLL ANIMATIONS — subtle fade + rise as elements enter view.
      Honors prefers-reduced-motion.
      ============================================================ */
@@ -759,11 +790,11 @@
   const RACE_DATA = {
     race: "District 5 Special Election Runoff",
     date: "April 14, 2026",
-    lastUpdated: "5 of 6 precincts · 8:39 PM",
-    precinctsReporting: { reported: 5, total: 6 },
+    lastUpdated: "6 of 6 precincts · FINAL",
+    precinctsReporting: { reported: 6, total: 6 },
     candidates: [
-      { name: "Andrea Cooke",  votes: 714, color: "peach", photo: "images/andrea-cooke.jpg"  },
-      { name: "Edward Foster", votes: 277, color: "green", photo: "images/edward-foster.jpg" }
+      { name: "Andrea Cooke",  votes: 746, color: "peach", photo: "images/andrea-cooke.jpg"  },
+      { name: "Edward Foster", votes: 313, color: "green", photo: "images/edward-foster.jpg" }
     ]
   };
 </script>
@@ -788,6 +819,14 @@
       </p>
     </div>
   </section>
+</div>
+
+<!-- Race call banner -->
+<div class="call-band">
+  <div class="call-inner">
+    <span class="call-flag">🍑 PeachTracker calls this race</span>
+    <span class="call-winner">Andrea Cooke wins District 5</span>
+  </div>
 </div>
 
 <!-- Results -->
@@ -885,7 +924,7 @@
   <div class="disclaimer">
     <div class="disclaimer-label">A note on these results</div>
     <div class="disclaimer-body">
-      PeachTracker is not affiliated with Macon-Bibb County government. Results displayed here are <strong>unofficial until certified</strong> by the Macon-Bibb County Board of Elections.
+      PeachTracker is not affiliated with Macon-Bibb County government. Results displayed here are <strong>unofficial until certified</strong> by the Macon-Bibb County Board of Elections. A small number of provisional ballots remain to be counted but are not expected to change the outcome.
     </div>
   </div>
 </section>
