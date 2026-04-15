@@ -51,9 +51,10 @@ export async function POST() {
     (commissionerRows ?? []).map((c) => [c.name.toLowerCase(), c.id]),
   );
 
-  // Fetch all events with agendas from CivicClerk
+  // Fetch all events from CivicClerk — no $filter (OData filters cause 500s
+  // on this endpoint). We filter client-side by category and hasAgenda.
   const eventsRes = await fetch(
-    `${CIVICCLERK_BASE}/Events?$filter=hasAgenda eq true&$orderby=startDateTime desc&$top=100`,
+    `${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$top=200`,
     { headers: { Accept: "application/json" }, next: { revalidate: 0 } },
   );
   if (!eventsRes.ok) {
@@ -61,7 +62,10 @@ export async function POST() {
   }
   const eventsJson = await eventsRes.json();
   const allEvents: CivicEvent[] = eventsJson.value ?? [];
-  const commEvents = allEvents.filter((e) => COMMISSION_CATEGORIES.includes(e.categoryName));
+  // Filter client-side: commission category + has an agenda
+  const commEvents = allEvents.filter(
+    (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda && e.agendaId,
+  );
 
   let meetingsSynced = 0;
   let itemsSynced = 0;
