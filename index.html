@@ -848,7 +848,8 @@
       </div>
       <div class="stat-timestamp">
         Source: Macon-Bibb Board of Elections<br>
-        Last updated <strong id="js-updated-2"></strong>
+        Last updated <strong id="js-updated-2"></strong><br>
+        <span id="js-refresh-note">This page refreshes automatically every 5 minutes.</span>
       </div>
     </div>
   </section>
@@ -1033,16 +1034,18 @@
     const INTERVAL_MS = 5 * 60 * 1000;
     let countdown = INTERVAL_MS / 1000;
 
-    // Show a subtle countdown in the page title
     const baseTitle = document.title;
+    const note = document.getElementById('js-refresh-note');
     setInterval(function () {
       countdown--;
       if (countdown <= 0) {
         window.location.reload();
-      } else if (countdown <= 10) {
+      } else if (countdown <= 30) {
         document.title = "Refreshing in " + countdown + "s — PeachTracker";
+        if (note) note.textContent = "Refreshing in " + countdown + "s…";
       } else {
         document.title = baseTitle;
+        if (note) note.textContent = "This page refreshes automatically every 5 minutes.";
       }
     }, 1000);
   })();
