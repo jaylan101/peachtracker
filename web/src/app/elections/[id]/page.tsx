@@ -29,7 +29,9 @@ export default async function ElectionPage({
     { data: races, error: racesErr },
     { data: candidates, error: candidatesErr },
     { data: unopposed, error: unopposedErr },
-    // Also grab all elections for the "past elections" link in footer
+    // Grab a few other elections for the cross-link section.
+    // We don't know the current election's status yet, so we fetch both
+    // upcoming and past and let the render logic pick the right slice.
     { data: allElections },
   ] = await Promise.all([
     supabase.from("elections").select("*").eq("id", id).maybeSingle(),
@@ -53,7 +55,7 @@ export default async function ElectionPage({
       .select("id, name, election_date, status")
       .neq("id", id)
       .order("election_date", { ascending: false })
-      .limit(5),
+      .limit(10),
   ]);
 
   if (electionErr || racesErr || candidatesErr || unopposedErr) {
@@ -69,11 +71,18 @@ export default async function ElectionPage({
   const contestedRaces = (races ?? []) as Race[];
   const unopposedRaces = (unopposed ?? []) as UnopposedRace[];
   const hasUnopposed = unopposedRaces.length > 0;
-  // Only show statewide band for upcoming/live/final elections (not certified
-  // one-race elections like D5 which had no statewide context)
-  const showStatewide = contestedRaces.some(
-    (r) => r.category === "State Legislature",
-  );
+  const showStatewide = contestedRaces.some((r) => r.category === "State Legislature");
+
+  // If current election is past → surface upcoming ones ("what's coming up").
+  // If current election is upcoming/live → surface past ones ("recent results").
+  const isPast = ["final", "certified"].includes(election.status);
+  const crossLinkElections = ((allElections ?? []) as Pick<Election, "id" | "name" | "election_date" | "status">[])
+    .filter((e) =>
+      isPast
+        ? ["upcoming", "live"].includes(e.status)
+        : ["final", "certified"].includes(e.status),
+    )
+    .slice(0, 3);
 
   return (
     <>
@@ -124,8 +133,8 @@ export default async function ElectionPage({
       {/* Statewide link-out — only when there are state legislature races */}
       {showStatewide && <StatewideSection />}
 
-      {/* Other elections */}
-      {(allElections ?? []).length > 0 && (
+      {/* Contextual cross-link — only renders when there are relevant elections */}
+      {crossLinkElections.length > 0 && (
         <section style={{ background: "var(--bg)", borderTop: "1.5px solid var(--border)" }}>
           <div style={{ maxWidth: "var(--content)", margin: "0 auto", padding: "40px var(--gutter)" }}>
             <div
@@ -138,10 +147,13 @@ export default async function ElectionPage({
                 marginBottom: 16,
               }}
             >
-              More elections
+              {/* On a past/certified election: point forward. On upcoming: show history. */}
+              {["final", "certified"].includes(election.status)
+                ? "What's coming up"
+                : "Past elections"}
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              {(allElections as Pick<Election, "id" | "name" | "election_date" | "status">[]).map((e) => (
+              {crossLinkElections.map((e) => (
                 <Link
                   key={e.id}
                   href={`/elections/${e.id}`}
