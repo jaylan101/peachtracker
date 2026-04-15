@@ -757,7 +757,7 @@
   const RACE_DATA = {
     race: "District 5 Special Election Runoff",
     date: "April 14, 2026",
-    lastUpdated: "1 of 6 precincts · 7:24 PM",
+    lastUpdated: "1 of 6 precincts · 8:02 PM",
     precinctsReporting: { reported: 1, total: 6 },
     candidates: [
       { name: "Andrea Cooke",  votes: 339, color: "peach", photo: "images/andrea-cooke.jpg"  },
@@ -1027,5 +1027,25 @@
 
 
 <script defer src="/_vercel/insights/script.js"></script>
+<script>
+  // Auto-refresh every 60 seconds so visitors always see the latest results
+  (function autoRefresh() {
+    const INTERVAL_MS = 60 * 1000;
+    let countdown = INTERVAL_MS / 1000;
+
+    // Show a subtle countdown in the page title
+    const baseTitle = document.title;
+    setInterval(function () {
+      countdown--;
+      if (countdown <= 0) {
+        window.location.reload();
+      } else if (countdown <= 10) {
+        document.title = "Refreshing in " + countdown + "s — PeachTracker";
+      } else {
+        document.title = baseTitle;
+      }
+    }, 1000);
+  })();
+</script>
 </body>
 </html>
