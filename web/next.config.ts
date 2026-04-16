@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-15 23:37 — fix: TypeScript type error in blog slug page related posts
+// Build: 2026-04-15 23:42 — feat: Civic Desk blog teaser on home page
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
 // Env vars still take precedence if set; these are fallbacks so Vercel
