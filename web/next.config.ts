@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:44 — fix district map: add geocoder API proxy for address lookup, reproject water authority to WGS84, replace school district with 74 attendance zones, fix Leaflet CSS loading
+// Build: 2026-04-16 03:52 — fix: update commissioners for districts 3 (Stanley Stewart), 5 (Vacant), 9 (Brendalyn Bailey); add Bibb County School District label to school zone popups and results
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

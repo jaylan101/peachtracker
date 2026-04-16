@@ -90,7 +90,8 @@ const LAYERS: DistrictLayer[] = [
       const mid = p.NAMEMID as string ?? "";
       const high = p.NAMEHIGH as string ?? "";
       return `<div style="font-family:Outfit,sans-serif">
-        <strong style="font-size:14px">${elem}</strong>
+        <span style="font-size:11px;color:#87817A;text-transform:uppercase;letter-spacing:0.08em;font-weight:700">Bibb County School District</span>
+        <br><strong style="font-size:14px">${elem}</strong>
         ${mid ? `<br><span style="font-size:12px;color:#87817A">Middle: ${mid}</span>` : ""}
         ${high ? `<br><span style="font-size:12px;color:#87817A">High: ${high}</span>` : ""}
       </div>`;
@@ -459,6 +460,18 @@ export default function DistrictMap() {
                   }}
                 >
                   Commissioner: {m.details.REPNAME1}
+                </div>
+              )}
+              {m.layerLabel === "School Zones" && (
+                <div
+                  style={{
+                    fontSize: "var(--micro)",
+                    color: "var(--text-secondary)",
+                    marginTop: 4,
+                    fontWeight: 500,
+                  }}
+                >
+                  District: Bibb County School District
                 </div>
               )}
               {m.details.NAMEMID && (
