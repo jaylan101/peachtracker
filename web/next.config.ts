@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 02:08 — fix: ask page mobile scroll — flex container fills viewport, messages scroll internally, input stays pinned
+// Build: 2026-04-16 02:43 — fix: ask page chat box uses explicit calc(100svh) height so it never grows the page on mobile
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

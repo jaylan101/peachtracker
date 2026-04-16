@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 export default function AskPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+    <>
       <AccentBar />
       <SiteNav />
 
-      {/* Page header */}
+      {/* Compact header — hidden on mobile to save space */}
       <div
         style={{
           background: "var(--text)",
@@ -25,7 +25,7 @@ export default function AskPage() {
           style={{
             maxWidth: "var(--content)",
             margin: "0 auto",
-            padding: "56px var(--gutter) 52px",
+            padding: "clamp(20px, 4vw, 52px) var(--gutter)",
           }}
         >
           <div
@@ -35,7 +35,7 @@ export default function AskPage() {
               textTransform: "uppercase",
               letterSpacing: "0.16em",
               color: "var(--peach)",
-              marginBottom: 14,
+              marginBottom: 10,
             }}
           >
             Civic AI · Macon-Bibb
@@ -43,7 +43,7 @@ export default function AskPage() {
           <h1
             style={{
               fontWeight: 900,
-              fontSize: "clamp(2rem, 4vw, 3rem)",
+              fontSize: "clamp(1.5rem, 4vw, 3rem)",
               letterSpacing: "-0.03em",
               lineHeight: 1.02,
               color: "white",
@@ -51,48 +51,34 @@ export default function AskPage() {
           >
             Ask <span style={{ color: "var(--peach)" }}>Mulberry</span>
           </h1>
-          <p
-            style={{
-              fontSize: "var(--lead)",
-              color: "rgba(255,255,255,0.65)",
-              fontWeight: 450,
-              marginTop: 16,
-              lineHeight: 1.55,
-              maxWidth: 540,
-            }}
-          >
-            Your Macon-Bibb civic guide — trained on local elections, commission
-            votes, voting logistics, and more. Ask anything.
-          </p>
         </div>
       </div>
 
-      {/* Main chat area — fills remaining viewport height so input stays pinned */}
+      {/* Chat box — explicit height so it never grows the page */}
       <div
         style={{
-          flex: 1,
+          maxWidth: 760,
+          width: "100%",
+          margin: "0 auto",
+          padding: "24px var(--gutter)",
+          /*
+           * height: calc(100svh - offset)
+           * svh = small viewport height (excludes browser chrome on mobile)
+           * offset = AccentBar(4px) + SiteNav(~52px) + compactHeader(~80px) + top/bottom padding(48px) = ~184px
+           * On desktop the header is taller so we use a safe value; overflow just scrolls
+           */
+          height: "calc(100svh - 184px)",
+          minHeight: 360,
+          maxHeight: "calc(100svh - 160px)",
+          boxSizing: "border-box" as React.CSSProperties["boxSizing"],
           display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
+          flexDirection: "column" as React.CSSProperties["flexDirection"],
         }}
       >
-        <div
-          style={{
-            flex: 1,
-            maxWidth: 760,
-            width: "100%",
-            margin: "0 auto",
-            padding: "32px var(--gutter) 24px",
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-          }}
-        >
-          <MulberryFullPage />
-        </div>
+        <MulberryFullPage />
       </div>
 
-      {/* About Mulberry */}
+      {/* About Mulberry — below the fold, user scrolls if curious */}
       <div
         style={{
           background: "var(--peach-bg)",
@@ -106,7 +92,7 @@ export default function AskPage() {
             margin: "0 auto",
             padding: "56px var(--gutter)",
             display: "grid",
-            gridTemplateColumns: "200px 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
             gap: 40,
             alignItems: "start",
           }}
@@ -158,6 +144,6 @@ export default function AskPage() {
       </div>
 
       <SiteFooter />
-    </div>
+    </>
   );
 }
