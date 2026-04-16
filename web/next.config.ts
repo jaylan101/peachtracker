@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 02:47 — fix: ask page uses position:fixed layout so iOS keyboard cannot scroll body out of view
+// Build: 2026-04-16 02:51 — fix: hide floating Mulberry bubble on /ask page
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

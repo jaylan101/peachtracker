@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 interface Message {
   role: "user" | "assistant";
@@ -15,6 +16,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export function MulberryChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -77,6 +79,9 @@ export function MulberryChat() {
       setLoading(false);
     }
   }
+
+  // Hide on /ask — full page chat is already there
+  if (pathname === "/ask") return null;
 
   return (
     <>
