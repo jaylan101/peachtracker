@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:30 — fix: IDF-weighted search so specific chunks beat generic ones; Gemma always gets context
+// Build: 2026-04-16 04:34 — fix: correct TypeScript errors in mulberry route — wrap rpc calls in try/catch instead of .catch()
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

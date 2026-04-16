@@ -65,12 +65,13 @@ async function searchKnowledge(query: string): Promise<string[]> {
 
   if (!rows || rows.length === 0) {
     // Typo fallback: try trigram similarity
-    const { data: trgmData } = await supabase
-      .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 8 })
-      .catch(() => ({ data: null }));
-    return ((trgmData as Array<{ content: string }>) ?? [])
-      .slice(0, 3)
-      .map((r) => r.content);
+    let trgmData: Array<{ content: string }> | null = null;
+    try {
+      const { data } = await supabase
+        .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 8 });
+      trgmData = data as Array<{ content: string }>;
+    } catch { /* ignore */ }
+    return (trgmData ?? []).slice(0, 3).map((r) => r.content);
   }
 
   // IDF-style scoring: count how many chunks each word appears in
@@ -112,12 +113,15 @@ async function searchKnowledge(query: string): Promise<string[]> {
 
   // If we got fewer than 2 results, also try trigram for typo coverage
   if (results.length < 2) {
-    const { data: trgmData } = await supabase
-      .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 6 })
-      .catch(() => ({ data: null }));
+    let trgmData: Array<{ chunk_id: string; content: string }> | null = null;
+    try {
+      const { data } = await supabase
+        .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 6 });
+      trgmData = data as Array<{ chunk_id: string; content: string }>;
+    } catch { /* ignore */ }
 
     const existingIds = new Set(scored.slice(0, 4).map((r) => r.chunk_id));
-    const extra = ((trgmData as Array<{ chunk_id: string; content: string }>) ?? [])
+    const extra = (trgmData ?? [])
       .filter((r) => !existingIds.has(r.chunk_id))
       .slice(0, 2)
       .map((r) => r.content);
