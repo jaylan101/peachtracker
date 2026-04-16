@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // ── Mulberry API Route ────────────────────────────────────────────────────────
-// 1. Searches knowledge_chunks in Supabase for relevant context
-// 2. Passes question + context to Cloudflare Workers AI (Llama 3.1 8B)
-// 3. Returns a natural language answer grounded in local Macon-Bibb data
+// RAG pipeline:
+//   1. Keyword search with IDF-style weighting (rare words score higher)
+//   2. Trigram fallback for typos / unmatched words
+//   3. Top chunks passed as context to Cloudflare Workers AI (Gemma 4 26B)
+//   4. Gemma reasons over the context and returns a grounded answer
 // ─────────────────────────────────────────────────────────────────────────────
 
 const supabase = createClient(
@@ -27,36 +29,103 @@ const STOP_WORDS = new Set([
   "about","which","there","been","more","also","into","than","then","some",
   "would","could","should","does","did","not","but","you","your","its","our",
   "tell","me","is","in","of","to","a","an","do","on","at","by","be","it",
+  "candidates","candidate","running","current","county","macon","bibb",
 ]);
 
-async function searchKnowledge(query: string): Promise<string[]> {
-  const words = query
+function extractWords(query: string): string[] {
+  return query
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
     .filter((w) => w.length >= 3 && !STOP_WORDS.has(w));
+}
 
-  if (words.length === 0) return [];
+async function searchKnowledge(query: string): Promise<string[]> {
+  const words = extractWords(query);
+  // Also keep original words (before stop-word filtering) for phrase matching
+  const rawWords = query
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
 
-  const conditions = words.map((w) => `content.ilike.%${w}%`).join(",");
-  const { data, error } = await supabase
+  const searchWords = words.length > 0 ? words : rawWords.filter(w => w.length >= 3);
+  if (searchWords.length === 0) return [];
+
+  // Fetch ALL chunks that match any query word
+  const ilikeConditions = searchWords
+    .map((w) => `content.ilike.%${w}%`)
+    .join(",");
+
+  const { data: rows } = await supabase
     .from("knowledge_chunks")
-    .select("content, category")
-    .or(conditions)
-    .limit(8);
+    .select("content, category, chunk_id")
+    .or(ilikeConditions)
+    .limit(30);
 
-  if (error || !data) return [];
+  if (!rows || rows.length === 0) {
+    // Typo fallback: try trigram similarity
+    const { data: trgmData } = await supabase
+      .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 8 })
+      .catch(() => ({ data: null }));
+    return ((trgmData as Array<{ content: string }>) ?? [])
+      .slice(0, 3)
+      .map((r) => r.content);
+  }
 
-  const scored = data.map((row) => {
+  // IDF-style scoring: count how many chunks each word appears in
+  // Words that appear in fewer chunks are more specific and worth more
+  const wordDocFreq: Record<string, number> = {};
+  for (const word of searchWords) {
+    wordDocFreq[word] = rows.filter((r) =>
+      r.content.toLowerCase().includes(word)
+    ).length;
+  }
+
+  const totalDocs = rows.length;
+
+  const scored = rows.map((row) => {
     const lower = row.content.toLowerCase();
-    const score = words.reduce((n, w) => n + (lower.includes(w) ? 1 : 0), 0);
-    return { content: row.content, score };
+
+    let score = 0;
+    for (const word of searchWords) {
+      if (lower.includes(word)) {
+        // IDF: words that appear in fewer docs are worth more
+        const df = wordDocFreq[word] ?? 1;
+        const idf = Math.log(totalDocs / df + 1);
+        score += idf;
+      }
+    }
+
+    // Bonus: how many distinct query words matched (breadth of match)
+    const matchedCount = searchWords.filter((w) => lower.includes(w)).length;
+    score += matchedCount * 0.5;
+
+    return { content: row.content, chunk_id: row.chunk_id, score, matchedCount };
   });
 
-  return scored
+  const results = scored
+    .filter((r) => r.matchedCount > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+    .slice(0, 4)
     .map((r) => r.content);
+
+  // If we got fewer than 2 results, also try trigram for typo coverage
+  if (results.length < 2) {
+    const { data: trgmData } = await supabase
+      .rpc("search_knowledge_trgm", { query_words: searchWords, match_limit: 6 })
+      .catch(() => ({ data: null }));
+
+    const existingIds = new Set(scored.slice(0, 4).map((r) => r.chunk_id));
+    const extra = ((trgmData as Array<{ chunk_id: string; content: string }>) ?? [])
+      .filter((r) => !existingIds.has(r.chunk_id))
+      .slice(0, 2)
+      .map((r) => r.content);
+
+    return [...results, ...extra].slice(0, 4);
+  }
+
+  return results;
 }
 
 async function askCloudflareAI(question: string, context: string): Promise<string> {
@@ -67,14 +136,16 @@ async function askCloudflareAI(question: string, context: string): Promise<strin
     "a civic tracker for Macon-Bibb County, Georgia. " +
     "Answer questions about local elections, commissioners, voting, and civic facts. " +
     "Keep answers concise (2-4 sentences), factual, and friendly. " +
-    "Base your answer strictly on the provided context. " +
-    "When relevant, point users to PeachTracker pages using these links:\n" +
+    "Use ONLY the information in the CONTEXT below to answer. " +
+    "If the context contains information unrelated to the question, ignore it. " +
+    "If the context does not contain enough information to answer, say so honestly " +
+    "and point to a relevant resource.\n" +
+    "When relevant, point users to PeachTracker pages:\n" +
     "- Elections & races: peachtracker.vercel.app/elections\n" +
     "- Commission districts & members: peachtracker.vercel.app/commission\n" +
     "- Ask Mulberry (full page): peachtracker.vercel.app/ask\n" +
-    "- External: Georgia My Voter Page at mvp.sos.ga.gov for polling location and sample ballot\n" +
-    "- External: Bibb County Board of Elections at maconbibb.us/board-of-elections or (478) 621-6622\n" +
-    "If the context doesn't cover the question, say so honestly and point to the relevant resource above.\n\n" +
+    "- Georgia My Voter Page: mvp.sos.ga.gov (polling location, sample ballot)\n" +
+    "- Bibb County Board of Elections: maconbibb.us/board-of-elections or (478) 621-6622\n\n" +
     "CONTEXT:\n" + context;
 
   const res = await fetch(url, {
@@ -94,11 +165,18 @@ async function askCloudflareAI(question: string, context: string): Promise<strin
   });
 
   if (!res.ok) {
-    throw new Error(`Cloudflare AI error: ${res.status} ${await res.text()}`);
+    const errText = await res.text();
+    console.error(`[mulberry] Cloudflare AI error: ${res.status}`, errText);
+    throw new Error(`Cloudflare AI error: ${res.status}`);
   }
 
   const data = await res.json();
-  return data?.result?.response?.trim() ?? "";
+  const reply = data?.result?.response?.trim();
+  if (!reply) {
+    console.error("[mulberry] Unexpected CF response:", JSON.stringify(data).slice(0, 400));
+    throw new Error("Empty reply from Cloudflare AI");
+  }
+  return reply;
 }
 
 export async function POST(req: NextRequest) {
@@ -109,18 +187,25 @@ export async function POST(req: NextRequest) {
     }
 
     const question = messages[messages.length - 1]?.content ?? "";
+    console.log("[mulberry] question:", question);
 
-    // 1. Retrieve relevant knowledge chunks
     const chunks = await searchKnowledge(question);
+    console.log("[mulberry] chunks found:", chunks.length, chunks.map(c => c.slice(0, 60)));
 
-    // 2. If Cloudflare is configured, generate a natural language answer
-    if (CF_ACCOUNT_ID && CF_API_TOKEN && chunks.length > 0) {
-      const context = chunks.join("\n\n");
-      const reply = await askCloudflareAI(question, context);
-      if (reply) return NextResponse.json({ reply });
+    if (CF_ACCOUNT_ID && CF_API_TOKEN) {
+      const context = chunks.length > 0
+        ? chunks.join("\n\n---\n\n")
+        : "No specific data was found in the PeachTracker database for this question.";
+
+      try {
+        const reply = await askCloudflareAI(question, context);
+        return NextResponse.json({ reply });
+      } catch (aiErr) {
+        console.error("[mulberry] AI call failed:", aiErr);
+      }
     }
 
-    // 3. Fallback: return raw chunks if CF not configured or no results
+    // Static fallback
     if (chunks.length === 0) {
       return NextResponse.json({
         reply:
@@ -130,9 +215,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      reply: chunks.slice(0, 2).join("\n\n"),
-    });
+    return NextResponse.json({ reply: chunks[0] });
   } catch (err) {
     console.error("[mulberry] error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

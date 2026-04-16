@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:24 — feat: switch Mulberry to Gemma 4 26B on Cloudflare Workers AI
+// Build: 2026-04-16 04:30 — fix: IDF-weighted search so specific chunks beat generic ones; Gemma always gets context
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
