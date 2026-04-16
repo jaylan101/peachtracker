@@ -89,9 +89,12 @@ const LAYERS: DistrictLayer[] = [
     popupFn: (p) => {
       const name = p.NAME as string ?? "Unknown";
       const member = p.BoardMember as string;
-      return member
-        ? `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong><br><span style="font-size:12px;color:#87817A">Board Member: ${member}</span><br><span style="font-size:11px;color:#87817A">Bibb County School District</span>`
-        : `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong>`;
+      return `<div style="font-family:Outfit,sans-serif">
+        <span style="font-size:11px;color:#87817A;text-transform:uppercase;letter-spacing:0.08em;font-weight:700">Bibb County School District</span>
+        <br><strong style="font-size:14px">${name}</strong>
+        ${member ? `<br><span style="font-size:12px;color:#87817A">${member}</span>` : ""}
+        <br><span style="font-size:11px;color:#aaa;margin-top:4px;display:inline-block">At-Large: Mr. Daryl J. Morton (Post 7) \u00B7 Dr. Lisa W. Garrett-Boyd (Post 8)</span>
+      </div>`;
     },
   },
   {
@@ -479,16 +482,29 @@ export default function DistrictMap() {
                 </div>
               )}
               {m.details.BoardMember && (
-                <div
-                  style={{
-                    fontSize: "var(--micro)",
-                    color: "var(--text-secondary)",
-                    marginTop: 4,
-                    fontWeight: 500,
-                  }}
-                >
-                  Board Member: {m.details.BoardMember}
-                </div>
+                <>
+                  <div
+                    style={{
+                      fontSize: "var(--micro)",
+                      color: "var(--text-secondary)",
+                      marginTop: 4,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {m.details.BoardMember}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "var(--micro)",
+                      color: "var(--text-light)",
+                      marginTop: 4,
+                      fontWeight: 500,
+                    }}
+                  >
+                    At-Large: Mr. Daryl J. Morton (Post 7) &middot; Dr. Lisa W.
+                    Garrett-Boyd (Post 8)
+                  </div>
+                </>
               )}
               {m.layerLabel === "School Zones" && (
                 <div

@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:54 — add BOE school board districts layer with 6 voting districts + board members; update District 5 commissioner to Andrea Cooke
+// Build: 2026-04-16 03:58 — add at-large BOE members (Morton Post 7, Garrett-Boyd Post 8) to school board popups and address lookup results
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
