@@ -355,8 +355,7 @@ export default function AboutPage() {
                   marginTop: 20,
                 }}
               >
-                &ldquo;Let your light so shine before men, that they may see your
-                good works.&rdquo;
+                &ldquo;Iron sharpens iron, and one man sharpens another.&rdquo;
               </p>
               <p
                 style={{
@@ -367,7 +366,7 @@ export default function AboutPage() {
                   letterSpacing: "0.04em",
                 }}
               >
-                Matthew 5:16
+                Proverbs 27:17
               </p>
             </div>
           </div>
