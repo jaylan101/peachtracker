@@ -14,7 +14,7 @@ const supabase = createClient(
 
 const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 const CF_API_TOKEN  = process.env.CF_API_TOKEN;
-const CF_MODEL      = "@cf/meta/llama-3.1-8b-instruct";
+const CF_MODEL      = "@cf/google/gemma-4-26b-a4b-it";
 
 interface Message {
   role: "user" | "assistant";

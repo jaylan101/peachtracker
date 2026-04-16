@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:20 — fix: Mulberry system prompt adds PeachTracker links; update powered-by to Llama
+// Build: 2026-04-16 04:24 — feat: switch Mulberry to Gemma 4 26B on Cloudflare Workers AI
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
