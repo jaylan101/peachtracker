@@ -336,7 +336,7 @@ function TwoCandidateRace({
           <div className="cand-photo">
             {b.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/${b.image_url}`} alt={b.name} />
+              <img src={b.image_url} alt={b.name} />
             ) : (
               <InitialsTile name={b.name} variant="green" />
             )}

@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:40 — feat: semantic vector search for Mulberry — BGE-small embeddings, pgvector similarity, Gemma answers
+// Build: 2026-04-16 04:41 — fix: remove extra slash on candidate B photo src causing broken images
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
