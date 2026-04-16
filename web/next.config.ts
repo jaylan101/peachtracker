@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:34 — fix: correct TypeScript errors in mulberry route — wrap rpc calls in try/catch instead of .catch()
+// Build: 2026-04-16 04:40 — feat: semantic vector search for Mulberry — BGE-small embeddings, pgvector similarity, Gemma answers
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
