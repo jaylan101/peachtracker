@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 05:04 — fix: Mulberry system prompt distinguishes mayor vs mayor pro tem roles explicitly
+// Build: 2026-04-16 05:06 — fix: reorder mayor chunks so Lester Miller chunk is last (recency bias fix)
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

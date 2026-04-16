@@ -193,7 +193,24 @@ export async function POST(req: NextRequest) {
       console.log("[mulberry] keyword fallback chunks:", chunks.length);
     }
 
-    // 3. Call Gemma with context (or without if no chunks found)
+    // 3. Re-order chunks so the most directly relevant one appears last
+    //    (LLMs tend to anchor on the final context items)
+    if (chunks.length > 1) {
+      const q = question.toLowerCase();
+      const isMayorQuery = /\bmayor\b/.test(q) && !/pro.?tem\b/.test(q);
+      if (isMayorQuery) {
+        // Find the chunk that names Lester Miller and put it last
+        const millerIdx = chunks.findIndex((c) =>
+          /lester miller/i.test(c) || /current mayor/i.test(c)
+        );
+        if (millerIdx > 0) {
+          const [millerChunk] = chunks.splice(millerIdx, 1);
+          chunks.push(millerChunk);
+        }
+      }
+    }
+
+    // 4. Call Gemma with context (or without if no chunks found)
     if (CF_ACCOUNT_ID && CF_API_TOKEN) {
       const context = chunks.length > 0
         ? chunks.join("\n\n---\n\n")
@@ -207,7 +224,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Static fallback
+    // 5. Static fallback
     if (chunks.length === 0) {
       return NextResponse.json({
         reply:
