@@ -50,6 +50,19 @@ export function SiteNav() {
           >
             Civic Desk
           </Link>
+          <Link
+            href="/about"
+            style={{
+              fontSize: "var(--kicker)",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              color: "var(--text)",
+              textDecoration: "none",
+            }}
+          >
+            About
+          </Link>
           {/* Commission link hidden — WIP, pending vote sync fix */}
         </div>
       </div>
@@ -79,6 +92,18 @@ export function SiteFooter() {
             }}
           >
             All elections
+          </Link>
+          <Link
+            href="/about"
+            style={{
+              fontSize: "var(--micro)",
+              color: "var(--text-light)",
+              fontWeight: 500,
+              textDecoration: "none",
+              letterSpacing: "0.04em",
+            }}
+          >
+            About
           </Link>
           <div className="footer-meta">© {new Date().getFullYear()} · Made in Macon</div>
         </div>
