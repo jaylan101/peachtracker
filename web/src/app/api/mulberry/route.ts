@@ -193,17 +193,23 @@ export async function POST(req: NextRequest) {
       console.log("[mulberry] keyword fallback chunks:", chunks.length);
     }
 
-    // 3. Re-order chunks so the most directly relevant one appears last
-    //    (LLMs tend to anchor on the final context items)
+    // 3. Post-retrieval intent filtering
+    //    When asking about "the mayor" (not "mayor pro tem"), suppress
+    //    chunks that are primarily about the mayor pro tem role.
     if (chunks.length > 1) {
       const q = question.toLowerCase();
-      const isMayorQuery = /\bmayor\b/.test(q) && !/pro.?tem\b/.test(q);
-      if (isMayorQuery) {
-        // Find the chunk that names Lester Miller and put it last
-        const millerIdx = chunks.findIndex((c) =>
-          /lester miller/i.test(c) || /current mayor/i.test(c)
-        );
-        if (millerIdx > 0) {
+      const askingAboutMayor = /\bmayor\b/.test(q) && !/pro.?tem\b/.test(q);
+      if (askingAboutMayor) {
+        const filtered = chunks.filter((c) => {
+          // Suppress chunks whose first sentence is about mayor pro tem
+          const firstSentence = c.split(".")[0].toLowerCase();
+          return !(/mayor pro tem/.test(firstSentence));
+        });
+        // Only use the filtered list if it still has relevant chunks
+        if (filtered.length > 0) chunks = filtered;
+        // Ensure the Lester Miller chunk comes last (freshest in context)
+        const millerIdx = chunks.findIndex((c) => /lester miller/i.test(c));
+        if (millerIdx >= 0 && millerIdx < chunks.length - 1) {
           const [millerChunk] = chunks.splice(millerIdx, 1);
           chunks.push(millerChunk);
         }
