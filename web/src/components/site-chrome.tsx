@@ -37,19 +37,7 @@ export function SiteNav() {
           >
             Elections
           </Link>
-          <Link
-            href="/commission"
-            style={{
-              fontSize: "var(--kicker)",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--text)",
-              textDecoration: "none",
-            }}
-          >
-            Commission
-          </Link>
+          {/* Commission link hidden — WIP, pending vote sync fix */}
         </div>
       </div>
     </nav>
