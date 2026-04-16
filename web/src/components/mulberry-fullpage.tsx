@@ -411,7 +411,7 @@ export function MulberryAskPage() {
                 color: "var(--text-light)",
               }}
             >
-              Powered by Gemma · Answers drawn from PeachTracker data
+              Powered by Llama · Answers drawn from PeachTracker data
             </div>
           </div>
         </div>
