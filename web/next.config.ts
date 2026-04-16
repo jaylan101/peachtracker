@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:02 — districts: stop auto-enabling layers on address search; add hint to toggle map layers
+// Build: 2026-04-16 04:16 — feat: Mulberry now powered by Cloudflare Workers AI (Llama 3.1 8B) with RAG knowledge base
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
