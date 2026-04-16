@@ -342,15 +342,7 @@ export default function DistrictMap() {
           });
         });
 
-        // Turn on matched layers
-        if (results.length > 0) {
-          const matchedIds = new Set<string>();
-          results.forEach((r) => {
-            const layer = LAYERS.find((l) => l.label === r.layerLabel);
-            if (layer) matchedIds.add(layer.id);
-          });
-          setActive((prev) => new Set([...prev, ...matchedIds]));
-        }
+
 
         setMatches(results);
       } catch {
@@ -431,6 +423,17 @@ export default function DistrictMap() {
 
       {/* Results cards */}
       {matches && matches.length > 0 && (
+        <>
+        <div
+          style={{
+            fontSize: "var(--micro)",
+            color: "var(--text-light)",
+            fontWeight: 500,
+            marginBottom: 10,
+          }}
+        >
+          Use the toggles below the map to view any of these districts on the map.
+        </div>
         <div
           style={{
             display: "grid",
@@ -545,6 +548,7 @@ export default function DistrictMap() {
             </div>
           ))}
         </div>
+        </>
       )}
 
       {matches && matches.length === 0 && (

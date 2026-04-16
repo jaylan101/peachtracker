@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:58 — add at-large BOE members (Morton Post 7, Garrett-Boyd Post 8) to school board popups and address lookup results
+// Build: 2026-04-16 04:02 — districts: stop auto-enabling layers on address search; add hint to toggle map layers
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
