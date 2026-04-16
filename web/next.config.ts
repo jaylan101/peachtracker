@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:36 — fix: move dynamic import to client component wrapper for Next.js 15 compat
+// Build: 2026-04-16 03:43 — feat: Mulberry knowledge base — 64 Macon-Bibb civic chunks, keyword search RAG
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

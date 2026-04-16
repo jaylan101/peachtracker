@@ -12,10 +12,11 @@ interface DistrictLayer {
   id: string;
   label: string;
   file: string;
-  color: string;        // fill
-  strokeColor: string;  // border
-  nameKey: string;      // property to use as display name
-  detailKeys?: string[]; // extra props to show in popup
+  color: string;
+  strokeColor: string;
+  nameKey: string;
+  detailKeys?: string[];
+  popupFn?: (props: Record<string, unknown>) => string;
 }
 
 interface MatchResult {
@@ -26,21 +27,28 @@ interface MatchResult {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Layer definitions — each points to a /districts/*.geojson file     */
+/*  Layer definitions                                                   */
 /* ------------------------------------------------------------------ */
 const LAYERS: DistrictLayer[] = [
   {
     id: "commission",
-    label: "Commission Districts",
+    label: "Commission",
     file: "/districts/commission.geojson",
     color: "#E0956E",
     strokeColor: "#C47A52",
     nameKey: "NAME",
     detailKeys: ["REPNAME1"],
+    popupFn: (p) => {
+      const name = p.NAME as string ?? "Unknown";
+      const rep = p.REPNAME1 as string;
+      return rep
+        ? `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong><br><span style="font-size:12px;color:#87817A">Commissioner: ${rep}</span>`
+        : `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong>`;
+    },
   },
   {
     id: "congressional",
-    label: "Congressional Districts",
+    label: "Congressional",
     file: "/districts/congressional.geojson",
     color: "#5E9470",
     strokeColor: "#4A7859",
@@ -48,7 +56,7 @@ const LAYERS: DistrictLayer[] = [
   },
   {
     id: "state-senate",
-    label: "State Senate Districts",
+    label: "State Senate",
     file: "/districts/state-senate.geojson",
     color: "#7B93C1",
     strokeColor: "#5E76A4",
@@ -56,7 +64,7 @@ const LAYERS: DistrictLayer[] = [
   },
   {
     id: "state-house",
-    label: "State House Districts",
+    label: "State House",
     file: "/districts/state-house.geojson",
     color: "#C4A054",
     strokeColor: "#A88638",
@@ -71,12 +79,22 @@ const LAYERS: DistrictLayer[] = [
     nameKey: "NAME",
   },
   {
-    id: "school",
-    label: "School District",
-    file: "/districts/school-district.geojson",
+    id: "school-zones",
+    label: "School Zones",
+    file: "/districts/school-zones.geojson",
     color: "#A87BC1",
     strokeColor: "#8C5FA5",
     nameKey: "NAME",
+    popupFn: (p) => {
+      const elem = p.NAME as string ?? "";
+      const mid = p.NAMEMID as string ?? "";
+      const high = p.NAMEHIGH as string ?? "";
+      return `<div style="font-family:Outfit,sans-serif">
+        <strong style="font-size:14px">${elem}</strong>
+        ${mid ? `<br><span style="font-size:12px;color:#87817A">Middle: ${mid}</span>` : ""}
+        ${high ? `<br><span style="font-size:12px;color:#87817A">High: ${high}</span>` : ""}
+      </div>`;
+    },
   },
 ];
 
@@ -85,13 +103,32 @@ const MACON_CENTER: [number, number] = [32.8407, -83.6324];
 const DEFAULT_ZOOM = 11;
 
 /* ------------------------------------------------------------------ */
+/*  Inject Leaflet CSS via <link> tag (require() doesn't work in Next) */
+/* ------------------------------------------------------------------ */
+function useLeafletCSS() {
+  useEffect(() => {
+    const id = "leaflet-css";
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    link.crossOrigin = "";
+    document.head.appendChild(link);
+  }, []);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 export default function DistrictMap() {
+  useLeafletCSS();
+
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
-  const layerGroups = useRef<Record<string, L.GeoJSON>>({}); // leaflet layer per id
-  const geoData = useRef<Record<string, FeatureCollection>>({}); // raw geojson per id
+  const layerGroups = useRef<Record<string, L.GeoJSON>>({});
+  const geoData = useRef<Record<string, FeatureCollection>>({});
+  const [ready, setReady] = useState(false);
 
   const [active, setActive] = useState<Set<string>>(new Set(["commission"]));
   const [address, setAddress] = useState("");
@@ -100,77 +137,84 @@ export default function DistrictMap() {
   const [error, setError] = useState<string | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
 
-  /* ---- Initialize Leaflet (client-only) ---- */
+  /* ---- Initialize Leaflet ---- */
   useEffect(() => {
-    if (mapInstance.current) return;
-    const L = require("leaflet") as typeof import("leaflet");
-    require("leaflet/dist/leaflet.css");
+    if (mapInstance.current || !mapRef.current) return;
 
-    const map = L.map(mapRef.current!, {
-      center: MACON_CENTER,
-      zoom: DEFAULT_ZOOM,
-      zoomControl: true,
-      attributionControl: true,
-    });
+    // Small delay to let CSS load
+    const timer = setTimeout(() => {
+      const L = require("leaflet") as typeof import("leaflet");
 
-    // Light tile layer — keeps PeachTracker's clean aesthetic
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 19,
-      },
-    ).addTo(map);
+      const map = L.map(mapRef.current!, {
+        center: MACON_CENTER,
+        zoom: DEFAULT_ZOOM,
+        zoomControl: true,
+        attributionControl: true,
+      });
 
-    mapInstance.current = map;
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · <a href="https://carto.com/">CARTO</a>',
+          subdomains: "abcd",
+          maxZoom: 19,
+        },
+      ).addTo(map);
 
-    // Load all GeoJSON files
-    LAYERS.forEach(async (layer) => {
-      try {
-        const res = await fetch(layer.file);
-        const fc: FeatureCollection = await res.json();
-        geoData.current[layer.id] = fc;
+      mapInstance.current = map;
 
-        const gj = L.geoJSON(fc, {
-          style: {
-            fillColor: layer.color,
-            fillOpacity: 0.25,
-            color: layer.strokeColor,
-            weight: 2,
-            opacity: 0.85,
-          },
-          onEachFeature: (feature, lyr) => {
-            const name =
-              feature.properties?.[layer.nameKey] ?? "Unknown District";
-            const rep = feature.properties?.REPNAME1;
-            const popup = rep
-              ? `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong><br><span style="font-size:12px;color:#87817A">Commissioner: ${rep}</span>`
-              : `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong>`;
-            (lyr as L.Layer).bindPopup(popup);
-          },
-        });
+      // Load all GeoJSON
+      LAYERS.forEach(async (layer) => {
+        try {
+          const res = await fetch(layer.file);
+          if (!res.ok) return;
+          const fc: FeatureCollection = await res.json();
+          geoData.current[layer.id] = fc;
 
-        layerGroups.current[layer.id] = gj;
+          const gj = L.geoJSON(fc, {
+            style: {
+              fillColor: layer.color,
+              fillOpacity: 0.25,
+              color: layer.strokeColor,
+              weight: 2,
+              opacity: 0.85,
+            },
+            onEachFeature: (feature, lyr) => {
+              const popup = layer.popupFn
+                ? layer.popupFn(feature.properties ?? {})
+                : `<strong style="font-family:Outfit,sans-serif;font-size:14px">${feature.properties?.[layer.nameKey] ?? "Unknown"}</strong>`;
+              (lyr as L.Layer).bindPopup(popup);
+            },
+          });
 
-        // Show commission by default
-        if (layer.id === "commission") {
-          gj.addTo(map);
+          layerGroups.current[layer.id] = gj;
+
+          if (layer.id === "commission") {
+            gj.addTo(map);
+          }
+        } catch {
+          /* skip */
         }
-      } catch {
-        console.warn(`Failed to load ${layer.file}`);
-      }
-    });
+      });
+
+      setReady(true);
+
+      // Force a resize after mount so tiles render correctly
+      setTimeout(() => map.invalidateSize(), 100);
+    }, 150);
 
     return () => {
-      map.remove();
-      mapInstance.current = null;
+      clearTimeout(timer);
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ---- Sync active layers with map ---- */
+  /* ---- Sync active layers ---- */
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
@@ -183,9 +227,9 @@ export default function DistrictMap() {
         if (map.hasLayer(lg)) map.removeLayer(lg);
       }
     });
-  }, [active]);
+  }, [active, ready]);
 
-  /* ---- Toggle helper ---- */
+  /* ---- Toggle ---- */
   const toggle = useCallback((id: string) => {
     setActive((prev) => {
       const next = new Set(prev);
@@ -195,7 +239,7 @@ export default function DistrictMap() {
     });
   }, []);
 
-  /* ---- Address lookup ---- */
+  /* ---- Address lookup (via our API route to avoid CORS) ---- */
   const handleSearch = useCallback(
     async (e?: React.FormEvent) => {
       if (e) e.preventDefault();
@@ -205,10 +249,9 @@ export default function DistrictMap() {
       setMatches(null);
 
       try {
-        // Use Census Geocoder (free, no API key)
-        const encoded = encodeURIComponent(address.trim());
-        const url = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encoded}&benchmark=Public_AR_Current&format=json`;
-        const res = await fetch(url);
+        const res = await fetch(
+          `/api/geocode?address=${encodeURIComponent(address.trim())}`,
+        );
         const data = await res.json();
 
         const match = data?.result?.addressMatches?.[0];
@@ -259,6 +302,13 @@ export default function DistrictMap() {
                   if (feature.properties?.[k])
                     details[k] = feature.properties[k];
                 });
+                // For school zones, include middle/high info
+                if (layer.id === "school-zones") {
+                  if (feature.properties?.NAMEMID)
+                    details.NAMEMID = feature.properties.NAMEMID;
+                  if (feature.properties?.NAMEHIGH)
+                    details.NAMEHIGH = feature.properties.NAMEHIGH;
+                }
                 results.push({
                   layerLabel: layer.label,
                   districtName: name,
@@ -267,12 +317,12 @@ export default function DistrictMap() {
                 });
               }
             } catch {
-              /* skip malformed geometries */
+              /* skip */
             }
           });
         });
 
-        // Turn on all matched layers so user can see them
+        // Turn on matched layers
         if (results.length > 0) {
           const matchedIds = new Set<string>();
           results.forEach((r) => {
@@ -338,7 +388,7 @@ export default function DistrictMap() {
               whiteSpace: "nowrap",
             }}
           >
-            {searching ? "Searching…" : "Find my districts"}
+            {searching ? "Searching\u2026" : "Find my districts"}
           </button>
         </div>
       </form>
@@ -374,10 +424,7 @@ export default function DistrictMap() {
           {matches.map((m, i) => (
             <div
               key={i}
-              style={{
-                padding: "16px 18px",
-                background: "var(--card)",
-              }}
+              style={{ padding: "16px 18px", background: "var(--card)" }}
             >
               <div
                 style={{
@@ -412,6 +459,30 @@ export default function DistrictMap() {
                   }}
                 >
                   Commissioner: {m.details.REPNAME1}
+                </div>
+              )}
+              {m.details.NAMEMID && (
+                <div
+                  style={{
+                    fontSize: "var(--micro)",
+                    color: "var(--text-secondary)",
+                    marginTop: 4,
+                    fontWeight: 500,
+                  }}
+                >
+                  Middle: {m.details.NAMEMID}
+                </div>
+              )}
+              {m.details.NAMEHIGH && (
+                <div
+                  style={{
+                    fontSize: "var(--micro)",
+                    color: "var(--text-secondary)",
+                    marginTop: 4,
+                    fontWeight: 500,
+                  }}
+                >
+                  High: {m.details.NAMEHIGH}
                 </div>
               )}
             </div>
@@ -507,9 +578,10 @@ export default function DistrictMap() {
         }}
       >
         District boundaries: Commission &amp; Water Authority districts via
-        Macon-Bibb County GIS · Congressional, State Senate, State House &amp;
-        School districts via U.S. Census Bureau TIGER/Line. Address lookup
-        powered by the Census Geocoder.
+        Macon-Bibb County GIS · Congressional, State Senate, State House
+        districts via U.S. Census Bureau TIGER/Line · School attendance zones
+        via Macon-Bibb County GIS. Address lookup powered by the Census
+        Geocoder.
       </div>
     </div>
   );
