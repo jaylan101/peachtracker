@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
-
-// Leaflet can only run in the browser — no SSR
-const DistrictMap = dynamic(() => import("./district-map"), { ssr: false });
+import DistrictMapLoader from "./district-map-loader";
 
 export const metadata: Metadata = {
   title: "Find Your Districts — PeachTracker",
@@ -84,7 +81,7 @@ export default function DistrictsPage() {
             padding: "32px var(--gutter) 64px",
           }}
         >
-          <DistrictMap />
+          <DistrictMapLoader />
         </div>
       </section>
 
