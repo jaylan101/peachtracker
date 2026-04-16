@@ -1,0 +1,50 @@
+import type { Metadata } from "next";
+import { Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
+const BASE_URL = "https://peachtracker.vercel.app";
+
+export const metadata: Metadata = {
+  title: "PeachTracker — Macon-Bibb civic tracker",
+  description:
+    "Live election results, commission votes, and civic news for Macon-Bibb County, Georgia.",
+  openGraph: {
+    title: "PeachTracker — Macon-Bibb civic tracker",
+    description:
+      "Live election results for Macon-Bibb County, Georgia, reported by the community.",
+    url: BASE_URL,
+    siteName: "PeachTracker",
+    images: [{ url: `${BASE_URL}/api/og`, width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PeachTracker — Macon-Bibb civic tracker",
+    description:
+      "Live election results for Macon-Bibb County, Georgia, reported by the community.",
+    images: [`${BASE_URL}/api/og`],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={outfit.variable}>
+      <body className="font-sans">
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  );
+}
