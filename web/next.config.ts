@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 04:41 — fix: remove extra slash on candidate B photo src causing broken images
+// Build: 2026-04-16 05:00 — fix: remove hardcoded secrets from gen-embeddings and test-search; lower vector threshold to 0.2
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

@@ -54,8 +54,8 @@ async function embedText(text: string): Promise<number[] | null> {
 async function vectorSearch(queryEmbedding: number[]): Promise<string[]> {
   const { data, error } = await supabase.rpc("match_knowledge_chunks", {
     query_embedding: queryEmbedding,
-    match_threshold: 0.3,
-    match_count: 4,
+    match_threshold: 0.2,
+    match_count: 5,
   });
   if (error || !data) return [];
   return (data as Array<{ content: string; similarity: number }>)
