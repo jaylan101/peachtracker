@@ -290,7 +290,7 @@ export default async function BlogPostPage({
                 border: "1.5px solid var(--border)",
               }}
             >
-              {(related ?? []).map((r: BlogPost) => (
+              {(related ?? []).map((r) => (
                 <Link
                   key={r.id}
                   href={`/blog/${r.slug}`}
