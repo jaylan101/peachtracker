@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 01:25 — feat: add Mulberry AI civic chatbot — floating bubble, /ask page, API route, nav link
+// Build: 2026-04-16 01:42 — force cache bust: Mulberry chatbot + /ask page + nav
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
 // Env vars still take precedence if set; these are fallbacks so Vercel
