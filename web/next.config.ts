@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 05:07 — fix: filter mayor-pro-tem chunks when asking about the mayor; move Lester Miller chunk to end
+// Build: 2026-04-16 05:09 — fix: who-is-mayor queries now return only the Lester Miller chunk for clean answer
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

@@ -194,24 +194,29 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Post-retrieval intent filtering
-    //    When asking about "the mayor" (not "mayor pro tem"), suppress
-    //    chunks that are primarily about the mayor pro tem role.
-    if (chunks.length > 1) {
+    //    When asking "who is the mayor" (not "mayor pro tem"), prioritize
+    //    CHUNK 029 (Lester Miller) and filter out off-topic chunks.
+    if (chunks.length > 0) {
       const q = question.toLowerCase();
-      const askingAboutMayor = /\bmayor\b/.test(q) && !/pro.?tem\b/.test(q);
-      if (askingAboutMayor) {
-        const filtered = chunks.filter((c) => {
-          // Suppress chunks whose first sentence is about mayor pro tem
-          const firstSentence = c.split(".")[0].toLowerCase();
-          return !(/mayor pro tem/.test(firstSentence));
-        });
-        // Only use the filtered list if it still has relevant chunks
-        if (filtered.length > 0) chunks = filtered;
-        // Ensure the Lester Miller chunk comes last (freshest in context)
-        const millerIdx = chunks.findIndex((c) => /lester miller/i.test(c));
-        if (millerIdx >= 0 && millerIdx < chunks.length - 1) {
-          const [millerChunk] = chunks.splice(millerIdx, 1);
-          chunks.push(millerChunk);
+      const isWhoIsMayor =
+        /\bmayor\b/.test(q) &&
+        !/pro.?tem\b/.test(q) &&
+        /\b(who|what|tell me|current|name)\b/.test(q);
+
+      if (isWhoIsMayor) {
+        // Try to isolate just the Lester Miller chunk — the authoritative answer
+        const millerChunk = chunks.find((c) => /lester miller/i.test(c));
+        if (millerChunk) {
+          // Use only the Lester Miller chunk so Gemma isn't confused by legal text
+          chunks = [millerChunk];
+        } else {
+          // No Miller chunk in results; filter out pro-tem and charter legal text
+          const filtered = chunks.filter((c) => {
+            const lower = c.toLowerCase();
+            return !(/mayor pro tem/.test(lower.split(".")[0])) &&
+                   !/shall serve at the pleasure of the mayor/.test(lower);
+          });
+          if (filtered.length > 0) chunks = filtered;
         }
       }
     }
