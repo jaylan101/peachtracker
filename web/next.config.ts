@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 02:43 — fix: ask page chat box uses explicit calc(100svh) height so it never grows the page on mobile
+// Build: 2026-04-16 02:47 — fix: ask page uses position:fixed layout so iOS keyboard cannot scroll body out of view
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
