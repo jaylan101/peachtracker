@@ -138,7 +138,7 @@ export default async function Home() {
                   fontSize: "1.25rem",
                   letterSpacing: "-0.015em",
                 }}>
-                  Context for what&rsquo;s on the ballot
+                  Local news that matters
                 </div>
               </div>
               <Link href="/blog" style={{
