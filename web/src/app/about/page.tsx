@@ -344,30 +344,32 @@ export default function AboutPage() {
                 be accessible to the people it affects most.
               </p>
             </div>
-            <p
-              style={{
-                fontSize: "var(--body)",
-                fontStyle: "italic",
-                color: "var(--text-secondary)",
-                lineHeight: 1.55,
-                fontWeight: 450,
-                marginTop: 20,
-              }}
-            >
-              &ldquo;Let your light so shine before men, that they may see your
-              good works.&rdquo;
-            </p>
-            <p
-              style={{
-                fontSize: "var(--micro)",
-                color: "var(--text-light)",
-                fontWeight: 600,
-                marginTop: 6,
-                letterSpacing: "0.04em",
-              }}
-            >
-              Matthew 5:16
-            </p>
+            <div className="about-founder-scripture">
+              <p
+                style={{
+                  fontSize: "var(--body)",
+                  fontStyle: "italic",
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.55,
+                  fontWeight: 450,
+                  marginTop: 20,
+                }}
+              >
+                &ldquo;Let your light so shine before men, that they may see your
+                good works.&rdquo;
+              </p>
+              <p
+                style={{
+                  fontSize: "var(--micro)",
+                  color: "var(--text-light)",
+                  fontWeight: 600,
+                  marginTop: 6,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Matthew 5:16
+              </p>
+            </div>
           </div>
         </div>
       </section>
