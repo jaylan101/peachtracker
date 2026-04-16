@@ -265,8 +265,7 @@ export function MulberryFullPage() {
           border: "2px solid var(--text)",
           display: "flex",
           background: "var(--card)",
-          position: hasMessages ? "sticky" : "relative",
-          bottom: hasMessages ? 20 : undefined,
+          position: "relative",
         }}
       >
         <input
@@ -280,7 +279,7 @@ export function MulberryFullPage() {
             border: "none",
             outline: "none",
             padding: "16px 20px",
-            fontSize: "var(--body)",
+            fontSize: "16px",
             fontFamily: "inherit",
             background: "transparent",
             color: "var(--text)",
