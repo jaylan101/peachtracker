@@ -150,6 +150,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, agendaId, meetingId: meeting.id, itemsSynced, votesSynced });
   }
 
+  // ── PHASE: all-meeting-ids ───────────────────────────────────────────────────
+  // Returns all meeting IDs in the DB so the client can run phase 2 on meetings
+  // that weren't returned by the Events API (e.g. manually-inserted rows).
+  if (phase === "all-meeting-ids") {
+    const { data: rows } = await supabase
+      .from("meetings")
+      .select("id")
+      .order("meeting_date", { ascending: false });
+    return NextResponse.json({ meetingIds: (rows ?? []).map((r) => r.id) });
+  }
+
   // ── PHASE: items ─────────────────────────────────────────────────────────────
   // Fetch agenda items + votes for one meeting. Called per-meeting from the UI.
   if (phase === "items" && targetMeetingId) {

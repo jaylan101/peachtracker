@@ -23,8 +23,17 @@ export function SyncCivicClerkButton() {
       const d1 = await r1.json();
       if (!r1.ok) throw new Error(d1.error ?? "Phase 1 failed");
 
-      addLog(`✓ ${d1.meetingsSynced} meetings synced`);
-      const ids: string[] = d1.meetingIds ?? [];
+      addLog(`✓ ${d1.meetingsSynced} meetings synced from CivicClerk`);
+
+      // Also fetch ALL meeting IDs from DB — catches manually-inserted meetings
+      // that aren't returned by the Events API (e.g. March 18 2026 event 2401).
+      const allDbResp = await fetch("/api/sync-civicclerk?phase=all-meeting-ids", { method: "POST" });
+      const allDbData = allDbResp.ok ? await allDbResp.json() : { meetingIds: [] };
+      const phase1Ids: string[] = d1.meetingIds ?? [];
+      const phase1Set = new Set(phase1Ids);
+      const extraIds: string[] = (allDbData.meetingIds ?? []).filter((id: string) => !phase1Set.has(id));
+      if (extraIds.length > 0) addLog(`+ ${extraIds.length} additional DB meetings to process`);
+      const ids: string[] = [...phase1Ids, ...extraIds];
       setProgress({ done: 0, total: ids.length });
 
       if (ids.length === 0) {
