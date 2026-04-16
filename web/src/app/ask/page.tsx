@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AskPage() {
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
       <AccentBar />
       <SiteNav />
 
@@ -67,15 +67,29 @@ export default function AskPage() {
         </div>
       </div>
 
-      {/* Main chat area */}
+      {/* Main chat area — fills remaining viewport height so input stays pinned */}
       <div
         style={{
-          maxWidth: 760,
-          margin: "0 auto",
-          padding: "40px var(--gutter) 80px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
         }}
       >
-        <MulberryFullPage />
+        <div
+          style={{
+            flex: 1,
+            maxWidth: 760,
+            width: "100%",
+            margin: "0 auto",
+            padding: "32px var(--gutter) 24px",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+          }}
+        >
+          <MulberryFullPage />
+        </div>
       </div>
 
       {/* About Mulberry */}
@@ -144,6 +158,6 @@ export default function AskPage() {
       </div>
 
       <SiteFooter />
-    </>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 02:04 — fix: Mulberry mobile — full screen panel, no page jump, no iOS zoom
+// Build: 2026-04-16 02:08 — fix: ask page mobile scroll — flex container fills viewport, messages scroll internally, input stays pinned
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
