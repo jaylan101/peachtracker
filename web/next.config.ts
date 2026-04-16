@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:43 — feat: Mulberry knowledge base — 64 Macon-Bibb civic chunks, keyword search RAG
+// Build: 2026-04-16 03:44 — fix district map: add geocoder API proxy for address lookup, reproject water authority to WGS84, replace school district with 74 attendance zones, fix Leaflet CSS loading
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
