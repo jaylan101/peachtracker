@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 02:51 — fix: hide floating Mulberry bubble on /ask page
+// Build: 2026-04-16 03:34 — Add interactive district map page with 6 layers — Commission, Congressional, State Senate, State House, Water Authority, School — plus address lookup
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

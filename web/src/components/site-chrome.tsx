@@ -10,6 +10,7 @@ export function AccentBar() {
 
 const NAV_LINKS = [
   { href: "/elections", label: "Elections" },
+  { href: "/districts", label: "Districts" },
   { href: "/ask", label: "Ask Mulberry" },
   { href: "/blog", label: "Civic Desk" },
   { href: "/about", label: "About" },
