@@ -10,13 +10,15 @@ interface Props {
 }
 
 export function EmailSignup({ source = "website", variant = "default" }: Props) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "exists" | "error">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !trimmed.includes("@")) return;
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !trimmedEmail.includes("@")) return;
 
     setStatus("saving");
 
@@ -24,14 +26,23 @@ export function EmailSignup({ source = "website", variant = "default" }: Props) 
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, source }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          source,
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         setStatus(data.exists ? "exists" : "done");
-        if (!data.exists) setEmail("");
+        if (!data.exists) {
+          setEmail("");
+          setFirstName("");
+          setLastName("");
+        }
       } else {
         setStatus("error");
       }
@@ -78,62 +89,87 @@ export function EmailSignup({ source = "website", variant = "default" }: Props) 
     );
   }
 
+  const inputBase: React.CSSProperties = {
+    padding: "10px 14px",
+    fontSize: "var(--body)",
+    fontWeight: 500,
+    fontFamily: "inherit",
+    border: "1.5px solid var(--border)",
+    background: "var(--card)",
+    color: "var(--text)",
+    outline: "none",
+    borderRadius: 0,
+    minWidth: 0,
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
       style={{
         display: "flex",
-        gap: 0,
+        flexDirection: "column",
+        gap: 8,
         maxWidth: isHero ? 420 : 480,
         width: "100%",
       }}
     >
-      <input
-        type="email"
-        required
-        placeholder="your@email.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{
-          flex: 1,
-          padding: "12px 16px",
-          fontSize: "var(--body)",
-          fontWeight: 500,
-          fontFamily: "inherit",
-          border: "1.5px solid var(--border)",
-          borderRight: "none",
-          background: "var(--card)",
-          color: "var(--text)",
-          outline: "none",
-          borderRadius: 0,
-          minWidth: 0,
-        }}
-      />
-      <button
-        type="submit"
-        disabled={status === "saving"}
-        style={{
-          padding: "12px 20px",
-          fontSize: "var(--kicker)",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          fontFamily: "inherit",
-          background: "var(--peach)",
-          color: "#fff",
-          border: "1.5px solid var(--peach)",
-          cursor: status === "saving" ? "wait" : "pointer",
-          whiteSpace: "nowrap",
-          borderRadius: 0,
-        }}
-      >
-        {status === "saving" ? "…" : "Sign up"}
-      </button>
+      {/* Name row */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          placeholder="First name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          style={{ ...inputBase, flex: 1 }}
+        />
+        <input
+          type="text"
+          placeholder="Last name"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          style={{ ...inputBase, flex: 1 }}
+        />
+      </div>
+
+      {/* Email + submit row */}
+      <div style={{ display: "flex", gap: 0 }}>
+        <input
+          type="email"
+          required
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{
+            ...inputBase,
+            flex: 1,
+            borderRight: "none",
+          }}
+        />
+        <button
+          type="submit"
+          disabled={status === "saving"}
+          style={{
+            padding: "10px 20px",
+            fontSize: "var(--kicker)",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            fontFamily: "inherit",
+            background: "var(--peach)",
+            color: "#fff",
+            border: "1.5px solid var(--peach)",
+            cursor: status === "saving" ? "wait" : "pointer",
+            whiteSpace: "nowrap",
+            borderRadius: 0,
+          }}
+        >
+          {status === "saving" ? "…" : "Sign up"}
+        </button>
+      </div>
+
       {status === "error" && (
         <div
           style={{
-            position: "absolute",
-            marginTop: 52,
             fontSize: "var(--micro)",
             color: "var(--peach)",
             fontWeight: 600,

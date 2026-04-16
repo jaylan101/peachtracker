@@ -5,11 +5,17 @@ const BREVO_LIST_ID = 2; // "Your first list"
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, source } = await req.json();
+    const { email, firstName, lastName, source } = await req.json();
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
+
+    const attributes: Record<string, string> = {
+      SOURCE: source || "website",
+    };
+    if (firstName) attributes.FIRSTNAME = firstName;
+    if (lastName) attributes.LASTNAME = lastName;
 
     const res = await fetch("https://api.brevo.com/v3/contacts", {
       method: "POST",
@@ -21,10 +27,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         email: email.trim().toLowerCase(),
         listIds: [BREVO_LIST_ID],
-        attributes: {
-          SOURCE: source || "website",
-        },
-        updateEnabled: true, // if contact exists, update instead of error
+        attributes,
+        updateEnabled: true,
       }),
     });
 
@@ -34,8 +38,6 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json();
 
-    // "Contact already exist" — Brevo returns this when updateEnabled
-    // doesn't apply (already in the list)
     if (data.code === "duplicate_parameter") {
       return NextResponse.json({ ok: true, exists: true });
     }
