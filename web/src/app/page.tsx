@@ -138,7 +138,7 @@ export default async function Home() {
                   fontSize: "1.25rem",
                   letterSpacing: "-0.015em",
                 }}>
-                  Local news that matters
+                  Making local government easier to understand
                 </div>
               </div>
               <Link href="/blog" style={{

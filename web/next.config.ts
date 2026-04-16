@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-15 23:58 — update Civic Desk subhead on home page
+// Build: 2026-04-15 23:59 — update Civic Desk subhead — government explainer framing
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
 // Env vars still take precedence if set; these are fallbacks so Vercel
