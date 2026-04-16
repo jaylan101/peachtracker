@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 03:52 — fix: update commissioners for districts 3 (Stanley Stewart), 5 (Vacant), 9 (Brendalyn Bailey); add Bibb County School District label to school zone popups and results
+// Build: 2026-04-16 03:54 — add BOE school board districts layer with 6 voting districts + board members; update District 5 commissioner to Andrea Cooke
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

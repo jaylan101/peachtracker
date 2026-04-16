@@ -79,6 +79,22 @@ const LAYERS: DistrictLayer[] = [
     nameKey: "NAME",
   },
   {
+    id: "boe",
+    label: "School Board",
+    file: "/districts/boe.geojson",
+    color: "#D16BA5",
+    strokeColor: "#B54E89",
+    nameKey: "NAME",
+    detailKeys: ["BoardMember"],
+    popupFn: (p) => {
+      const name = p.NAME as string ?? "Unknown";
+      const member = p.BoardMember as string;
+      return member
+        ? `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong><br><span style="font-size:12px;color:#87817A">Board Member: ${member}</span><br><span style="font-size:11px;color:#87817A">Bibb County School District</span>`
+        : `<strong style="font-family:Outfit,sans-serif;font-size:14px">${name}</strong>`;
+    },
+  },
+  {
     id: "school-zones",
     label: "School Zones",
     file: "/districts/school-zones.geojson",
@@ -462,6 +478,18 @@ export default function DistrictMap() {
                   Commissioner: {m.details.REPNAME1}
                 </div>
               )}
+              {m.details.BoardMember && (
+                <div
+                  style={{
+                    fontSize: "var(--micro)",
+                    color: "var(--text-secondary)",
+                    marginTop: 4,
+                    fontWeight: 500,
+                  }}
+                >
+                  Board Member: {m.details.BoardMember}
+                </div>
+              )}
               {m.layerLabel === "School Zones" && (
                 <div
                   style={{
@@ -592,9 +620,9 @@ export default function DistrictMap() {
       >
         District boundaries: Commission &amp; Water Authority districts via
         Macon-Bibb County GIS · Congressional, State Senate, State House
-        districts via U.S. Census Bureau TIGER/Line · School attendance zones
-        via Macon-Bibb County GIS. Address lookup powered by the Census
-        Geocoder.
+        districts via U.S. Census Bureau TIGER/Line · BOE districts &amp;
+        school attendance zones via Macon-Bibb County GIS. Address lookup
+        powered by the Census Geocoder.
       </div>
     </div>
   );
