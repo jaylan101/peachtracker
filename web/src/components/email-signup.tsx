@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface Props {
-  /** Where the form is placed — stored in the `source` column */
+  /** Where the form is placed — passed to Brevo as SOURCE attribute */
   source?: string;
   /** Visual variant */
   variant?: "default" | "hero";
@@ -12,7 +11,7 @@ interface Props {
 
 export function EmailSignup({ source = "website", variant = "default" }: Props) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "done" | "error" | "exists">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "done" | "exists" | "error">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,22 +19,24 @@ export function EmailSignup({ source = "website", variant = "default" }: Props) 
     if (!trimmed || !trimmed.includes("@")) return;
 
     setStatus("saving");
-    const supabase = createClient();
 
-    const { error } = await supabase
-      .from("email_subscribers")
-      .insert({ email: trimmed, source });
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed, source }),
+      });
 
-    if (error) {
-      // Unique constraint violation = already subscribed
-      if (error.code === "23505") {
-        setStatus("exists");
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus(data.exists ? "exists" : "done");
+        if (!data.exists) setEmail("");
       } else {
         setStatus("error");
       }
-    } else {
-      setStatus("done");
-      setEmail("");
+    } catch {
+      setStatus("error");
     }
   }
 

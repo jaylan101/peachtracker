@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 00:13 — update founder scripture to Proverbs 27:17
+// Build: 2026-04-16 00:25 — feat: Brevo email signup integration
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
 // Env vars still take precedence if set; these are fallbacks so Vercel
