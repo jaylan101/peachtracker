@@ -1,11 +1,31 @@
 // Shared PeachTracker chrome — accent bar, sticky nav with logo, footer.
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 export function AccentBar() {
   return <div className="accent-bar" aria-hidden />;
 }
 
+const NAV_LINKS = [
+  { href: "/elections", label: "Elections" },
+  { href: "/blog", label: "Civic Desk" },
+  { href: "/about", label: "About" },
+];
+
+const navLinkStyle: React.CSSProperties = {
+  fontSize: "var(--kicker)",
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.14em",
+  color: "var(--text)",
+  textDecoration: "none",
+};
+
 export function SiteNav() {
+  const [open, setOpen] = useState(false);
+
   return (
     <nav className="nav">
       <div className="nav-inner" style={{ justifyContent: "space-between" }}>
@@ -17,55 +37,77 @@ export function SiteNav() {
             alt="PeachTracker"
           />
         </Link>
-        <div
-          style={{
-            display: "flex",
-            gap: 28,
-            alignItems: "center",
-          }}
-        >
-          <Link
-            href="/elections"
-            style={{
-              fontSize: "var(--kicker)",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--text)",
-              textDecoration: "none",
-            }}
-          >
-            Elections
-          </Link>
-          <Link
-            href="/blog"
-            style={{
-              fontSize: "var(--kicker)",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--text)",
-              textDecoration: "none",
-            }}
-          >
-            Civic Desk
-          </Link>
-          <Link
-            href="/about"
-            style={{
-              fontSize: "var(--kicker)",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "var(--text)",
-              textDecoration: "none",
-            }}
-          >
-            About
-          </Link>
-          {/* Commission link hidden — WIP, pending vote sync fix */}
+
+        {/* Desktop nav links */}
+        <div className="nav-links-desktop">
+          {NAV_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} style={navLinkStyle}>
+              {l.label}
+            </Link>
+          ))}
         </div>
+
+        {/* Mobile hamburger button */}
+        <button
+          className="nav-hamburger"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? "Close menu" : "Open menu"}
+        >
+          <span
+            style={{
+              display: "block",
+              width: 22,
+              height: 2,
+              background: "var(--text)",
+              transition: "transform 200ms ease, opacity 200ms ease",
+              transform: open ? "rotate(45deg) translate(4px, 4px)" : "none",
+            }}
+          />
+          <span
+            style={{
+              display: "block",
+              width: 22,
+              height: 2,
+              background: "var(--text)",
+              marginTop: 5,
+              transition: "opacity 200ms ease",
+              opacity: open ? 0 : 1,
+            }}
+          />
+          <span
+            style={{
+              display: "block",
+              width: 22,
+              height: 2,
+              background: "var(--text)",
+              marginTop: 5,
+              transition: "transform 200ms ease, opacity 200ms ease",
+              transform: open ? "rotate(-45deg) translate(4px, -4px)" : "none",
+            }}
+          />
+        </button>
       </div>
+
+      {/* Mobile dropdown */}
+      {open && (
+        <div className="nav-mobile-menu">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              style={{
+                ...navLinkStyle,
+                display: "block",
+                padding: "14px var(--gutter)",
+                borderTop: "1px solid var(--border)",
+              }}
+              onClick={() => setOpen(false)}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
@@ -80,7 +122,7 @@ export function SiteFooter() {
           src="/images/peachlogo2-remove-bg-io.png"
           alt="PeachTracker"
         />
-        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
           <Link
             href="/elections"
             style={{

@@ -74,6 +74,23 @@ button, input, select, textarea { border-radius: 0; }
   display: inline-block;
   line-height: 0;
 }
+.nav-links-desktop {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+.nav-mobile-menu {
+  display: none;
+  background: var(--card);
+  padding-bottom: 8px;
+}
 
 /* ============================================================
    HERO — autoplay aerial Macon video behind a peach gradient.
@@ -730,6 +747,46 @@ button, input, select, textarea { border-radius: 0; }
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+
+/* ============================================================
+   ABOUT PAGE
+   ============================================================ */
+.about-sidebar-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.about-values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5px;
+  background: var(--border);
+  border: 1.5px solid var(--border);
+}
+.about-founder-row {
+  display: flex;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+.about-founder-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Mobile nav — hamburger replaces inline links */
+@media (max-width: 700px) {
+  .nav-links-desktop { display: none; }
+  .nav-hamburger { display: block; }
+  .nav-mobile-menu { display: block; }
+  .nav-logo { height: 42px; }
+  .nav-inner { padding: 12px var(--gutter); }
+}
+
 @media (max-width: 960px) {
   :root { --gutter: 28px; }
   .hero {
@@ -756,6 +813,7 @@ button, input, select, textarea { border-radius: 0; }
   }
   .why-inner { grid-template-columns: 1fr; gap: 24px; padding: 56px var(--gutter); }
   .disclaimer { grid-template-columns: 1fr; gap: 12px; }
+  .about-sidebar-grid { grid-template-columns: 1fr; gap: 16px; }
 }
 
 @media (max-width: 560px) {
@@ -791,6 +849,9 @@ button, input, select, textarea { border-radius: 0; }
     );
   }
   .footer-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .about-values-grid { grid-template-columns: 1fr; }
+  .about-founder-row { flex-direction: column; gap: 16px; }
+  .about-founder-img { width: 80px; height: 80px; }
 }
 
 /* Hero entrance animation */

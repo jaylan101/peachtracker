@@ -77,14 +77,7 @@ export default function AboutPage() {
           padding: "64px var(--gutter) 56px",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "220px 1fr",
-            gap: 32,
-            alignItems: "start",
-          }}
-        >
+        <div className="about-sidebar-grid">
           <span
             style={{
               fontSize: "var(--kicker)",
@@ -182,15 +175,7 @@ export default function AboutPage() {
             Our values
           </h2>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-              gap: "1.5px",
-              background: "var(--border)",
-              border: "1.5px solid var(--border)",
-            }}
-          >
+          <div className="about-values-grid">
             {/* Value 1 — Truth & Transparency */}
             <div style={{ background: "var(--bg)", padding: "36px 32px" }}>
               <div
@@ -321,14 +306,7 @@ export default function AboutPage() {
           padding: "64px var(--gutter) 56px",
         }}
       >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "220px 1fr",
-            gap: 32,
-            alignItems: "start",
-          }}
-        >
+        <div className="about-sidebar-grid">
           <span
             style={{
               fontSize: "var(--kicker)",
@@ -344,18 +322,12 @@ export default function AboutPage() {
             Who&rsquo;s behind this
           </span>
           <div style={{ maxWidth: 640 }}>
-            <div style={{ display: "flex", gap: 24, alignItems: "start", marginBottom: 20 }}>
+            <div className="about-founder-row">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                className="about-founder-img"
                 src="/images/founder-headshot.jpg"
                 alt="Jaylan Scott"
-                style={{
-                  width: 100,
-                  height: 100,
-                  objectFit: "cover",
-                  border: "1.5px solid var(--border)",
-                  flexShrink: 0,
-                }}
               />
               <p
                 style={{

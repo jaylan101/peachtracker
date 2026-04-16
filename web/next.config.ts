@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 00:06 — feat: email signup list + founder headshot on About page
+// Build: 2026-04-16 00:09 — feat: mobile hamburger nav + responsive fixes for About page
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
 // Env vars still take precedence if set; these are fallbacks so Vercel
