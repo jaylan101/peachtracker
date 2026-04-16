@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
+import { EmailSignup } from "@/components/email-signup";
 import type { Election } from "@/lib/supabase/types";
 
 // Civic landing page.
@@ -94,6 +95,20 @@ export default async function Home() {
                   </Link>
                 </div>
               )}
+            </div>
+
+            {/* Email signup */}
+            <div style={{ marginTop: 24 }}>
+              <div style={{
+                fontSize: "var(--micro)",
+                fontWeight: 600,
+                color: "var(--text-secondary)",
+                marginBottom: 8,
+                letterSpacing: "0.02em",
+              }}>
+                Stay in the loop — election updates &amp; Civic Desk posts.
+              </div>
+              <EmailSignup source="hero" variant="hero" />
             </div>
           </div>
         </section>

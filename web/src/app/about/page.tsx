@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
+import { EmailSignup } from "@/components/email-signup";
 
 export const metadata = {
   title: "About — PeachTracker",
@@ -343,20 +344,34 @@ export default function AboutPage() {
             Who&rsquo;s behind this
           </span>
           <div style={{ maxWidth: 640 }}>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                fontWeight: 450,
-                lineHeight: 1.6,
-                color: "var(--text)",
-              }}
-            >
-              PeachTracker is built and maintained by{" "}
-              <strong>Jaylan Scott</strong> — born and raised in Macon, Georgia.
-              This isn&rsquo;t a media company or a political operation.
-              It&rsquo;s a community tool, built because the information should
-              be accessible to the people it affects most.
-            </p>
+            <div style={{ display: "flex", gap: 24, alignItems: "start", marginBottom: 20 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/founder-headshot.jpg"
+                alt="Jaylan Scott"
+                style={{
+                  width: 100,
+                  height: 100,
+                  objectFit: "cover",
+                  border: "1.5px solid var(--border)",
+                  flexShrink: 0,
+                }}
+              />
+              <p
+                style={{
+                  fontSize: "1.1rem",
+                  fontWeight: 450,
+                  lineHeight: 1.6,
+                  color: "var(--text)",
+                }}
+              >
+                PeachTracker is built and maintained by{" "}
+                <strong>Jaylan Scott</strong> — born and raised in Macon, Georgia.
+                This isn&rsquo;t a media company or a political operation.
+                It&rsquo;s a community tool, built because the information should
+                be accessible to the people it affects most.
+              </p>
+            </div>
             <p
               style={{
                 fontSize: "var(--body)",
@@ -422,6 +437,9 @@ export default function AboutPage() {
             Follow along with elections, commission coverage, and Civic Desk
             explainers.
           </p>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <EmailSignup source="about-cta" />
+          </div>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
             <Link
               href="/elections"
