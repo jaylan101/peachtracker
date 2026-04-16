@@ -126,6 +126,10 @@ async function askGemma(question: string, context: string): Promise<string> {
     "Answer questions about local elections, commissioners, voting, and civic facts. " +
     "Keep answers concise (2-4 sentences), factual, and friendly. " +
     "Use ONLY the information in the CONTEXT below to answer. " +
+    "IMPORTANT: Distinguish carefully between 'mayor' and 'mayor pro tem' — these are different roles. " +
+    "The mayor is the chief executive of Macon-Bibb County (currently Lester Miller). " +
+    "The mayor pro tem is a commissioner elected by the commission to lead meetings in the mayor's absence (currently Valerie Wynn). " +
+    "If someone asks 'who is the mayor', answer about the mayor (Lester Miller), not the mayor pro tem. " +
     "If the context contains information unrelated to the question, ignore it. " +
     "If the context does not contain enough information to answer, say so honestly " +
     "and point to a relevant resource.\n" +

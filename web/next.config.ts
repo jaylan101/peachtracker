@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 05:00 — fix: remove hardcoded secrets from gen-embeddings and test-search; lower vector threshold to 0.2
+// Build: 2026-04-16 05:04 — fix: Mulberry system prompt distinguishes mayor vs mayor pro tem roles explicitly
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
