@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 01:55 — Mulberry AI chatbot v1
+// Build: 2026-04-16 02:04 — fix: Mulberry mobile — full screen panel, no page jump, no iOS zoom
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
