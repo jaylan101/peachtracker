@@ -81,7 +81,11 @@ export function MulberryChat() {
   }
 
   // Hide on /ask — full page chat is already there
+  // Hide on /ask (full-page Mulberry), /maintenance (branded splash),
+  // and inside /admin (back-of-house shouldn't have the public chat bubble).
   if (pathname === "/ask") return null;
+  if (pathname === "/maintenance") return null;
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <>

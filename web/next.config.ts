@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 04:48 — on-brand maintenance splash with motion.dev floating peaches
+// Build: 2026-04-17 04:51 — hide mulberry chat bubble on /maintenance and /admin
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
