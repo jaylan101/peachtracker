@@ -8,21 +8,32 @@ interface DebugChunk {
   source: string | null;
   similarity: number | null;
   rerankScore: number | null;
+  matchedVia: "question" | "body" | null;
+  matchedQuestion: string | null;
   preview: string;
   content: string;
 }
 
+interface QuestionHit {
+  chunk_id: string;
+  question: string;
+  similarity: number;
+}
+
 interface DebugResult {
   query: string;
-  source: "vector" | "keyword_fallback" | "none";
+  source: "vector" | "vector_empty" | "keyword_fallback" | "none";
   embedding: { dim: number; first_5: number[]; norm: number } | null;
   timings: Record<string, number>;
-  vector: DebugChunk[];
+  question_vector: DebugChunk[];
+  question_hits: QuestionHit[];
+  body_vector: DebugChunk[];
+  merged: DebugChunk[];
   keyword_fallback: DebugChunk[];
   rerank: DebugChunk[];
   top_k: DebugChunk[];
   context_for_llm: string;
-  config: { candidate_pool: number; top_k: number };
+  config: { candidate_pool: number; question_pool: number; top_k: number };
 }
 
 const EXAMPLE_QUERIES = [
@@ -38,7 +49,17 @@ function fmt(n: number | null, digits = 4): string {
   return n.toFixed(digits);
 }
 
-function ChunkRow({ chunk, rank, highlight }: { chunk: DebugChunk; rank: number; highlight: boolean }) {
+function ChunkRow({
+  chunk,
+  rank,
+  highlight,
+  showMatched,
+}: {
+  chunk: DebugChunk;
+  rank: number;
+  highlight: boolean;
+  showMatched?: boolean;
+}) {
   return (
     <tr style={{ background: highlight ? "var(--peach-bg)" : "transparent" }}>
       <td style={{ padding: "6px 8px", fontVariantNumeric: "tabular-nums", color: "var(--text-secondary)", fontSize: "0.8rem", width: 28 }}>{rank}</td>
@@ -54,8 +75,22 @@ function ChunkRow({ chunk, rank, highlight }: { chunk: DebugChunk; rank: number;
       <td style={{ padding: "6px 8px", fontVariantNumeric: "tabular-nums", fontSize: "0.8rem", textAlign: "right", whiteSpace: "nowrap" }}>
         {fmt(chunk.rerankScore, 4)}
       </td>
+      {showMatched && (
+        <td style={{ padding: "6px 8px", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+          {chunk.matchedVia ?? "—"}
+        </td>
+      )}
       <td style={{ padding: "6px 8px", fontSize: "0.85rem", lineHeight: 1.4 }}>
-        {chunk.preview}
+        {chunk.matchedQuestion ? (
+          <div>
+            <div style={{ fontStyle: "italic", color: "var(--text-secondary)", fontSize: "0.78rem", marginBottom: 2 }}>
+              matched: “{chunk.matchedQuestion}”
+            </div>
+            <div>{chunk.preview}</div>
+          </div>
+        ) : (
+          chunk.preview
+        )}
       </td>
     </tr>
   );
@@ -66,11 +101,13 @@ function ChunkTable({
   chunks,
   highlight,
   sortedBy,
+  showMatched,
 }: {
   title: string;
   chunks: DebugChunk[];
   highlight?: (c: DebugChunk) => boolean;
   sortedBy: "similarity" | "rerank" | "none";
+  showMatched?: boolean;
 }) {
   if (chunks.length === 0) {
     return (
@@ -94,12 +131,21 @@ function ChunkTable({
               <th style={{ padding: "6px 8px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)" }}>cat</th>
               <th style={{ padding: "6px 8px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", textAlign: "right" }}>cosine</th>
               <th style={{ padding: "6px 8px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", textAlign: "right" }}>rerank</th>
+              {showMatched && (
+                <th style={{ padding: "6px 8px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)" }}>via</th>
+              )}
               <th style={{ padding: "6px 8px", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)" }}>preview</th>
             </tr>
           </thead>
           <tbody>
             {chunks.map((c, i) => (
-              <ChunkRow key={`${c.chunk_id ?? i}-${i}`} chunk={c} rank={i + 1} highlight={!!highlight?.(c)} />
+              <ChunkRow
+                key={`${c.chunk_id ?? i}-${i}`}
+                chunk={c}
+                rank={i + 1}
+                highlight={!!highlight?.(c)}
+                showMatched={showMatched}
+              />
             ))}
           </tbody>
         </table>
@@ -146,10 +192,23 @@ export function DebugPanel() {
     ? (c: DebugChunk) => (c.chunk_id ?? "").toLowerCase() === watch.trim().toLowerCase()
     : undefined;
 
-  const candidatePool = result?.source === "keyword_fallback" ? result.keyword_fallback : result?.vector ?? [];
-  const watchInVector = highlightFn ? candidatePool.findIndex((c) => highlightFn(c)) : -1;
-  const watchInRerank = highlightFn && result ? result.rerank.findIndex((c) => highlightFn(c)) : -1;
-  const watchInTopK = highlightFn && result ? result.top_k.findIndex((c) => highlightFn(c)) : -1;
+  const watchIn = (arr: DebugChunk[]) =>
+    highlightFn ? arr.findIndex((c) => highlightFn(c)) : -1;
+
+  const watchInQuestions = result ? watchIn(result.question_vector) : -1;
+  const watchInBody = result ? watchIn(result.body_vector) : -1;
+  const watchInMerged = result ? watchIn(result.merged) : -1;
+  const watchInRerank = result ? watchIn(result.rerank) : -1;
+  const watchInTopK = result ? watchIn(result.top_k) : -1;
+
+  const retrievalPathLabel =
+    result?.source === "vector"
+      ? "vector (dual: questions + body)"
+      : result?.source === "vector_empty"
+        ? "vector (empty — no hits)"
+        : result?.source === "keyword_fallback"
+          ? "keyword fallback (no vector hits)"
+          : "none";
 
   return (
     <div>
@@ -248,7 +307,7 @@ export function DebugPanel() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 24, fontSize: "0.85rem" }}>
               <div>
                 <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)" }}>Retrieval path</div>
-                <div style={{ fontWeight: 600 }}>{result.source === "vector" ? "vector (pgvector)" : result.source === "keyword_fallback" ? "keyword fallback (no vector hits)" : "none"}</div>
+                <div style={{ fontWeight: 600 }}>{retrievalPathLabel}</div>
               </div>
               <div>
                 <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)" }}>Embedding</div>
@@ -257,14 +316,16 @@ export function DebugPanel() {
               <div>
                 <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)" }}>Timings</div>
                 <div style={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                  embed {result.timings.embed_ms}ms · vector {result.timings.vector_ms}ms · rerank {result.timings.rerank_ms}ms · total {result.timings.total_ms}ms
+                  embed {result.timings.embed_ms}ms · questions {result.timings.question_ms}ms · body {result.timings.body_ms}ms · rerank {result.timings.rerank_ms}ms · total {result.timings.total_ms}ms
                 </div>
               </div>
               {highlightFn && (
                 <div>
                   <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)" }}>Watched chunk</div>
                   <div style={{ fontWeight: 600 }}>
-                    vector: {watchInVector >= 0 ? `#${watchInVector + 1}` : "not in pool"} ·
+                    questions: {watchInQuestions >= 0 ? `#${watchInQuestions + 1}` : "not in pool"} ·
+                    body: {watchInBody >= 0 ? `#${watchInBody + 1}` : "not in pool"} ·
+                    merged: {watchInMerged >= 0 ? `#${watchInMerged + 1}` : "not in pool"} ·
                     rerank: {watchInRerank >= 0 ? `#${watchInRerank + 1}` : "not ranked"} ·
                     top-{result.config.top_k}: {watchInTopK >= 0 ? `#${watchInTopK + 1}` : "not sent to Gemini"}
                   </div>
@@ -273,28 +334,57 @@ export function DebugPanel() {
             </div>
           </div>
 
-          {/* Stage 1: vector */}
+          {/* Keyword fallback (only shown if it was used) */}
+          {result.source === "keyword_fallback" && (
+            <ChunkTable
+              title="Keyword fallback candidates"
+              chunks={result.keyword_fallback}
+              highlight={highlightFn}
+              sortedBy="similarity"
+            />
+          )}
+
+          {/* Stage 2a: question vector search */}
           <ChunkTable
-            title={result.source === "keyword_fallback" ? "Keyword fallback candidates" : `pgvector top-${result.config.candidate_pool}`}
-            chunks={result.source === "keyword_fallback" ? result.keyword_fallback : result.vector}
+            title={`Question vector top-${result.config.question_pool}  (knowledge_chunk_questions)`}
+            chunks={result.question_vector}
             highlight={highlightFn}
             sortedBy="similarity"
           />
 
-          {/* Stage 2: rerank */}
+          {/* Stage 2b: body vector search */}
+          <ChunkTable
+            title={`Body vector top-${result.config.candidate_pool}  (knowledge_chunks)`}
+            chunks={result.body_vector}
+            highlight={highlightFn}
+            sortedBy="similarity"
+          />
+
+          {/* Stage 2c: merged */}
+          <ChunkTable
+            title="Merged pool (dedupe by chunk_id, best sim wins)"
+            chunks={result.merged}
+            highlight={highlightFn}
+            sortedBy="similarity"
+            showMatched
+          />
+
+          {/* Stage 3: rerank */}
           <ChunkTable
             title="After cross-encoder rerank"
             chunks={result.rerank}
             highlight={highlightFn}
             sortedBy="rerank"
+            showMatched
           />
 
-          {/* Stage 3: final top-K */}
+          {/* Stage 4: final top-K */}
           <ChunkTable
             title={`Top-${result.config.top_k} sent to Gemini`}
             chunks={result.top_k}
             highlight={highlightFn}
             sortedBy="rerank"
+            showMatched
           />
 
           {/* Context preview */}

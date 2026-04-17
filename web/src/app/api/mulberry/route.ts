@@ -3,6 +3,8 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/ge
 import {
   embedText,
   vectorSearch,
+  questionVectorSearch,
+  mergeCandidates,
   rerank,
   keywordSearch,
   formatContext,
@@ -152,16 +154,25 @@ export async function POST(req: NextRequest) {
     const question = messages[messages.length - 1]?.content ?? "";
     console.log("[mulberry] question:", question);
 
-    // 1. Try vector search first
+    // 1. Dual vector search — questions AND body — merged by chunk_id.
+    //    Question matches usually win on similarity because the query echoes
+    //    a stored hypothetical (cosine ~0.9+). Body matches backfill chunks
+    //    no question happened to cover.
     let candidates: RetrievedChunk[] = [];
     const embedding = await embedText(question);
 
     if (embedding) {
-      candidates = await vectorSearch(embedding);
-      console.log(`[mulberry] vector search: ${candidates.length} candidates`);
+      const [{ chunks: questionChunks }, bodyChunks] = await Promise.all([
+        questionVectorSearch(embedding),
+        vectorSearch(embedding),
+      ]);
+      candidates = mergeCandidates(questionChunks, bodyChunks);
+      console.log(
+        `[mulberry] vector: questions=${questionChunks.length} body=${bodyChunks.length} merged=${candidates.length}`
+      );
     }
 
-    // 2. Keyword fallback if vector path returned nothing
+    // 2. Keyword fallback if both vector paths returned nothing
     if (candidates.length === 0) {
       candidates = await keywordSearch(question);
       console.log(`[mulberry] keyword fallback: ${candidates.length} candidates`);
