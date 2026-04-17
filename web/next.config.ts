@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 01:32 — Mulberry: swap knowledge base to 120 plain-language chunks (up from 105)
+// Build: 2026-04-17 01:35 — Mulberry: tighten system prompt to enforce plain-language, helpful-neighbor voice
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
