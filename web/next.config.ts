@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 00:59 — Mulberry RAG upgrade: 105-chunk knowledge base, BGE reranker, admin reingest UI
+// Build: 2026-04-17 01:15 — Mulberry: swap generation LLM to Gemini 2.5 Flash (retrieval unchanged)
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
