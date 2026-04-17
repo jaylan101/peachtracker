@@ -22,11 +22,17 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
 
   const { data: commissioner } = await supabase
     .from("commissioners")
-    .select("id, name, district, image_url, bio, bio_sources")
+    .select("id, name, district, image_url, bio, bio_sources, links")
     .eq("id", id)
     .maybeSingle();
 
   if (!commissioner) notFound();
+
+  // Public social / web presence. Hand-curated in the commissioners.links column.
+  // Not every commissioner has a public web presence — render only what we have.
+  const links = Array.isArray(commissioner.links)
+    ? (commissioner.links as CommissionerLink[]).filter((l) => l && typeof l.url === "string")
+    : [];
 
   // Recent news pulled weekly by the cron job. Public RLS filters to visible only.
   const { data: news } = await supabase
@@ -102,6 +108,34 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
             <p style={{ color: "var(--text-secondary)", fontSize: "var(--body)", marginTop: 8 }}>
               Macon-Bibb County Board of Commissioners
             </p>
+            {links.length > 0 && (
+              <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {links.map((l) => (
+                  <a
+                    key={l.url}
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "5px 12px",
+                      border: "1.5px solid var(--border)",
+                      background: "var(--card)",
+                      color: "var(--text)",
+                      fontSize: "var(--micro)",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    <span aria-hidden="true">{linkIcon(l.type)}</span>
+                    <span>{linkLabel(l)}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
@@ -299,6 +333,35 @@ function meetingLabel(type: string) {
 }
 function voteColor(vote: string) { return vote === "yes" ? "var(--green)" : vote === "no" ? "#DC2626" : "var(--text-secondary)"; }
 
+// Simple unicode glyphs — no icon library dependency. If we get fancy later we
+// can swap in SVGs, but for now this keeps the header light.
+function linkIcon(type: CommissionerLink["type"] | undefined): string {
+  switch (type) {
+    case "facebook": return "f";
+    case "twitter": return "𝕏";
+    case "instagram": return "◎";
+    case "website": return "↗";
+    default: return "↗";
+  }
+}
+
+function linkLabel(l: CommissionerLink): string {
+  if (l.label) return l.label;
+  switch (l.type) {
+    case "facebook": return "Facebook";
+    case "twitter": return "Twitter / X";
+    case "instagram": return "Instagram";
+    case "website": {
+      try { return new URL(l.url).hostname.replace(/^www\./, ""); }
+      catch { return "Website"; }
+    }
+    default: {
+      try { return new URL(l.url).hostname.replace(/^www\./, ""); }
+      catch { return "Link"; }
+    }
+  }
+}
+
 // Format the yes rate so we never round up to 100% if there's been any dissent.
 // Integer percent for most ranges; one decimal when it would otherwise round to 100.
 function formatYesRate(yes: number, total: number): string {
@@ -310,6 +373,11 @@ function formatYesRate(yes: number, total: number): string {
   return `${Math.round(pct)}%`;
 }
 
+interface CommissionerLink {
+  type?: "website" | "facebook" | "twitter" | "instagram" | "other";
+  label?: string;
+  url: string;
+}
 interface MeetingInfo { id: string; meeting_date: string; meeting_type: string; }
 interface VoteWithContext {
   id: string; vote: string; notes: string | null;
