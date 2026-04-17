@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-16 05:09 — fix: who-is-mayor queries now return only the Lester Miller chunk for clean answer
+// Build: 2026-04-17 00:59 — Mulberry RAG upgrade: 105-chunk knowledge base, BGE reranker, admin reingest UI
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
@@ -21,6 +21,12 @@ const config: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
     ],
+  },
+  // Ensure the Mulberry knowledge base JSONL ships with the serverless bundle.
+  // Without this, readFile() at runtime can't find web/data/knowledge-chunks.jsonl.
+  outputFileTracingIncludes: {
+    "/api/mulberry/reingest": ["./data/knowledge-chunks.jsonl"],
+    "/admin/mulberry": ["./data/knowledge-chunks.jsonl"],
   },
 };
 

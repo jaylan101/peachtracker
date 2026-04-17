@@ -3,12 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 
 // ── Mulberry API Route ────────────────────────────────────────────────────────
 // RAG pipeline:
-//   1. Embed the question using Cloudflare BGE-small (384 dims)
-//   2. Vector similarity search via match_knowledge_chunks (pgvector)
-//   3. Pass top chunks as context to Cloudflare Gemma 4 26B
-//   4. Return a grounded natural language answer
+//   1. Embed the user's question with Cloudflare BGE-small (384 dims).
+//   2. Pull candidate_pool=10 chunks from Supabase via pgvector similarity.
+//   3. Re-rank those with Cloudflare BGE-reranker-base — much better at
+//      telling "procedural voting rules" apart from "a 2012 referendum
+//      that used the word 'vote'" than a bi-encoder alone.
+//   4. Keep top_k=3 and send them to Gemma 4 26B as context.
 //
-// Fallback: if embedding fails, uses IDF keyword search
+// Fallback if embedding or reranking fails: IDF keyword search.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const supabase = createClient(
@@ -16,14 +18,26 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const CF_ACCOUNT_ID  = process.env.CF_ACCOUNT_ID;
-const CF_API_TOKEN   = process.env.CF_API_TOKEN;
-const CF_LLM_MODEL   = "@cf/google/gemma-4-26b-a4b-it";
-const CF_EMBED_MODEL = "@cf/baai/bge-small-en-v1.5";
+const CF_ACCOUNT_ID   = process.env.CF_ACCOUNT_ID;
+const CF_API_TOKEN    = process.env.CF_API_TOKEN;
+const CF_LLM_MODEL    = "@cf/google/gemma-4-26b-a4b-it";
+const CF_EMBED_MODEL  = "@cf/baai/bge-small-en-v1.5";
+const CF_RERANK_MODEL = "@cf/baai/bge-reranker-base";
+
+const CANDIDATE_POOL = 10;   // chunks pulled from pgvector before reranking
+const TOP_K          = 3;    // chunks sent to Gemma after reranking
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface RetrievedChunk {
+  chunk_id?: string;
+  content: string;
+  source?: string | null;
+  similarity?: number;
+  rerankScore?: number;
 }
 
 // ── Embedding ────────────────────────────────────────────────────────────────
@@ -51,15 +65,63 @@ async function embedText(text: string): Promise<number[] | null> {
 
 // ── Vector search (primary) ──────────────────────────────────────────────────
 
-async function vectorSearch(queryEmbedding: number[]): Promise<string[]> {
+async function vectorSearch(queryEmbedding: number[]): Promise<RetrievedChunk[]> {
+  // Pull a larger pool than we'll actually use — the reranker will pick the best.
   const { data, error } = await supabase.rpc("match_knowledge_chunks", {
     query_embedding: queryEmbedding,
-    match_threshold: 0.2,
-    match_count: 5,
+    match_threshold: 0.15, // slightly lower than before — reranker compensates
+    match_count: CANDIDATE_POOL,
   });
   if (error || !data) return [];
-  return (data as Array<{ content: string; similarity: number }>)
-    .map((r) => r.content);
+  return (data as Array<{ chunk_id?: string; content: string; source?: string | null; similarity: number }>)
+    .map((r) => ({
+      chunk_id: r.chunk_id,
+      content: r.content,
+      source: r.source ?? null,
+      similarity: r.similarity,
+    }));
+}
+
+// ── Reranker ─────────────────────────────────────────────────────────────────
+// Cross-encoder that scores (query, chunk) pairs. Much smarter than the
+// bi-encoder on its own: it reads the full query alongside each candidate
+// and can distinguish "who is the mayor" (wants Lester Miller) from
+// "who is the mayor pro tem" (wants Valerie Wynn), or procedural voting
+// from a 2012 consolidation referendum — without brittle hand-coded filters.
+async function rerank(query: string, candidates: RetrievedChunk[]): Promise<RetrievedChunk[]> {
+  if (!CF_ACCOUNT_ID || !CF_API_TOKEN || candidates.length === 0) return candidates;
+
+  try {
+    const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_RERANK_MODEL}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${CF_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        contexts: candidates.map((c) => ({ text: c.content })),
+        top_k: candidates.length, // rerank all, we trim after
+      }),
+    });
+    if (!res.ok) return candidates; // fail open — return pre-ranked order
+
+    const data = await res.json();
+    // Response shape: { result: { response: [{ id, score }, ...] } }
+    const scores = data?.result?.response as Array<{ id: number; score: number }> | undefined;
+    if (!scores?.length) return candidates;
+
+    // Attach scores and sort
+    const withScores = scores.map((s) => ({
+      ...candidates[s.id],
+      rerankScore: s.score,
+    }));
+    withScores.sort((a, b) => (b.rerankScore ?? 0) - (a.rerankScore ?? 0));
+    return withScores;
+  } catch {
+    return candidates;
+  }
 }
 
 // ── Keyword search (fallback) ────────────────────────────────────────────────
@@ -72,7 +134,7 @@ const STOP_WORDS = new Set([
   "tell","me","is","in","of","to","a","an","do","on","at","by","be","it",
 ]);
 
-async function keywordSearch(query: string): Promise<string[]> {
+async function keywordSearch(query: string): Promise<RetrievedChunk[]> {
   const words = query
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
@@ -84,7 +146,7 @@ async function keywordSearch(query: string): Promise<string[]> {
   const ilikeConditions = words.map((w) => `content.ilike.%${w}%`).join(",");
   const { data: rows } = await supabase
     .from("knowledge_chunks")
-    .select("content, chunk_id")
+    .select("chunk_id, content, source")
     .or(ilikeConditions)
     .limit(20);
 
@@ -107,15 +169,25 @@ async function keywordSearch(query: string): Promise<string[]> {
           matchCount++;
         }
       }
-      return { content: row.content, score, matchCount };
+      return { chunk_id: row.chunk_id, content: row.content, source: row.source, score, matchCount };
     })
     .filter((r) => r.matchCount > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 4)
-    .map((r) => r.content);
+    .slice(0, CANDIDATE_POOL)
+    .map(({ chunk_id, content, source }) => ({ chunk_id, content, source: source ?? null }));
 }
 
 // ── LLM call ─────────────────────────────────────────────────────────────────
+
+function formatContext(chunks: RetrievedChunk[]): string {
+  if (chunks.length === 0) return "No relevant information found in the knowledge base.";
+  return chunks
+    .map((c, i) => {
+      const src = c.source ? ` (source: ${c.source})` : "";
+      return `[Source ${i + 1}${src}]\n${c.content}`;
+    })
+    .join("\n\n");
+}
 
 async function askGemma(question: string, context: string): Promise<string> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_LLM_MODEL}`;
@@ -125,20 +197,20 @@ async function askGemma(question: string, context: string): Promise<string> {
     "a civic tracker for Macon-Bibb County, Georgia. " +
     "Answer questions about local elections, commissioners, voting, and civic facts. " +
     "Keep answers concise (2-4 sentences), factual, and friendly. " +
-    "Use ONLY the information in the CONTEXT below to answer. " +
-    "IMPORTANT: Distinguish carefully between 'mayor' and 'mayor pro tem' — these are different roles. " +
-    "The mayor is the chief executive of Macon-Bibb County (currently Lester Miller). " +
-    "The mayor pro tem is a commissioner elected by the commission to lead meetings in the mayor's absence (currently Valerie Wynn). " +
-    "If someone asks 'who is the mayor', answer about the mayor (Lester Miller), not the mayor pro tem. " +
-    "If the context contains information unrelated to the question, ignore it. " +
-    "If the context does not contain enough information to answer, say so honestly " +
+    "Use ONLY the information in the SOURCES below to answer. " +
+    "Do not quote statutory or legal text verbatim — summarize in plain English. " +
+    "IMPORTANT: 'Mayor' and 'mayor pro tem' are different roles. The mayor is the chief executive " +
+    "of Macon-Bibb County (currently Lester Miller). The mayor pro tem is a commissioner elected " +
+    "by the commission to lead meetings in the mayor's absence (currently Valerie Wynn). " +
+    "If the sources contain information unrelated to the question, ignore it. " +
+    "If the sources do not contain enough information to answer, say so honestly " +
     "and point to a relevant resource.\n" +
     "When relevant, link to:\n" +
     "- Elections & races: peachtracker.vercel.app/elections\n" +
     "- Commission districts & members: peachtracker.vercel.app/commission\n" +
-    "- Georgia My Voter Page: mvp.sos.ga.gov (polling location, sample ballot)\n" +
+    "- Georgia My Voter Page: mvp.sos.ga.gov\n" +
     "- Bibb County Board of Elections: maconbibb.us/board-of-elections or (478) 621-6622\n\n" +
-    "CONTEXT:\n" + context;
+    "SOURCES:\n" + context;
 
   const res = await fetch(url, {
     method: "POST",
@@ -179,53 +251,31 @@ export async function POST(req: NextRequest) {
     console.log("[mulberry] question:", question);
 
     // 1. Try vector search first (semantic, typo-tolerant, meaning-aware)
-    let chunks: string[] = [];
+    let candidates: RetrievedChunk[] = [];
     const embedding = await embedText(question);
 
     if (embedding) {
-      chunks = await vectorSearch(embedding);
-      console.log("[mulberry] vector search chunks:", chunks.length);
+      candidates = await vectorSearch(embedding);
+      console.log(`[mulberry] vector search: ${candidates.length} candidates`);
     }
 
     // 2. Fall back to keyword search if vector search returned nothing
-    if (chunks.length === 0) {
-      chunks = await keywordSearch(question);
-      console.log("[mulberry] keyword fallback chunks:", chunks.length);
+    if (candidates.length === 0) {
+      candidates = await keywordSearch(question);
+      console.log(`[mulberry] keyword fallback: ${candidates.length} candidates`);
     }
 
-    // 3. Post-retrieval intent filtering
-    //    When asking "who is the mayor" (not "mayor pro tem"), prioritize
-    //    CHUNK 029 (Lester Miller) and filter out off-topic chunks.
-    if (chunks.length > 0) {
-      const q = question.toLowerCase();
-      const isWhoIsMayor =
-        /\bmayor\b/.test(q) &&
-        !/pro.?tem\b/.test(q) &&
-        /\b(who|what|tell me|current|name)\b/.test(q);
-
-      if (isWhoIsMayor) {
-        // Try to isolate just the Lester Miller chunk — the authoritative answer
-        const millerChunk = chunks.find((c) => /lester miller/i.test(c));
-        if (millerChunk) {
-          // Use only the Lester Miller chunk so Gemma isn't confused by legal text
-          chunks = [millerChunk];
-        } else {
-          // No Miller chunk in results; filter out pro-tem and charter legal text
-          const filtered = chunks.filter((c) => {
-            const lower = c.toLowerCase();
-            return !(/mayor pro tem/.test(lower.split(".")[0])) &&
-                   !/shall serve at the pleasure of the mayor/.test(lower);
-          });
-          if (filtered.length > 0) chunks = filtered;
-        }
-      }
+    // 3. Rerank with cross-encoder (if we have more than TOP_K candidates)
+    let topChunks: RetrievedChunk[] = candidates;
+    if (candidates.length > TOP_K) {
+      topChunks = await rerank(question, candidates);
+      console.log(`[mulberry] reranked; top scores: ${topChunks.slice(0, 3).map((c) => c.rerankScore?.toFixed(3) ?? "-").join(", ")}`);
     }
+    topChunks = topChunks.slice(0, TOP_K);
 
     // 4. Call Gemma with context (or without if no chunks found)
     if (CF_ACCOUNT_ID && CF_API_TOKEN) {
-      const context = chunks.length > 0
-        ? chunks.join("\n\n---\n\n")
-        : "No specific data was found in the PeachTracker database for this question.";
+      const context = formatContext(topChunks);
 
       try {
         const reply = await askGemma(question, context);
@@ -236,7 +286,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Static fallback
-    if (chunks.length === 0) {
+    if (topChunks.length === 0) {
       return NextResponse.json({
         reply:
           "I don't have specific information about that yet. " +
@@ -245,7 +295,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ reply: chunks[0] });
+    return NextResponse.json({ reply: topChunks[0].content });
   } catch (err) {
     console.error("[mulberry] error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
