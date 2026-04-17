@@ -9,6 +9,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+// Give Vercel enough time to walk paginated CivicClerk responses.
+// The server caps page size at ~15 regardless of $top, so covering 3 years
+// of commission meetings (~150 events) means ~10 page fetches minimum.
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
 const CIVICCLERK_BASE = "https://maconbibbcoga.api.civicclerk.com/v1";
 const COMMISSION_CATEGORIES = ["Board of Commissioners"];
 
@@ -21,12 +27,69 @@ function toMeetingType(eventName: string): string {
   return "regular";
 }
 
-// Fetch all CivicClerk Events following pagination
+// Fetch commission events from CivicClerk, newest first, following pagination.
+//
+// Why this is shaped the way it is:
+//   - The old approach fetched /Events with no filter or order. CivicClerk
+//     returns events in creation (id) order, which is roughly oldest-first,
+//     and the server caps each page at ~15 items regardless of $top. That
+//     meant the first hundred events were all early 2023 test meetings,
+//     and the sync ran out of time (or hit an undocumented page limit)
+//     before reaching anything from 2025 or 2026.
+//   - Now we push the filter onto the server: only commission meetings that
+//     have a real agendaId, ordered by startDateTime descending. That way
+//     the very first page already contains the newest meetings we care
+//     about, and a "stopAt" cutoff lets the sync short-circuit once it
+//     reaches dates we already have in the DB.
+//
+// Passing `stopAtDate` (a YYYY-MM-DD string — the newest meeting_date we
+// already have in Supabase) makes this an incremental sync: we stop walking
+// pages once the current page's oldest event is older than the cutoff. Omit
+// it to pull everything.
+async function fetchCommissionEvents(opts?: { stopAtDate?: string; maxPages?: number }): Promise<{ events: CivicEvent[]; pagesFetched: number; stoppedEarly: boolean }> {
+  const { stopAtDate, maxPages = 80 } = opts ?? {};
+  const all: CivicEvent[] = [];
+
+  // OData: filter to the commission category + has-agenda, ordered newest first.
+  // We don't rely on $top because the server caps it; we just follow nextLink.
+  const filter = `categoryName eq 'Board of Commissioners' and agendaId gt 0`;
+  const firstUrl = `${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$filter=${encodeURIComponent(filter)}`;
+
+  let nextUrl: string | null = firstUrl;
+  let pagesFetched = 0;
+  let stoppedEarly = false;
+
+  while (nextUrl && pagesFetched < maxPages) {
+    const r: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
+    if (!r.ok) break;
+    const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
+    const page = d.value ?? [];
+    all.push(...page);
+    pagesFetched++;
+
+    // Incremental stop: if the oldest event on this page is already older than
+    // what we have in the DB, we've pulled everything new and can bail.
+    if (stopAtDate && page.length > 0) {
+      const oldestOnPage = page[page.length - 1].startDateTime.slice(0, 10);
+      if (oldestOnPage < stopAtDate) {
+        stoppedEarly = true;
+        break;
+      }
+    }
+
+    nextUrl = d["@odata.nextLink"] ?? null;
+  }
+
+  return { events: all, pagesFetched, stoppedEarly };
+}
+
+// Legacy unfiltered fetch kept for the debug endpoint so we can still see
+// raw category counts and pagination behavior without the new filter.
 async function fetchAllEvents(): Promise<CivicEvent[]> {
   const all: CivicEvent[] = [];
   let nextUrl: string | null = `${CIVICCLERK_BASE}/Events?$top=100`;
   let page = 0;
-  while (nextUrl && page < 150) { // 150 pages × 100 = up to 15,000 events covers full history
+  while (nextUrl && page < 40) {
     const r: Response = await fetch(nextUrl, { headers: { Accept: "application/json" } });
     if (!r.ok) break;
     const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
@@ -37,24 +100,52 @@ async function fetchAllEvents(): Promise<CivicEvent[]> {
   return all;
 }
 
-// GET: debug — shows event counts without touching DB
+// GET: debug — shows what the sync would pull without touching the DB.
+// ?debug=1       — uses the new filtered/ordered query (what the sync uses)
+// ?debug=raw     — uses the old bare /Events query (useful for diagnosing
+//                  pagination behavior or discovering new categories)
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  if (!searchParams.get("debug")) {
-    return NextResponse.json({ error: "Add ?debug=1" }, { status: 400 });
+  const debug = searchParams.get("debug");
+  if (!debug) {
+    return NextResponse.json({ error: "Add ?debug=1 or ?debug=raw" }, { status: 400 });
   }
-  const events = await fetchAllEvents();
-  const commission = events.filter(
-    (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda,
-  );
+
+  if (debug === "raw") {
+    const events = await fetchAllEvents();
+    const commission = events.filter(
+      (e) => COMMISSION_CATEGORIES.includes(e.categoryName) && e.hasAgenda,
+    );
+    return NextResponse.json({
+      mode: "raw",
+      total: events.length,
+      commissionWithAgenda: commission.length,
+      sample: commission.slice(0, 5).map((e) => ({
+        id: e.id, eventName: e.eventName, date: e.startDateTime,
+        agendaId: e.agendaId, category: e.categoryName,
+      })),
+      allCategories: [...new Set(events.map((e) => e.categoryName))].sort(),
+    });
+  }
+
+  const { events, pagesFetched } = await fetchCommissionEvents();
+  const yearCounts: Record<string, number> = {};
+  for (const e of events) {
+    const y = e.startDateTime.slice(0, 4);
+    yearCounts[y] = (yearCounts[y] ?? 0) + 1;
+  }
   return NextResponse.json({
-    total: events.length,
-    commissionWithAgenda: commission.length,
-    sample: commission.slice(0, 5).map((e) => ({
+    mode: "filtered",
+    pagesFetched,
+    totalCommissionEvents: events.length,
+    yearCounts,
+    newest5: events.slice(0, 5).map((e) => ({
       id: e.id, eventName: e.eventName, date: e.startDateTime,
-      agendaId: e.agendaId, category: e.categoryName,
+      agendaId: e.agendaId, published: e.isPublished,
     })),
-    allCategories: [...new Set(events.map((e) => e.categoryName))].sort(),
+    oldest3: events.slice(-3).map((e) => ({
+      id: e.id, eventName: e.eventName, date: e.startDateTime, agendaId: e.agendaId,
+    })),
   });
 }
 
@@ -263,12 +354,32 @@ export async function POST(request: Request) {
   }
 
   // ── PHASE: meetings ───────────────────────────────────────────────────────────
-  // Fetch all CivicClerk Event pages, upsert meeting rows. Fast (~5s total).
-  const allEvents = await fetchAllEvents();
-  const commEvents = allEvents.filter(
-    // Include published events even when hasAgenda=false — some 2025/2026 meetings
-    // have minutes in the API but hasAgenda isn't set to true yet. The Meetings
-    // endpoint works by agendaId regardless.
+  // Pull commission meeting rows from CivicClerk. Server-side filter + newest-
+  // first ordering means we reach 2026 meetings on page 1 instead of having
+  // to walk past three years of 2023 backlog.
+  //
+  // `full=1` on the query forces a complete refresh (no incremental stop).
+  // Otherwise we stop once the current page is older than what's already in
+  // the DB — which keeps a normal sync under a couple of seconds.
+  const fullRefresh = searchParams.get("full") === "1";
+  let stopAtDate: string | undefined;
+  if (!fullRefresh) {
+    const { data: newestRow } = await supabase
+      .from("meetings")
+      .select("meeting_date")
+      .not("civicclerk_event_id", "is", null)
+      .order("meeting_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    stopAtDate = newestRow?.meeting_date;
+  }
+
+  const { events, pagesFetched, stoppedEarly } = await fetchCommissionEvents({ stopAtDate });
+
+  // Belt-and-suspenders: even though the server filter restricts the category,
+  // keep the client-side check so a future API quirk can't silently widen
+  // the set of rows we write.
+  const commEvents = events.filter(
     (e) => COMMISSION_CATEGORIES.includes(e.categoryName) &&
       (e.hasAgenda || e.isPublished === "Published") &&
       e.agendaId,
@@ -310,7 +421,11 @@ export async function POST(request: Request) {
     ok: true,
     meetingsSynced,
     meetingIds, // caller can use these to trigger items phase per-meeting
-    message: `${meetingsSynced} meetings synced. Now call POST ?phase=items&id=<meeting_id> for each to pull agenda items + votes.`,
+    pagesFetched,
+    stoppedEarly,
+    stopAtDate,
+    mode: fullRefresh ? "full" : "incremental",
+    message: `${meetingsSynced} meetings synced from ${pagesFetched} API pages. Now call POST ?phase=items&id=<meeting_id> for each to pull agenda items + votes.`,
   });
 }
 
