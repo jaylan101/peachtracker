@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
 import { CommissionerAvatar } from "@/components/commissioner-avatar";
+import { ProfileTabs } from "@/components/profile-tabs";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -35,12 +36,15 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
     : [];
 
   // Recent news pulled weekly by the cron job. Public RLS filters to visible only.
+  // Bumped to 24 now that news has its own tab — more articles = more value
+  // on the News surface without crowding the Votes view.
   const { data: news } = await supabase
     .from("commissioner_news")
     .select("id, source_url, source_name, title, snippet, published_at")
     .eq("commissioner_id", id)
     .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(8);
+    .limit(24);
+  const newsCount = news?.length ?? 0;
 
   // All votes for this commissioner with meeting + item context
   const { data: votes } = await supabase
@@ -207,125 +211,157 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
           ))}
         </div>
 
-        {/* In the news — auto-pulled weekly from Google News, filtered for
-            Macon/Bibb relevance. Empty state hidden; if nothing's been picked up,
-            the section just doesn't render. */}
-        {news && news.length > 0 && (
-          <section style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
-              In the news
-            </div>
-            <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
-              {news.map((n) => {
-                // Google News titles always end with " - Source Name". Strip that
-                // suffix when we show a separate source line below to avoid the
-                // redundant "Title - 41NBC News · 41NBC News · date" triple.
-                const cleanTitle = n.source_name
-                  ? stripTrailingSource(n.title, n.source_name)
-                  : n.title;
-                return (
-                  <a
-                    key={n.id}
-                    href={n.source_url}
-                    target="_blank"
-                    rel="noopener"
-                    style={{
-                      display: "block",
-                      padding: "10px 16px",
-                      background: "var(--card)",
-                      textDecoration: "none",
-                      color: "var(--text)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: "var(--body)",
-                        lineHeight: 1.3,
-                        marginBottom: 4,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {cleanTitle}
-                    </div>
-                    <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
-                      {n.source_name ?? hostFromUrl(n.source_url)}
-                      {n.published_at && <> · {formatDate(n.published_at.slice(0, 10))}</>}
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
-            <p style={{ fontSize: "var(--micro)", color: "var(--text-light)", marginTop: 10 }}>
-              Headlines are pulled automatically from Google News. PeachTracker doesn&apos;t endorse or verify their reporting.
-            </p>
-          </section>
-        )}
-
-        {/* Dissenting votes — most interesting for accountability */}
-        {noVoteItems.length > 0 && (
-          <section style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "#DC2626", borderTop: "2px solid #DC2626", paddingTop: 12, marginBottom: 16 }}>
-              Dissenting votes ({noVoteItems.length})
-            </div>
-            <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
-              {noVoteItems.map((v) => {
-                const m = v.agenda_items?.meetings;
-                return (
-                  <div key={v.id} style={{ background: "#fef2f2", padding: "16px 24px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: "var(--body)", color: "var(--text)" }}>
-                          {v.agenda_items?.title}
-                        </div>
-                        {m && (
-                          <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 4, fontWeight: 500 }}>
-                            {meetingLabel(m.meeting_type)} · {formatDate(m.meeting_date)}
-                          </div>
-                        )}
-                        {v.notes && <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 2 }}>{v.notes}</div>}
+        {/* Votes (default) | In the news tabs. Dissents + full voting record
+            live inside the Votes tab so the top-of-page stats are always the
+            first thing the reader sees. News gets its own surface. */}
+        <ProfileTabs
+          initial="votes"
+          tabs={[
+            {
+              id: "votes",
+              label: "Votes",
+              count: total > 0 ? total : undefined,
+              panel: (
+                <>
+                  {noVoteItems.length > 0 && (
+                    <section style={{ marginBottom: 48 }}>
+                      <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "#DC2626", borderTop: "2px solid #DC2626", paddingTop: 12, marginBottom: 16 }}>
+                        Dissenting votes ({noVoteItems.length})
                       </div>
-                      <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: "#DC2626", border: "1.5px solid #DC2626", padding: "4px 10px", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
-                        No
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                      <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
+                        {noVoteItems.map((v) => {
+                          const m = v.agenda_items?.meetings;
+                          return (
+                            <div key={v.id} style={{ background: "#fef2f2", padding: "16px 24px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: "var(--body)", color: "var(--text)" }}>
+                                    {v.agenda_items?.title}
+                                  </div>
+                                  {m && (
+                                    <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 4, fontWeight: 500 }}>
+                                      {meetingLabel(m.meeting_type)} · {formatDate(m.meeting_date)}
+                                    </div>
+                                  )}
+                                  {v.notes && <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 2 }}>{v.notes}</div>}
+                                </div>
+                                <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: "#DC2626", border: "1.5px solid #DC2626", padding: "4px 10px", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+                                  No
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
 
-        {/* Full voting record by meeting */}
-        {total === 0 && (
-          <p style={{ color: "var(--text-secondary)" }}>
-            No votes recorded yet. Check back after the next commission meeting.
-          </p>
-        )}
+                  {total === 0 && (
+                    <p style={{ color: "var(--text-secondary)" }}>
+                      No votes recorded yet. Check back after the next commission meeting.
+                    </p>
+                  )}
 
-        {meetingGroups.map(({ meeting, votes: mVotes }) => (
-          <section key={meeting.id} style={{ marginBottom: 40 }}>
-            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
-              {meetingLabel(meeting.meeting_type)} · {formatDate(meeting.meeting_date)}
-            </div>
-            <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
-              {mVotes.map((v) => (
-                <div key={v.id} style={{ background: v.vote === "no" ? "#fef2f2" : v.vote === "yes" ? "var(--green-bg)" : "var(--card)", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-                  <span style={{ fontSize: "var(--body)", fontWeight: 600, color: "var(--text)", flex: 1 }}>
-                    {v.agenda_items?.item_number && <span style={{ color: "var(--text-light)", marginRight: 6 }}>{v.agenda_items.item_number}.</span>}
-                    {v.agenda_items?.title}
-                  </span>
-                  <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: voteColor(v.vote), textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
-                    {v.vote}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
+                  {meetingGroups.map(({ meeting, votes: mVotes }) => (
+                    <section key={meeting.id} style={{ marginBottom: 40 }}>
+                      <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
+                        {meetingLabel(meeting.meeting_type)} · {formatDate(meeting.meeting_date)}
+                      </div>
+                      <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
+                        {mVotes.map((v) => (
+                          <div key={v.id} style={{ background: v.vote === "no" ? "#fef2f2" : v.vote === "yes" ? "var(--green-bg)" : "var(--card)", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+                            <span style={{ fontSize: "var(--body)", fontWeight: 600, color: "var(--text)", flex: 1 }}>
+                              {v.agenda_items?.item_number && <span style={{ color: "var(--text-light)", marginRight: 6 }}>{v.agenda_items.item_number}.</span>}
+                              {v.agenda_items?.title}
+                            </span>
+                            <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: voteColor(v.vote), textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+                              {v.vote}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </>
+              ),
+            },
+            {
+              id: "news",
+              label: "In the news",
+              count: newsCount > 0 ? newsCount : undefined,
+              panel: (
+                <>
+                  {newsCount === 0 ? (
+                    <p style={{ color: "var(--text-secondary)" }}>
+                      No recent news picked up for this commissioner. Headlines refresh every Monday from Google News.
+                    </p>
+                  ) : (
+                    <>
+                      {/* 2-col squarish cards. Auto-fit so it collapses to 1-col
+                          on narrow viewports without explicit media queries. */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                          gap: 12,
+                          marginBottom: 16,
+                        }}
+                      >
+                        {(news ?? []).map((n) => {
+                          const cleanTitle = n.source_name
+                            ? stripTrailingSource(n.title, n.source_name)
+                            : n.title;
+                          return (
+                            <a
+                              key={n.id}
+                              href={n.source_url}
+                              target="_blank"
+                              rel="noopener"
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                gap: 12,
+                                padding: "16px 18px",
+                                minHeight: 160,
+                                background: "var(--card)",
+                                border: "1.5px solid var(--border)",
+                                textDecoration: "none",
+                                color: "var(--text)",
+                                transition: "border-color 0.15s ease",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: 700,
+                                  fontSize: "var(--body)",
+                                  lineHeight: 1.3,
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 4,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                {cleanTitle}
+                              </div>
+                              <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
+                                {n.source_name ?? hostFromUrl(n.source_url)}
+                                {n.published_at && <> · {formatDate(n.published_at.slice(0, 10))}</>}
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
+                      <p style={{ fontSize: "var(--micro)", color: "var(--text-light)" }}>
+                        Headlines are pulled automatically from Google News. PeachTracker doesn&apos;t endorse or verify their reporting.
+                      </p>
+                    </>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
       </main>
 
       <SiteFooter />

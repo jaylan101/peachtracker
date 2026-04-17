@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 04:15 — news: decode entities before strip + tighter card layout
+// Build: 2026-04-17 04:19 — profile: tabbed Votes/News view with 2-col news card grid
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
