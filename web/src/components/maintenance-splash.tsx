@@ -18,7 +18,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 
 // A simple peach SVG. Tweakable via color/size. Leaf + highlight for depth.
-function PeachSVG({ size = 48, color = "#FF8A4C" }: { size?: number; color?: string }) {
+function PeachSVG({ size = 48, color = "#E0956E" }: { size?: number; color?: string }) {
   return (
     <svg
       width={size}
@@ -87,20 +87,20 @@ function generatePeaches(): PeachConfig[] {
   // Deterministic enough to look curated but varied. We pre-define positions
   // instead of Math.random at render so SSR/CSR match.
   return [
-    { size: 64,  startX: 8,   startY: 20,  drift: 40,  rise: -60, rotate: 25,  duration: 18, delay: 0,   opacity: 0.7,  color: "#FF8A4C" },
-    { size: 42,  startX: 18,  startY: 72,  drift: -30, rise: -40, rotate: -20, duration: 22, delay: 1.5, opacity: 0.5,  color: "#FFB37A" },
-    { size: 88,  startX: 85,  startY: 15,  drift: -50, rise: 70,  rotate: -30, duration: 24, delay: 0.8, opacity: 0.45, color: "#FF7A42" },
-    { size: 36,  startX: 70,  startY: 85,  drift: 60,  rise: -90, rotate: 40,  duration: 20, delay: 2.2, opacity: 0.6,  color: "#FF8A4C" },
-    { size: 56,  startX: 45,  startY: 10,  drift: 30,  rise: 50,  rotate: 15,  duration: 26, delay: 1.2, opacity: 0.4,  color: "#FFB37A" },
-    { size: 72,  startX: 92,  startY: 60,  drift: -70, rise: -50, rotate: -35, duration: 28, delay: 0.3, opacity: 0.5,  color: "#FF7A42" },
-    { size: 30,  startX: 55,  startY: 55,  drift: 50,  rise: -70, rotate: 60,  duration: 16, delay: 3,   opacity: 0.65, color: "#FF8A4C" },
-    { size: 48,  startX: 30,  startY: 35,  drift: -40, rise: 60,  rotate: -25, duration: 21, delay: 1.8, opacity: 0.55, color: "#FFB37A" },
-    { size: 38,  startX: 78,  startY: 35,  drift: 30,  rise: 80,  rotate: 20,  duration: 23, delay: 0.6, opacity: 0.5,  color: "#FF8A4C" },
-    { size: 96,  startX: 5,   startY: 80,  drift: 80,  rise: -80, rotate: -45, duration: 30, delay: 2.5, opacity: 0.35, color: "#FF7A42" },
-    { size: 34,  startX: 62,  startY: 75,  drift: -40, rise: -100, rotate: 30, duration: 19, delay: 1.1, opacity: 0.6,  color: "#FFB37A" },
-    { size: 52,  startX: 12,  startY: 50,  drift: 70,  rise: 40,  rotate: -15, duration: 25, delay: 0.9, opacity: 0.5,  color: "#FF8A4C" },
-    { size: 44,  startX: 88,  startY: 88,  drift: -60, rise: -60, rotate: 35,  duration: 22, delay: 2.8, opacity: 0.55, color: "#FF7A42" },
-    { size: 28,  startX: 40,  startY: 90,  drift: 40,  rise: -120, rotate: 50, duration: 17, delay: 0.4, opacity: 0.7,  color: "#FF8A4C" },
+    { size: 64,  startX: 8,   startY: 20,  drift: 40,  rise: -60, rotate: 25,  duration: 18, delay: 0,   opacity: 0.55, color: "#E0956E" },
+    { size: 42,  startX: 18,  startY: 72,  drift: -30, rise: -40, rotate: -20, duration: 22, delay: 1.5, opacity: 0.40, color: "#E8A784" },
+    { size: 88,  startX: 85,  startY: 15,  drift: -50, rise: 70,  rotate: -30, duration: 24, delay: 0.8, opacity: 0.35, color: "#D08559" },
+    { size: 36,  startX: 70,  startY: 85,  drift: 60,  rise: -90, rotate: 40,  duration: 20, delay: 2.2, opacity: 0.50, color: "#E0956E" },
+    { size: 56,  startX: 45,  startY: 10,  drift: 30,  rise: 50,  rotate: 15,  duration: 26, delay: 1.2, opacity: 0.30, color: "#E8A784" },
+    { size: 72,  startX: 92,  startY: 60,  drift: -70, rise: -50, rotate: -35, duration: 28, delay: 0.3, opacity: 0.40, color: "#D08559" },
+    { size: 30,  startX: 55,  startY: 55,  drift: 50,  rise: -70, rotate: 60,  duration: 16, delay: 3,   opacity: 0.55, color: "#E0956E" },
+    { size: 48,  startX: 30,  startY: 35,  drift: -40, rise: 60,  rotate: -25, duration: 21, delay: 1.8, opacity: 0.45, color: "#E8A784" },
+    { size: 38,  startX: 78,  startY: 35,  drift: 30,  rise: 80,  rotate: 20,  duration: 23, delay: 0.6, opacity: 0.40, color: "#E0956E" },
+    { size: 96,  startX: 5,   startY: 80,  drift: 80,  rise: -80, rotate: -45, duration: 30, delay: 2.5, opacity: 0.28, color: "#D08559" },
+    { size: 34,  startX: 62,  startY: 75,  drift: -40, rise: -100, rotate: 30, duration: 19, delay: 1.1, opacity: 0.50, color: "#E8A784" },
+    { size: 52,  startX: 12,  startY: 50,  drift: 70,  rise: 40,  rotate: -15, duration: 25, delay: 0.9, opacity: 0.40, color: "#E0956E" },
+    { size: 44,  startX: 88,  startY: 88,  drift: -60, rise: -60, rotate: 35,  duration: 22, delay: 2.8, opacity: 0.45, color: "#D08559" },
+    { size: 28,  startX: 40,  startY: 90,  drift: 40,  rise: -120, rotate: 50, duration: 17, delay: 0.4, opacity: 0.55, color: "#E0956E" },
   ];
 }
 
@@ -111,16 +111,45 @@ export function MaintenanceSplash() {
   return (
     <main
       style={{
-        minHeight: "100dvh",
+        // Pin to viewport; prevent scroll bleed on mobile when the address
+        // bar toggles. Uses both svh (small viewport height) minimum and dvh
+        // for dynamic adjustment — whichever the browser supports.
+        position: "fixed",
+        inset: 0,
+        minHeight: "100svh",
+        height: "100dvh",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
         overflow: "hidden",
+        overscrollBehavior: "none",
         background:
-          "radial-gradient(ellipse at 50% 20%, #FFF3E4 0%, #FFFBF5 55%, #FDF5EB 100%)",
+          "radial-gradient(ellipse at 50% 20%, #FDF0E8 0%, #FFFBF5 55%, #FDF5EB 100%)",
         color: "#1a1a1a",
       }}
     >
+      {/* Lock the document — no scroll bleed on mobile */}
+      <style>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          height: 100%;
+          overscroll-behavior: none;
+          background: #FFFBF5;
+        }
+      `}</style>
+
+      {/* Top accent bar — matches the rest of the site */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "relative",
+          zIndex: 3,
+          height: 5,
+          background: "#E0956E",
+          flexShrink: 0,
+        }}
+      />
       {/* Floating peaches — behind content */}
       <div
         aria-hidden="true"
@@ -166,7 +195,7 @@ export function MaintenanceSplash() {
               position: "absolute",
               left: `${p.startX}%`,
               top: `${p.startY}%`,
-              filter: "drop-shadow(0 6px 14px rgba(255, 122, 66, 0.15))",
+              filter: "drop-shadow(0 6px 14px rgba(224, 149, 110, 0.18))",
               willChange: "transform",
             }}
           >
@@ -216,9 +245,9 @@ export function MaintenanceSplash() {
                 : {
                     scale: [1, 1.03, 1],
                     filter: [
-                      "drop-shadow(0 0 0px rgba(255, 122, 66, 0.0))",
-                      "drop-shadow(0 0 24px rgba(255, 122, 66, 0.35))",
-                      "drop-shadow(0 0 0px rgba(255, 122, 66, 0.0))",
+                      "drop-shadow(0 0 0px rgba(224, 149, 110, 0.0))",
+                      "drop-shadow(0 0 24px rgba(224, 149, 110, 0.35))",
+                      "drop-shadow(0 0 0px rgba(224, 149, 110, 0.0))",
                     ],
                   }
             }
@@ -242,47 +271,24 @@ export function MaintenanceSplash() {
           </motion.div>
         </motion.div>
 
-        {/* Kicker with hairlines */}
-        <motion.div
+        {/* Kicker — matches site style: tiny caps, peach, with peach underline */}
+        <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            marginBottom: 24,
+            fontSize: "0.68rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.18em",
+            color: "#E0956E",
+            margin: "0 0 20px",
+            paddingBottom: 10,
+            borderBottom: "2px solid #E0956E",
           }}
         >
-          <div
-            style={{
-              width: 48,
-              height: 1,
-              background:
-                "linear-gradient(90deg, transparent, rgba(255, 122, 66, 0.7), transparent)",
-            }}
-          />
-          <p
-            style={{
-              fontSize: "0.72rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.32em",
-              color: "#FF7A42",
-              margin: 0,
-            }}
-          >
-            Scheduled Maintenance
-          </p>
-          <div
-            style={{
-              width: 48,
-              height: 1,
-              background:
-                "linear-gradient(90deg, transparent, rgba(255, 122, 66, 0.7), transparent)",
-            }}
-          />
-        </motion.div>
+          Scheduled Maintenance
+        </motion.p>
 
         {/* Headline */}
         <motion.h1
@@ -321,23 +327,23 @@ export function MaintenanceSplash() {
           soon.
         </motion.p>
 
-        {/* Status pill */}
+        {/* Status line — sharp, bordered strip, no pill */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.7, ease: "easeOut" }}
           style={{
-            marginTop: 44,
+            marginTop: 48,
             display: "inline-flex",
             alignItems: "center",
-            gap: 12,
-            padding: "10px 18px",
-            borderRadius: 999,
-            background: "rgba(255, 122, 66, 0.08)",
-            border: "1px solid rgba(255, 122, 66, 0.25)",
-            fontSize: "0.88rem",
+            gap: 14,
+            padding: "12px 20px",
+            background: "#FDF0E8",
+            borderLeft: "3px solid #E0956E",
+            fontSize: "0.86rem",
             color: "#4a4a4a",
             letterSpacing: "0.01em",
+            fontWeight: 500,
           }}
         >
           <motion.span
@@ -345,8 +351,7 @@ export function MaintenanceSplash() {
               reduced
                 ? {}
                 : {
-                    scale: [1, 1.4, 1],
-                    opacity: [0.5, 1, 0.5],
+                    opacity: [0.35, 1, 0.35],
                   }
             }
             transition={{
@@ -358,17 +363,26 @@ export function MaintenanceSplash() {
             style={{
               width: 8,
               height: 8,
-              borderRadius: "50%",
-              background: "#FF7A42",
-              boxShadow: "0 0 10px rgba(255, 122, 66, 0.6)",
+              background: "#E0956E",
               display: "inline-block",
             }}
           />
-          System status: Maintenance in progress
+          <span
+            style={{
+              textTransform: "uppercase",
+              fontSize: "0.68rem",
+              fontWeight: 700,
+              letterSpacing: "0.16em",
+              color: "#E0956E",
+            }}
+          >
+            Status
+          </span>
+          <span style={{ color: "#1a1a1a" }}>Maintenance in progress</span>
         </motion.div>
       </div>
 
-      {/* Footer with admin bypass */}
+      {/* Footer with admin bypass — matches site footer chrome */}
       <motion.footer
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -376,34 +390,36 @@ export function MaintenanceSplash() {
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "24px 24px 32px",
+          padding: "20px 24px 24px",
           textAlign: "center",
-          borderTop: "1px solid rgba(0, 0, 0, 0.06)",
-          background: "rgba(255, 251, 245, 0.55)",
+          borderTop: "1px solid rgba(0, 0, 0, 0.08)",
+          background: "rgba(255, 251, 245, 0.7)",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
+          fontSize: "0.68rem",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          fontWeight: 700,
         }}
       >
         <Link
           href="/admin/login"
-          style={{
-            color: "rgba(0, 0, 0, 0.55)",
-            textDecoration: "none",
-            transition: "color 0.2s ease, transform 0.2s ease",
-            fontSize: "0.82rem",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            fontWeight: 600,
-            display: "inline-block",
-          }}
           className="pt-admin-link"
+          style={{
+            color: "#8a8a8a",
+            textDecoration: "none",
+            transition: "color 0.15s ease",
+            display: "inline-block",
+            borderBottom: "2px solid transparent",
+            paddingBottom: 2,
+          }}
         >
           Administrator Sign In →
         </Link>
         <style>{`
           .pt-admin-link:hover {
-            color: #FF7A42 !important;
-            transform: translateX(2px);
+            color: #E0956E !important;
+            border-bottom-color: #E0956E !important;
           }
         `}</style>
       </motion.footer>
