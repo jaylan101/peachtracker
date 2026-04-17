@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 04:42 — serious dark maintenance splash with canvas particle network
+// Build: 2026-04-17 04:48 — on-brand maintenance splash with motion.dev floating peaches
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
