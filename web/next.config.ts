@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 02:51 — Fix Mulberry MAX_TOKENS truncation — raise maxOutputTokens 400→2048 for Gemini 2.5 thinking budget
+// Build: 2026-04-17 03:18 — Redesign /commission: commissioner grid + filter + paginated list, add /commission/meeting/[id] detail route
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
