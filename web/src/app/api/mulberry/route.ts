@@ -1,200 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import {
+  embedText,
+  vectorSearch,
+  rerank,
+  keywordSearch,
+  formatContext,
+  TOP_K,
+  type RetrievedChunk,
+} from "@/lib/mulberry/retrieval";
 
 // ── Mulberry API Route ────────────────────────────────────────────────────────
-// RAG pipeline:
+// RAG pipeline (shared with /api/mulberry/debug via @/lib/mulberry/retrieval):
 //   1. Embed the user's question with Cloudflare BGE-small (384 dims).
-//   2. Pull candidate_pool=10 chunks from Supabase via pgvector similarity.
-//   3. Re-rank those with Cloudflare BGE-reranker-base — much better at
-//      telling "procedural voting rules" apart from "a 2012 referendum
-//      that used the word 'vote'" than a bi-encoder alone.
-//   4. Keep top_k=3 and send them to **Gemini 2.5 Flash** as context for
-//      the final answer. (Retrieval stays on Cloudflare; only generation
-//      moved to Gemini for better instruction-following on refusal cases.)
+//   2. Pull top-CANDIDATE_POOL chunks from Supabase via pgvector similarity.
+//   3. Re-rank with Cloudflare BGE-reranker-base (cross-encoder on (q, chunk)).
+//   4. Keep TOP_K and send them to Gemini 2.5 Flash as context.
 //
 // Fallback if embedding or reranking fails: IDF keyword search.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// Cloudflare is still used for retrieval only (embedding + reranking).
-const CF_ACCOUNT_ID   = process.env.CF_ACCOUNT_ID;
-const CF_API_TOKEN    = process.env.CF_API_TOKEN;
-const CF_EMBED_MODEL  = "@cf/baai/bge-small-en-v1.5";
-const CF_RERANK_MODEL = "@cf/baai/bge-reranker-base";
-
-// Gemini is the answer-generation model.
-const GEMINI_API_KEY  = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const GEMINI_MODEL    = "gemini-2.5-flash";
-
-const CANDIDATE_POOL = 10;   // chunks pulled from pgvector before reranking
-const TOP_K          = 3;    // chunks sent to Gemini after reranking
+const GEMINI_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const GEMINI_MODEL   = "gemini-2.5-flash";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-interface RetrievedChunk {
-  chunk_id?: string;
-  content: string;
-  source?: string | null;
-  similarity?: number;
-  rerankScore?: number;
-}
-
-// ── Embedding ────────────────────────────────────────────────────────────────
-
-async function embedText(text: string): Promise<number[] | null> {
-  if (!CF_ACCOUNT_ID || !CF_API_TOKEN) return null;
-  try {
-    const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_EMBED_MODEL}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${CF_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const vector: number[] = data?.result?.data?.[0];
-    return vector?.length === 384 ? vector : null;
-  } catch {
-    return null;
-  }
-}
-
-// ── Vector search (primary) ──────────────────────────────────────────────────
-
-async function vectorSearch(queryEmbedding: number[]): Promise<RetrievedChunk[]> {
-  // Pull a larger pool than we'll actually use — the reranker will pick the best.
-  const { data, error } = await supabase.rpc("match_knowledge_chunks", {
-    query_embedding: queryEmbedding,
-    match_threshold: 0.15, // slightly lower than before — reranker compensates
-    match_count: CANDIDATE_POOL,
-  });
-  if (error || !data) return [];
-  return (data as Array<{ chunk_id?: string; content: string; source?: string | null; similarity: number }>)
-    .map((r) => ({
-      chunk_id: r.chunk_id,
-      content: r.content,
-      source: r.source ?? null,
-      similarity: r.similarity,
-    }));
-}
-
-// ── Reranker ─────────────────────────────────────────────────────────────────
-// Cross-encoder that scores (query, chunk) pairs. Much smarter than the
-// bi-encoder on its own: it reads the full query alongside each candidate
-// and can distinguish "who is the mayor" (wants Lester Miller) from
-// "who is the mayor pro tem" (wants Valerie Wynn), or procedural voting
-// from a 2012 consolidation referendum — without brittle hand-coded filters.
-async function rerank(query: string, candidates: RetrievedChunk[]): Promise<RetrievedChunk[]> {
-  if (!CF_ACCOUNT_ID || !CF_API_TOKEN || candidates.length === 0) return candidates;
-
-  try {
-    const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_RERANK_MODEL}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${CF_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        contexts: candidates.map((c) => ({ text: c.content })),
-        top_k: candidates.length, // rerank all, we trim after
-      }),
-    });
-    if (!res.ok) return candidates; // fail open — return pre-ranked order
-
-    const data = await res.json();
-    // Response shape: { result: { response: [{ id, score }, ...] } }
-    const scores = data?.result?.response as Array<{ id: number; score: number }> | undefined;
-    if (!scores?.length) return candidates;
-
-    // Attach scores and sort
-    const withScores = scores.map((s) => ({
-      ...candidates[s.id],
-      rerankScore: s.score,
-    }));
-    withScores.sort((a, b) => (b.rerankScore ?? 0) - (a.rerankScore ?? 0));
-    return withScores;
-  } catch {
-    return candidates;
-  }
-}
-
-// ── Keyword search (fallback) ────────────────────────────────────────────────
-
-const STOP_WORDS = new Set([
-  "the","and","for","are","was","were","has","have","had","this","that","with",
-  "from","they","them","their","what","when","where","who","how","can","will",
-  "about","which","there","been","more","also","into","than","then","some",
-  "would","could","should","does","did","not","but","you","your","its","our",
-  "tell","me","is","in","of","to","a","an","do","on","at","by","be","it",
-]);
-
-async function keywordSearch(query: string): Promise<RetrievedChunk[]> {
-  const words = query
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length >= 3 && !STOP_WORDS.has(w));
-
-  if (words.length === 0) return [];
-
-  const ilikeConditions = words.map((w) => `content.ilike.%${w}%`).join(",");
-  const { data: rows } = await supabase
-    .from("knowledge_chunks")
-    .select("chunk_id, content, source")
-    .or(ilikeConditions)
-    .limit(20);
-
-  if (!rows?.length) return [];
-
-  const totalDocs = rows.length;
-  const wordDocFreq: Record<string, number> = {};
-  for (const word of words) {
-    wordDocFreq[word] = rows.filter((r) => r.content.toLowerCase().includes(word)).length;
-  }
-
-  return rows
-    .map((row) => {
-      const lower = row.content.toLowerCase();
-      let score = 0;
-      let matchCount = 0;
-      for (const word of words) {
-        if (lower.includes(word)) {
-          score += Math.log(totalDocs / (wordDocFreq[word] ?? 1) + 1);
-          matchCount++;
-        }
-      }
-      return { chunk_id: row.chunk_id, content: row.content, source: row.source, score, matchCount };
-    })
-    .filter((r) => r.matchCount > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, CANDIDATE_POOL)
-    .map(({ chunk_id, content, source }) => ({ chunk_id, content, source: source ?? null }));
-}
-
 // ── LLM call (Gemini 2.5 Flash) ──────────────────────────────────────────────
-
-function formatContext(chunks: RetrievedChunk[]): string {
-  if (chunks.length === 0) return "No relevant information found in the knowledge base.";
-  return chunks
-    .map((c, i) => {
-      const src = c.source ? ` (source: ${c.source})` : "";
-      return `[Source ${i + 1}${src}]\n${c.content}`;
-    })
-    .join("\n\n");
-}
 
 const SYSTEM_PROMPT = `\
 You are Mulberry, a civic assistant built into PeachTracker (peachtracker.vercel.app), \
@@ -213,6 +47,8 @@ candidates." "A runoff — a second round between the top two if no one won a ma
 - Do NOT quote statute text. Do NOT cite section numbers in the body of your answer \
 (e.g. don't say "Under Section 14(a)..."). The SOURCES may include citations for your \
 reference — summarize them in plain English instead.
+- Avoid instructional lead-ins like "First," "Step 1," etc. Lead with the answer itself \
+in a warm register ("You'll want to start by..." rather than "First, find out...").
 
 ANSWER RULES:
 1. Use ONLY the information in the SOURCES block. If the sources don't have enough \
@@ -238,9 +74,6 @@ treat them as the intended word. The sources were already retrieved for the corr
    - Bibb County Board of Elections: https://maconbibb.us/board-of-elections or (478) 621-6622
 `;
 
-// Loosen safety filters slightly — civic content (violence in history, election law, etc.)
-// can trip default thresholds. We still keep the hate/harassment/sexual defaults strict by
-// leaving them at BLOCK_MEDIUM_AND_ABOVE.
 const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT,        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,       threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
@@ -258,9 +91,9 @@ const RATE_LIMIT_FALLBACK =
 
 type GeminiOutcome =
   | { kind: "ok"; reply: string }
-  | { kind: "safety" }       // blocked by Gemini's safety filters
-  | { kind: "rate_limit" }   // 429 from Gemini
-  | { kind: "error" };       // any other failure
+  | { kind: "safety" }
+  | { kind: "rate_limit" }
+  | { kind: "error" };
 
 async function askGemini(question: string, context: string): Promise<GeminiOutcome> {
   if (!GEMINI_API_KEY) return { kind: "error" };
@@ -281,7 +114,6 @@ async function askGemini(question: string, context: string): Promise<GeminiOutco
     const result = await model.generateContent(userPrompt);
     const response = result.response;
 
-    // Safety block: response exists but has no candidates / finishReason = SAFETY.
     const candidates = response.candidates ?? [];
     const blockedFinishReasons = new Set(["SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII"]);
     const blocked =
@@ -293,10 +125,9 @@ async function askGemini(question: string, context: string): Promise<GeminiOutco
     }
 
     const text = response.text()?.trim();
-    if (!text) return { kind: "safety" }; // no content came back — treat as block
+    if (!text) return { kind: "safety" };
     return { kind: "ok", reply: text };
   } catch (err: unknown) {
-    // The @google/generative-ai SDK throws with a status code on HTTP errors.
     const errObj = err as { status?: number; message?: string };
     const status = errObj?.status;
     const msg = errObj?.message ?? "";
@@ -321,7 +152,7 @@ export async function POST(req: NextRequest) {
     const question = messages[messages.length - 1]?.content ?? "";
     console.log("[mulberry] question:", question);
 
-    // 1. Try vector search first (semantic, typo-tolerant, meaning-aware)
+    // 1. Try vector search first
     let candidates: RetrievedChunk[] = [];
     const embedding = await embedText(question);
 
@@ -330,13 +161,13 @@ export async function POST(req: NextRequest) {
       console.log(`[mulberry] vector search: ${candidates.length} candidates`);
     }
 
-    // 2. Fall back to keyword search if vector search returned nothing
+    // 2. Keyword fallback if vector path returned nothing
     if (candidates.length === 0) {
       candidates = await keywordSearch(question);
       console.log(`[mulberry] keyword fallback: ${candidates.length} candidates`);
     }
 
-    // 3. Rerank with cross-encoder (if we have more than TOP_K candidates)
+    // 3. Rerank with cross-encoder if we have more than TOP_K candidates
     let topChunks: RetrievedChunk[] = candidates;
     if (candidates.length > TOP_K) {
       topChunks = await rerank(question, candidates);
@@ -344,7 +175,7 @@ export async function POST(req: NextRequest) {
     }
     topChunks = topChunks.slice(0, TOP_K);
 
-    // 4. Call Gemini with context (or the empty-context string if nothing retrieved)
+    // 4. Ask Gemini
     if (GEMINI_API_KEY) {
       const context = formatContext(topChunks);
       const outcome = await askGemini(question, context);
@@ -357,12 +188,11 @@ export async function POST(req: NextRequest) {
         case "rate_limit":
           return NextResponse.json({ reply: RATE_LIMIT_FALLBACK });
         case "error":
-          // fall through to static fallback below
           break;
       }
     }
 
-    // 5. Static fallback (no Gemini key configured, or Gemini errored)
+    // 5. Static fallback
     if (topChunks.length === 0) {
       return NextResponse.json({
         reply:

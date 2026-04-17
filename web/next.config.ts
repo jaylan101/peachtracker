@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 01:44 — Mulberry: scrub stale Gemma display strings (admin pipeline description, Powered-by footers, migration comments) — generation is fully Gemini 2.5 Flash
+// Build: 2026-04-17 01:57 — Mulberry: add retrieval debug panel at /admin/mulberry/debug (shows pgvector top-10 + rerank scores + final Gemini context); extract retrieval pipeline into shared lib; voice prompt nudge against First/Step-1 lead-ins
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

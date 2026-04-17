@@ -94,11 +94,23 @@ export default async function MulberryAdminPage() {
         <div className="admin-card-title" style={{ marginBottom: 8 }}>
           Pipeline
         </div>
-        <div style={{ fontSize: "var(--body)", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+        <div style={{ fontSize: "var(--body)", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 10 }}>
           User query → Cloudflare BGE-small embedding (384 dims) →
           pgvector top-10 candidates → Cloudflare BGE-reranker-base re-rank →
           top-3 to Google Gemini 2.5 Flash → plain-language answer.
         </div>
+        <Link
+          href="/admin/mulberry/debug"
+          style={{
+            display: "inline-block",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            color: "var(--peach)",
+            textDecoration: "underline",
+          }}
+        >
+          Open retrieval debug panel →
+        </Link>
       </div>
     </main>
   );
