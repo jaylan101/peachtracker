@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 04:58 — maintenance page — kill status strip, tighten tagline
+// Build: 2026-04-17 15:16 — Mulberry: route meeting questions to /commission (2 new chunks + system prompt rule 8); reingest required
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
