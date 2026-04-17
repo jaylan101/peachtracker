@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 03:28 — Fix /commission filters (link-based pills), meeting-card vote count (items w/ votes, not row count), commissioner yes-rate rounding + unanimity explainer, meeting detail schema (full_text not description)
+// Build: 2026-04-17 03:39 — commission: photos on grid + profile, fix grid yes-rate rounding
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

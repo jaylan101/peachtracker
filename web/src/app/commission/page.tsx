@@ -14,6 +14,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
+import { CommissionerAvatar } from "@/components/commissioner-avatar";
 
 const PAGE_SIZE = 20;
 
@@ -150,14 +151,14 @@ function renderPage(props: {
             {commissioners.map((c) => {
               const total = c.commission_votes?.length ?? 0;
               const yes = c.commission_votes?.filter((v) => v.vote === "yes").length ?? 0;
-              const pct = total > 0 ? Math.round((yes / total) * 100) : null;
+              const yesRate = formatYesRate(yes, total);
               return (
                 <Link
                   key={c.id}
                   href={`/commission/${c.id}`}
                   style={{ background: "var(--card)", padding: "20px 16px", textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}
                 >
-                  <Avatar name={c.name} src={c.image_url} />
+                  <CommissionerAvatar name={c.name} src={c.image_url} size={64} />
                   <div>
                     <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", marginBottom: 2 }}>
                       {c.district}
@@ -165,9 +166,9 @@ function renderPage(props: {
                     <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text)", letterSpacing: "-0.01em" }}>
                       {c.name}
                     </div>
-                    {pct !== null && (
+                    {total > 0 && (
                       <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", marginTop: 4, fontWeight: 500 }}>
-                        {pct}% yes · {total} votes
+                        {yesRate} yes · {total} votes
                       </div>
                     )}
                   </div>
@@ -396,22 +397,13 @@ function PaginationLink({ disabled, href, label }: { disabled: boolean; href: st
   );
 }
 
-function Avatar({ name, src }: { name: string; src: string | null }) {
-  const initials = name.split(" ").map((n) => n[0]).filter(Boolean).slice(0, 2).join("");
-  if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={name} style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--border)" }} />;
-  }
-  return (
-    <div style={{
-      width: 64, height: 64, borderRadius: "50%", background: "var(--peach-bg, #FFE8D6)",
-      border: "2px solid var(--peach)", color: "var(--peach)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 900, fontSize: "1.15rem", letterSpacing: "0.02em",
-    }}>
-      {initials}
-    </div>
-  );
+// Don't round 356/357 up to 100%. Single dissents should still read as "not unanimous".
+function formatYesRate(yes: number, total: number): string {
+  if (total === 0) return "—";
+  if (yes === total) return "100%";
+  const pct = (yes / total) * 100;
+  if (pct > 99.5) return `${pct.toFixed(1)}%`;
+  return `${Math.round(pct)}%`;
 }
 
 function pageHref({ q, year, meetingType, voteShape, page }: {

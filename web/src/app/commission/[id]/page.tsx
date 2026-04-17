@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AccentBar, SiteNav, SiteFooter } from "@/components/site-chrome";
+import { CommissionerAvatar } from "@/components/commissioner-avatar";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -21,7 +22,7 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
 
   const { data: commissioner } = await supabase
     .from("commissioners")
-    .select("id, name, district")
+    .select("id, name, district, image_url")
     .eq("id", id)
     .maybeSingle();
 
@@ -81,16 +82,19 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
           </Link>
         </div>
 
-        <header style={{ borderBottom: "2px solid var(--text)", paddingBottom: 20, marginBottom: 40 }}>
-          <p style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.16em", color: "var(--peach)", marginBottom: 8 }}>
-            {commissioner.district}
-          </p>
-          <h1 style={{ fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", letterSpacing: "-0.03em", lineHeight: 1.02 }}>
-            {commissioner.name}
-          </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "var(--body)", marginTop: 8 }}>
-            Macon-Bibb County Board of Commissioners
-          </p>
+        <header style={{ borderBottom: "2px solid var(--text)", paddingBottom: 20, marginBottom: 40, display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+          <CommissionerAvatar name={commissioner.name} src={commissioner.image_url} size={120} />
+          <div>
+            <p style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.16em", color: "var(--peach)", marginBottom: 8 }}>
+              {commissioner.district}
+            </p>
+            <h1 style={{ fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", letterSpacing: "-0.03em", lineHeight: 1.02 }}>
+              {commissioner.name}
+            </h1>
+            <p style={{ color: "var(--text-secondary)", fontSize: "var(--body)", marginTop: 8 }}>
+              Macon-Bibb County Board of Commissioners
+            </p>
+          </div>
         </header>
 
         {/* Why-most-votes-are-yes note. Unanimous votes are the norm on most
