@@ -37,6 +37,33 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Maintenance mode — gated behind MAINTENANCE_MODE env var so we can flip it
+  // without redeploying code. Signed-in admin users pass through. The
+  // /maintenance page itself plus the admin login page must stay reachable,
+  // otherwise we'd lock ourselves out. /api/* stays reachable so Vercel Cron
+  // jobs keep hitting sync-news / sync-civicclerk during maintenance.
+  const maintenance = process.env.MAINTENANCE_MODE === "true";
+  if (maintenance) {
+    const isExempt =
+      pathname === "/maintenance" ||
+      pathname === "/admin/login" ||
+      pathname.startsWith("/admin/") || // admin area itself is gated below
+      pathname === "/admin" ||
+      pathname.startsWith("/api/") ||
+      pathname.startsWith("/_next/") ||
+      pathname.startsWith("/auth/") ||
+      pathname === "/favicon.ico" ||
+      pathname === "/robots.txt" ||
+      pathname === "/sitemap.xml";
+
+    if (!isExempt && !user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/maintenance";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Gate /admin routes. /admin/login itself is public so users can sign in.
   const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin/login";
 
