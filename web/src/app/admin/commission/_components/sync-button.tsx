@@ -11,15 +11,20 @@ export function SyncCivicClerkButton() {
     setLog((prev) => [...prev, msg]);
   }
 
-  async function sync() {
+  async function sync(full = false) {
     setStatus("phase1");
     setLog([]);
     setProgress({ done: 0, total: 0 });
 
     try {
       // Phase 1: sync meeting rows (fast)
-      addLog("Fetching meetings from CivicClerk...");
-      const r1 = await fetch("/api/sync-civicclerk?phase=meetings", { method: "POST" });
+      addLog(full
+        ? "Full backfill — fetching every commission meeting from CivicClerk..."
+        : "Fetching meetings from CivicClerk...");
+      const url = full
+        ? "/api/sync-civicclerk?phase=meetings&full=1"
+        : "/api/sync-civicclerk?phase=meetings";
+      const r1 = await fetch(url, { method: "POST" });
       const d1 = await r1.json();
       if (!r1.ok) throw new Error(d1.error ?? "Phase 1 failed");
 
@@ -70,8 +75,17 @@ export function SyncCivicClerkButton() {
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button onClick={sync} disabled={isRunning} className="admin-btn">
+        <button onClick={() => sync(false)} disabled={isRunning} className="admin-btn">
           {isRunning ? "Syncing…" : "↻ Sync meetings from CivicClerk"}
+        </button>
+        <button
+          onClick={() => sync(true)}
+          disabled={isRunning}
+          className="admin-btn"
+          title="Walks every page of CivicClerk Events. Only needed to backfill older meetings; normal sync is incremental and fast."
+          style={{ background: "var(--card)", color: "var(--text)" }}
+        >
+          Full backfill
         </button>
         {status === "phase2" && progress.total > 0 && (
           <span style={{ fontSize: "var(--body)", color: "var(--text-secondary)", fontWeight: 600 }}>
