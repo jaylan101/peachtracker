@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 03:49 — commissioner bios + news feed (Google News RSS, weekly cron)
+// Build: 2026-04-17 04:02 — add temporary cron debug endpoint
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
