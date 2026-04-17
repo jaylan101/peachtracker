@@ -83,6 +83,37 @@ async function fetchCommissionEvents(opts?: { stopAtDate?: string; maxPages?: nu
   return { events: all, pagesFetched, stoppedEarly };
 }
 
+// Paginated full-backfill fetch: jump to page N by walking N-1 pages first,
+// then return just that page and the next page number. This lets the client
+// chunk a long backfill across many short requests so none of them hit the
+// 60-second Vercel cap. A single page is ~15 events.
+async function fetchCommissionEventsPage(page: number): Promise<{
+  events: CivicEvent[]; hasMore: boolean; nextPage: number;
+}> {
+  const filter = `categoryName eq 'Board of Commissioners' and agendaId gt 0`;
+  let url: string = `${CIVICCLERK_BASE}/Events?$orderby=startDateTime desc&$filter=${encodeURIComponent(filter)}`;
+
+  // Walk forward page-by-page to the requested one.
+  let currentPage = 1;
+  while (currentPage < page) {
+    const r: Response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!r.ok) return { events: [], hasMore: false, nextPage: currentPage };
+    const d: { "@odata.nextLink"?: string } = await r.json();
+    const next = d["@odata.nextLink"];
+    if (!next) return { events: [], hasMore: false, nextPage: currentPage };
+    url = next;
+    currentPage++;
+  }
+
+  // Now fetch the requested page.
+  const r: Response = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!r.ok) return { events: [], hasMore: false, nextPage: page };
+  const d: { value?: CivicEvent[]; "@odata.nextLink"?: string } = await r.json();
+  const events = d.value ?? [];
+  const hasMore = Boolean(d["@odata.nextLink"]) && events.length > 0;
+  return { events, hasMore, nextPage: page + 1 };
+}
+
 // Legacy unfiltered fetch kept for the debug endpoint so we can still see
 // raw category counts and pagination behavior without the new filter.
 async function fetchAllEvents(): Promise<CivicEvent[]> {
@@ -361,7 +392,67 @@ export async function POST(request: Request) {
   // `full=1` on the query forces a complete refresh (no incremental stop).
   // Otherwise we stop once the current page is older than what's already in
   // the DB — which keeps a normal sync under a couple of seconds.
+  //
+  // `page=N` chunks a full backfill into single-page requests so each stays
+  // well under Vercel's 60s function cap. The client loops until hasMore=false.
   const fullRefresh = searchParams.get("full") === "1";
+  const pageParam = searchParams.get("page");
+  const pageNum = pageParam ? parseInt(pageParam, 10) : null;
+
+  // Chunked mode: fetch exactly one page of events and upsert only those.
+  if (pageNum && pageNum >= 1) {
+    const { events, hasMore, nextPage } = await fetchCommissionEventsPage(pageNum);
+
+    const commEvents = events.filter(
+      (e) => COMMISSION_CATEGORIES.includes(e.categoryName) &&
+        (e.hasAgenda || e.isPublished === "Published") &&
+        e.agendaId,
+    );
+
+    let meetingsSynced = 0;
+    const meetingIds: string[] = [];
+
+    for (const event of commEvents) {
+      const meetingDate = event.startDateTime.split("T")[0];
+      const meetingType = toMeetingType(event.eventName);
+      const agendaUrl = `https://maconbibbcoga.portal.civicclerk.com/event/${event.id}/files`;
+
+      await supabase
+        .from("meetings")
+        .upsert({
+          civicclerk_event_id: event.id,
+          civicclerk_agenda_id: event.agendaId,
+          meeting_date: meetingDate,
+          meeting_type: meetingType,
+          agenda_url: agendaUrl,
+        }, { onConflict: "civicclerk_event_id" });
+
+      const { data: row } = await supabase
+        .from("meetings")
+        .select("id")
+        .eq("civicclerk_event_id", event.id)
+        .maybeSingle();
+
+      if (row) {
+        meetingsSynced++;
+        meetingIds.push(row.id);
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mode: "paged",
+      page: pageNum,
+      meetingsSynced,
+      meetingIds,
+      hasMore,
+      nextPage: hasMore ? nextPage : null,
+      dateRange: events.length > 0
+        ? { newest: events[0]?.startDateTime?.slice(0, 10), oldest: events[events.length - 1]?.startDateTime?.slice(0, 10) }
+        : null,
+    });
+  }
+
   let stopAtDate: string | undefined;
   if (!fullRefresh) {
     const { data: newestRow } = await supabase

@@ -17,24 +17,48 @@ export function SyncCivicClerkButton() {
     setProgress({ done: 0, total: 0 });
 
     try {
-      // Phase 1: sync meeting rows (fast)
-      addLog(full
-        ? "Full backfill — fetching every commission meeting from CivicClerk..."
-        : "Fetching meetings from CivicClerk...");
-      const url = full
-        ? "/api/sync-civicclerk?phase=meetings&full=1"
-        : "/api/sync-civicclerk?phase=meetings";
-      const r1 = await fetch(url, { method: "POST" });
-      const d1 = await r1.json();
-      if (!r1.ok) throw new Error(d1.error ?? "Phase 1 failed");
+      // Phase 1: sync meeting rows
+      //
+      // Full backfill walks every page (~34 pages, ~506 events) so we can't
+      // do it in one request — Vercel caps functions at 60s. Instead we loop
+      // page-by-page, each request pulls ~15 events and stays under a second.
+      // Normal (incremental) sync is already fast and does everything in one.
+      let phase1Ids: string[] = [];
+      let totalMeetings = 0;
 
-      addLog(`✓ ${d1.meetingsSynced} meetings synced from CivicClerk`);
+      if (full) {
+        addLog("Full backfill — fetching every commission meeting from CivicClerk...");
+        let page = 1;
+        let hasMore = true;
+        while (hasMore && page <= 50) {
+          const pr = await fetch(
+            `/api/sync-civicclerk?phase=meetings&full=1&page=${page}`,
+            { method: "POST" },
+          );
+          const pd = await pr.json();
+          if (!pr.ok) throw new Error(pd.error ?? `Full backfill page ${page} failed`);
+          totalMeetings += pd.meetingsSynced ?? 0;
+          phase1Ids.push(...(pd.meetingIds ?? []));
+          const range = pd.dateRange ? ` (${pd.dateRange.newest} → ${pd.dateRange.oldest})` : "";
+          addLog(`  page ${page}: +${pd.meetingsSynced ?? 0}${range}`);
+          hasMore = Boolean(pd.hasMore);
+          page++;
+        }
+        addLog(`✓ ${totalMeetings} meetings synced across ${page - 1} pages`);
+      } else {
+        addLog("Fetching meetings from CivicClerk...");
+        const r1 = await fetch("/api/sync-civicclerk?phase=meetings", { method: "POST" });
+        const d1 = await r1.json();
+        if (!r1.ok) throw new Error(d1.error ?? "Phase 1 failed");
+        totalMeetings = d1.meetingsSynced ?? 0;
+        phase1Ids = d1.meetingIds ?? [];
+        addLog(`✓ ${totalMeetings} meetings synced from CivicClerk`);
+      }
 
       // Also fetch ALL meeting IDs from DB — catches manually-inserted meetings
       // that aren't returned by the Events API (e.g. March 18 2026 event 2401).
       const allDbResp = await fetch("/api/sync-civicclerk?phase=all-meeting-ids", { method: "POST" });
       const allDbData = allDbResp.ok ? await allDbResp.json() : { meetingIds: [] };
-      const phase1Ids: string[] = d1.meetingIds ?? [];
       const phase1Set = new Set(phase1Ids);
       const extraIds: string[] = (allDbData.meetingIds ?? []).filter((id: string) => !phase1Set.has(id));
       if (extraIds.length > 0) addLog(`+ ${extraIds.length} additional DB meetings to process`);
