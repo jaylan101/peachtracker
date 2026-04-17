@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 01:15 — Mulberry: swap generation LLM to Gemini 2.5 Flash (retrieval unchanged)
+// Build: 2026-04-17 01:32 — Mulberry: swap knowledge base to 120 plain-language chunks (up from 105)
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
