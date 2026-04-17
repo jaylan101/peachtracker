@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 01:57 — Mulberry: add retrieval debug panel at /admin/mulberry/debug (shows pgvector top-10 + rerank scores + final Gemini context); extract retrieval pipeline into shared lib; voice prompt nudge against First/Step-1 lead-ins
+// Build: 2026-04-17 02:03 — Mulberry: put hypothetical questions first and doubled in embedding input (fix for commission-vote retrieval miss diagnosed via debug panel) — requires reingest
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

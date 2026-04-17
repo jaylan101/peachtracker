@@ -50,9 +50,21 @@ async function loadChunks(): Promise<RawChunk[]> {
 }
 
 function buildEmbeddingText(c: RawChunk): string {
+  // Embedding input is tuned for short user queries that look like the chunk's
+  // hypothetical questions. BGE-small is a bi-encoder that weights leading
+  // tokens heavily and averages over the whole input — so we put the questions
+  // FIRST, inline (no bullet noise), and repeat them twice so the resulting
+  // vector concentrates on question semantics rather than on the longer body.
+  //
+  // Before (questions appended at end with bullets): the voting-threshold
+  // chunk's embedding was dominated by procedural body text and got out-ranked
+  // by weaker chunks that happened to mention "vote" or "commissioner" more
+  // literally, so "how does the commission vote?" didn't retrieve its own
+  // answer. See /admin/mulberry/debug for the before/after comparison.
   const qs = Array.isArray(c.hypothetical_questions) ? c.hypothetical_questions : [];
   if (qs.length === 0) return c.content;
-  return `${c.content}\n\nRelated questions:\n${qs.map((q) => `- ${q}`).join("\n")}`;
+  const questionLine = qs.join(" ");
+  return `Questions this answers: ${questionLine}\nQuestions this answers: ${questionLine}\n\n${c.content}`;
 }
 
 async function embed(text: string): Promise<number[]> {
