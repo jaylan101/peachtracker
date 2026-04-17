@@ -308,7 +308,7 @@ export function MaintenanceSplash() {
           We&rsquo;ll be back shortly.
         </motion.h1>
 
-        {/* Subtitle */}
+        {/* Subtitle — what PeachTracker is, without giving it all away */}
         <motion.p
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -322,64 +322,8 @@ export function MaintenanceSplash() {
             margin: 0,
           }}
         >
-          PeachTracker is undergoing scheduled maintenance ahead of relaunch.
-          Our civic accountability platform for Macon-Bibb County will return
-          soon.
+          An independent civic tracker for Macon-Bibb County, Georgia.
         </motion.p>
-
-        {/* Status line — sharp, bordered strip, no pill */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.7, ease: "easeOut" }}
-          style={{
-            marginTop: 48,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 14,
-            padding: "12px 20px",
-            background: "#FDF0E8",
-            borderLeft: "3px solid #E0956E",
-            fontSize: "0.86rem",
-            color: "#4a4a4a",
-            letterSpacing: "0.01em",
-            fontWeight: 500,
-          }}
-        >
-          <motion.span
-            animate={
-              reduced
-                ? {}
-                : {
-                    opacity: [0.35, 1, 0.35],
-                  }
-            }
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            aria-hidden="true"
-            style={{
-              width: 8,
-              height: 8,
-              background: "#E0956E",
-              display: "inline-block",
-            }}
-          />
-          <span
-            style={{
-              textTransform: "uppercase",
-              fontSize: "0.68rem",
-              fontWeight: 700,
-              letterSpacing: "0.16em",
-              color: "#E0956E",
-            }}
-          >
-            Status
-          </span>
-          <span style={{ color: "#1a1a1a" }}>Maintenance in progress</span>
-        </motion.div>
       </div>
 
       {/* Footer with admin bypass — matches site footer chrome */}
