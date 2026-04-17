@@ -54,8 +54,13 @@ function parseGoogleNewsRss(xml: string): RssItem[] {
     const pubDate = extract(block, "pubDate");
     const source = extractAttr(block, "source");
     const description = extract(block, "description");
-    // Google News wraps titles + descriptions in CDATA; description is HTML.
-    const snippet = description ? stripHtml(description).trim() : null;
+    // Google News wraps descriptions in CDATA containing ENTITY-ENCODED HTML
+    // (e.g. "&lt;a href=...&gt;Title&lt;/a&gt;"). We have to decode entities
+    // before stripping tags — otherwise the stripper sees plain text and
+    // leaves the encoded markup as-is.
+    const snippet = description
+      ? stripHtml(decodeHtml(description)).trim()
+      : null;
     if (title && link) {
       items.push({
         title: decodeHtml(title).trim(),

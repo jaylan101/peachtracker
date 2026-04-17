@@ -215,29 +215,49 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
             <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
               In the news
             </div>
-            <div style={{ display: "grid", gap: 14 }}>
-              {news.map((n) => (
-                <a
-                  key={n.id}
-                  href={n.source_url}
-                  target="_blank"
-                  rel="noopener"
-                  style={{ display: "block", padding: "14px 18px", background: "var(--card)", border: "1.5px solid var(--border)", textDecoration: "none", color: "var(--text)" }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: "var(--body)", lineHeight: 1.35, marginBottom: 4 }}>
-                    {n.title}
-                  </div>
-                  {n.snippet && (
-                    <p style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", lineHeight: 1.45, marginBottom: 6 }}>
-                      {n.snippet}
-                    </p>
-                  )}
-                  <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
-                    {n.source_name ?? hostFromUrl(n.source_url)}
-                    {n.published_at && <> · {formatDate(n.published_at.slice(0, 10))}</>}
-                  </div>
-                </a>
-              ))}
+            <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
+              {news.map((n) => {
+                // Google News titles always end with " - Source Name". Strip that
+                // suffix when we show a separate source line below to avoid the
+                // redundant "Title - 41NBC News · 41NBC News · date" triple.
+                const cleanTitle = n.source_name
+                  ? stripTrailingSource(n.title, n.source_name)
+                  : n.title;
+                return (
+                  <a
+                    key={n.id}
+                    href={n.source_url}
+                    target="_blank"
+                    rel="noopener"
+                    style={{
+                      display: "block",
+                      padding: "10px 16px",
+                      background: "var(--card)",
+                      textDecoration: "none",
+                      color: "var(--text)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "var(--body)",
+                        lineHeight: 1.3,
+                        marginBottom: 4,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {cleanTitle}
+                    </div>
+                    <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
+                      {n.source_name ?? hostFromUrl(n.source_url)}
+                      {n.published_at && <> · {formatDate(n.published_at.slice(0, 10))}</>}
+                    </div>
+                  </a>
+                );
+              })}
             </div>
             <p style={{ fontSize: "var(--micro)", color: "var(--text-light)", marginTop: 10 }}>
               Headlines are pulled automatically from Google News. PeachTracker doesn&apos;t endorse or verify their reporting.
@@ -319,6 +339,14 @@ function hostFromUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+// Google News headlines always end with " - Source Name". When we render the
+// source on its own line, the suffix is redundant. Strip it only when it
+// actually matches the source we'd otherwise repeat.
+function stripTrailingSource(title: string, sourceName: string): string {
+  const suffix = ` - ${sourceName}`;
+  return title.endsWith(suffix) ? title.slice(0, -suffix.length) : title;
 }
 
 function formatDate(iso: string) {
