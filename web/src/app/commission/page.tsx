@@ -177,37 +177,55 @@ function renderPage(props: {
           </div>
         </section>
 
-        {/* Filter bar — form GET so URL is shareable */}
+        {/* Filter bar — separate forms per filter, so clicking a pill does its own GET.
+            This is the simplest reliable way to make pill filters "just work" without
+            any client JS while keeping a server-rendered page. */}
         <section style={{ marginBottom: 32 }}>
-          <form method="GET" action="/commission" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ position: "relative" }}>
+          {/* Search is its own form — press Enter or click Search to submit */}
+          <form method="GET" action="/commission" style={{ marginBottom: 14 }}>
+            {/* Preserve other filters across search submissions */}
+            {year !== "all" && <input type="hidden" name="year" value={year} />}
+            {meetingType !== "all" && <input type="hidden" name="type" value={meetingType} />}
+            {voteShape !== "all" && <input type="hidden" name="votes" value={voteShape} />}
+            <div style={{ display: "flex", gap: 0 }}>
               <input
                 type="search"
                 name="q"
                 defaultValue={q}
                 placeholder="Search agenda items — e.g. budget, zoning, police..."
-                style={{ width: "100%", padding: "14px 18px", fontSize: "var(--body)", border: "1.5px solid var(--border)", background: "var(--card)", fontFamily: "inherit" }}
+                style={{ flex: 1, padding: "14px 18px", fontSize: "var(--body)", border: "1.5px solid var(--border)", background: "var(--card)", fontFamily: "inherit", borderRight: "none" }}
               />
-            </div>
-            <FilterRow label="Year" name="year" current={year} options={[["all", "All years"], ...years.map((y) => [y, y] as [string, string])]} />
-            <FilterRow label="Type" name="type" current={meetingType} options={[
-              ["all", "All"], ["regular", "Commission"], ["work_session", "Pre-Commission"], ["special", "Special Called"], ["committee", "Committee"],
-            ]} />
-            <FilterRow label="Votes" name="votes" current={voteShape} options={[
-              ["all", "All"], ["contested", "Contested (any No)"], ["unanimous", "Unanimous"],
-            ]} />
-            {/* Preserve other filters by submitting via same form */}
-            <div style={{ display: "flex", gap: 10 }}>
-              <button type="submit" style={{ padding: "10px 24px", fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", background: "var(--text)", color: "var(--card)", border: "none", cursor: "pointer" }}>
-                Apply
+              <button type="submit" style={{ padding: "10px 24px", fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", background: "var(--text)", color: "var(--card)", border: "1.5px solid var(--text)", cursor: "pointer" }}>
+                Search
               </button>
-              {(q || year !== "all" || meetingType !== "all" || voteShape !== "all") && (
-                <Link href="/commission" style={{ padding: "10px 24px", fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", background: "var(--card)", color: "var(--text)", border: "1.5px solid var(--border)", textDecoration: "none" }}>
-                  Reset
-                </Link>
-              )}
             </div>
           </form>
+
+          {/* Filter pills — each pill is its own link that rebuilds the URL with
+              that filter changed and everything else preserved. Clicking a pill
+              navigates immediately. */}
+          <FilterPills label="Year" paramKey="year" current={year}
+            options={[["all", "All years"], ...years.map((y) => [y, y] as [string, string])]}
+            state={{ q, year, meetingType, voteShape }} />
+          <FilterPills label="Type" paramKey="type" current={meetingType}
+            options={[
+              ["all", "All"], ["regular", "Commission"], ["work_session", "Pre-Commission"],
+              ["special", "Special Called"], ["committee", "Committee"],
+            ]}
+            state={{ q, year, meetingType, voteShape }} />
+          <FilterPills label="Votes" paramKey="votes" current={voteShape}
+            options={[
+              ["all", "All"], ["contested", "Contested (any No)"], ["unanimous", "Unanimous"],
+            ]}
+            state={{ q, year, meetingType, voteShape }} />
+
+          {(q || year !== "all" || meetingType !== "all" || voteShape !== "all") && (
+            <div style={{ marginTop: 14 }}>
+              <Link href="/commission" style={{ padding: "8px 18px", fontSize: "var(--micro)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", background: "var(--card)", color: "var(--text)", border: "1.5px solid var(--border)", textDecoration: "none" }}>
+                Reset filters
+              </Link>
+            </div>
+          )}
         </section>
 
         {/* Meeting list — summary cards */}
@@ -259,20 +277,26 @@ function renderPage(props: {
   );
 }
 
-function FilterRow({ label, name, current, options }: {
-  label: string; name: string; current: string; options: [string, string][];
+type FilterState = { q: string; year: string; meetingType: string; voteShape: string };
+
+function FilterPills({ label, paramKey, current, options, state }: {
+  label: string; paramKey: "year" | "type" | "votes"; current: string;
+  options: [string, string][]; state: FilterState;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
       <span style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--text-secondary)", minWidth: 60 }}>
         {label}
       </span>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {options.map(([val, lab]) => {
           const active = val === current;
+          const href = buildFilterHref(state, paramKey, val);
           return (
-            <label
+            <Link
               key={val}
+              href={href}
+              prefetch={false}
               style={{
                 padding: "6px 14px",
                 fontSize: "var(--micro)",
@@ -280,12 +304,12 @@ function FilterRow({ label, name, current, options }: {
                 border: `1.5px solid ${active ? "var(--text)" : "var(--border)"}`,
                 background: active ? "var(--text)" : "var(--card)",
                 color: active ? "var(--card)" : "var(--text)",
-                cursor: "pointer",
+                textDecoration: "none",
+                userSelect: "none",
               }}
             >
-              <input type="radio" name={name} value={val} defaultChecked={active} style={{ display: "none" }} />
               {lab}
-            </label>
+            </Link>
           );
         })}
       </div>
@@ -293,10 +317,28 @@ function FilterRow({ label, name, current, options }: {
   );
 }
 
+// Build a /commission URL with one filter param updated and page reset to 1.
+function buildFilterHref(state: FilterState, key: "year" | "type" | "votes", value: string): string {
+  const sp = new URLSearchParams();
+  if (state.q) sp.set("q", state.q);
+  // Preserve the other two filters
+  if (key !== "year" && state.year !== "all") sp.set("year", state.year);
+  if (key !== "type" && state.meetingType !== "all") sp.set("type", state.meetingType);
+  if (key !== "votes" && state.voteShape !== "all") sp.set("votes", state.voteShape);
+  // Set the changed filter (skip if it's "all" — default)
+  if (value !== "all") sp.set(key, value);
+  const qs = sp.toString();
+  return qs ? `/commission?${qs}` : "/commission";
+}
+
 function MeetingCard({ meeting: m }: { meeting: MeetingRow }) {
   const items = m.agenda_items ?? [];
-  const voteCount = items.reduce((s, i) => s + (i.commission_votes?.length ?? 0), 0);
-  const hasNo = items.some((i) => (i.commission_votes ?? []).some((v) => v.vote === "no"));
+  // "Motions" = items that actually had a recorded vote. One agenda item can
+  // have many vote records (one per commissioner who voted), so summing
+  // commission_votes.length overcounts by ~9x. Items-with-votes is the number
+  // a voter actually cares about.
+  const motionsWithVote = items.filter((i) => (i.commission_votes?.length ?? 0) > 0).length;
+  const contestedCount = items.filter((i) => (i.commission_votes ?? []).some((v) => v.vote === "no")).length;
   const label = meetingLabel(m.meeting_type);
   const dateStr = formatDate(m.meeting_date);
   const isFuture = m.meeting_date > new Date().toISOString().slice(0, 10);
@@ -318,8 +360,13 @@ function MeetingCard({ meeting: m }: { meeting: MeetingRow }) {
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         {isFuture && <Tag text="Upcoming" color="var(--peach)" />}
         {!isFuture && !isSynced && <Tag text="Pending" color="var(--text-light)" />}
-        {items.length > 0 && <Tag text={`${items.length} items`} />}
-        {voteCount > 0 && <Tag text={`${voteCount} votes`} color={hasNo ? "#DC2626" : "var(--green)"} />}
+        {items.length > 0 && <Tag text={`${items.length} ${items.length === 1 ? "item" : "items"}`} />}
+        {motionsWithVote > 0 && (
+          <Tag
+            text={`${motionsWithVote} ${motionsWithVote === 1 ? "vote" : "votes"}`}
+            color={contestedCount > 0 ? "#DC2626" : "var(--green)"}
+          />
+        )}
         <span style={{ color: "var(--text-light)", fontSize: "1.2rem" }}>→</span>
       </div>
     </Link>

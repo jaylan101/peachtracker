@@ -47,7 +47,9 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
   const yes = allVotes.filter((v) => v.vote === "yes").length;
   const no = allVotes.filter((v) => v.vote === "no").length;
   const abstain = allVotes.filter((v) => v.vote === "abstain").length;
-  const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
+  // Don't round to 100% unless it actually is 100%. Makes the "356 yes / 1 no /
+  // 100% yes rate" display make sense — a single dissent shows as 99.7%, not 100.
+  const yesRateLabel = formatYesRate(yes, total);
 
   // Group by meeting date for display
   const byMeeting = new Map<string, { meeting: MeetingInfo; votes: VoteWithContext[] }>();
@@ -91,6 +93,28 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
           </p>
         </header>
 
+        {/* Why-most-votes-are-yes note. Unanimous votes are the norm on most
+            councils — items go through committee first, and commissioners often
+            negotiate changes before a final vote. This is the context the
+            average reader needs so "100% yes rate" doesn't read as a rubber stamp. */}
+        {total > 20 && (
+          <aside style={{
+            background: "var(--green-bg, #f0fdf4)",
+            border: "1.5px solid var(--green-pastel, #bbf7d0)",
+            padding: "14px 18px",
+            marginBottom: 24,
+            fontSize: "var(--body)",
+            color: "var(--text)",
+            lineHeight: 1.5,
+          }}>
+            <strong>About these numbers:</strong> Most commission votes are unanimous
+            because items are debated and amended in committee before they reach a
+            formal vote. A high Yes rate is typical — the interesting part is where
+            a commissioner breaks from the pack, which is why we highlight
+            {no > 0 ? ` the ${no === 1 ? "dissenting vote" : `${no} dissenting votes`}` : " any dissent"} below.
+          </aside>
+        )}
+
         {/* Vote summary stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1.5px", background: "var(--border)", border: "1.5px solid var(--border)", marginBottom: 48 }}>
           {[
@@ -98,7 +122,7 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
             { label: "Yes", value: yes, color: "var(--green)" },
             { label: "No", value: no, color: "#DC2626" },
             { label: "Abstain", value: abstain, color: "var(--text-secondary)" },
-            { label: "Yes rate", value: `${yesPct}%`, color: "var(--green)" },
+            { label: "Yes rate", value: yesRateLabel, color: "var(--green)" },
           ].map((stat) => (
             <div key={stat.label} style={{ background: "var(--card)", padding: "20px 24px" }}>
               <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--text-secondary)", marginBottom: 6 }}>
@@ -190,6 +214,17 @@ function meetingLabel(type: string) {
   return type;
 }
 function voteColor(vote: string) { return vote === "yes" ? "var(--green)" : vote === "no" ? "#DC2626" : "var(--text-secondary)"; }
+
+// Format the yes rate so we never round up to 100% if there's been any dissent.
+// Integer percent for most ranges; one decimal when it would otherwise round to 100.
+function formatYesRate(yes: number, total: number): string {
+  if (total === 0) return "—";
+  if (yes === total) return "100%";
+  const pct = (yes / total) * 100;
+  // If it would round up to 100 but isn't actually 100, show one decimal.
+  if (pct > 99.5) return `${pct.toFixed(1)}%`;
+  return `${Math.round(pct)}%`;
+}
 
 interface MeetingInfo { id: string; meeting_date: string; meeting_type: string; }
 interface VoteWithContext {

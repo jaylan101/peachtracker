@@ -40,10 +40,12 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
 
   if (!meeting) notFound();
 
+  // full_text is the CivicClerk item body; category is a free-text classification.
+  // Schema doesn't have a `description` column, so don't select it.
   const { data: items } = await supabase
     .from("agenda_items")
     .select(`
-      id, title, category, item_number, description,
+      id, title, category, item_number, full_text, summary_eli5,
       commission_votes (
         id, vote, notes,
         commissioners ( id, name, district )
@@ -164,11 +166,15 @@ function AgendaItemCard({ item }: { item: AgendaItem }) {
       <h2 style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.01em", lineHeight: 1.3, marginBottom: 10 }}>
         {item.title}
       </h2>
-      {item.description && (
+      {item.summary_eli5 ? (
         <p style={{ color: "var(--text-secondary)", fontSize: "var(--body)", marginBottom: 12, lineHeight: 1.5 }}>
-          {item.description}
+          {item.summary_eli5}
         </p>
-      )}
+      ) : item.full_text ? (
+        <p style={{ color: "var(--text-secondary)", fontSize: "var(--body)", marginBottom: 12, lineHeight: 1.5 }}>
+          {truncate(item.full_text, 280)}
+        </p>
+      ) : null}
 
       {votes.length === 0 ? (
         <p style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
@@ -256,8 +262,14 @@ interface VoteRow {
 }
 interface AgendaItem {
   id: string; title: string; category: string | null;
-  item_number: number | null; description: string | null;
+  item_number: number | null;
+  full_text: string | null; summary_eli5: string | null;
   commission_votes: VoteRow[];
+}
+
+function truncate(s: string, max: number) {
+  const t = s.replace(/\s+/g, " ").trim();
+  return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
 }
 
 export const dynamic = "force-dynamic";
