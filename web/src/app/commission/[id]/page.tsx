@@ -22,11 +22,19 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
 
   const { data: commissioner } = await supabase
     .from("commissioners")
-    .select("id, name, district, image_url")
+    .select("id, name, district, image_url, bio, bio_sources")
     .eq("id", id)
     .maybeSingle();
 
   if (!commissioner) notFound();
+
+  // Recent news pulled weekly by the cron job. Public RLS filters to visible only.
+  const { data: news } = await supabase
+    .from("commissioner_news")
+    .select("id, source_url, source_name, title, snippet, published_at")
+    .eq("commissioner_id", id)
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(8);
 
   // All votes for this commissioner with meeting + item context
   const { data: votes } = await supabase
@@ -97,6 +105,32 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
           </div>
         </header>
 
+        {/* Bio — short factual intro for readers who don't know this commissioner.
+            Static enough to refresh manually every few months. */}
+        {commissioner.bio && (
+          <section style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 12 }}>
+              About
+            </div>
+            <p style={{ fontSize: "var(--lead)", lineHeight: 1.55, color: "var(--text)", maxWidth: "72ch", fontWeight: 450 }}>
+              {commissioner.bio}
+            </p>
+            {Array.isArray(commissioner.bio_sources) && commissioner.bio_sources.length > 0 && (
+              <div style={{ marginTop: 10, fontSize: "var(--micro)", color: "var(--text-light)" }}>
+                Sources:{" "}
+                {(commissioner.bio_sources as string[]).map((url, i) => (
+                  <span key={url}>
+                    <a href={url} target="_blank" rel="noopener" style={{ color: "var(--text-secondary)", textDecoration: "underline" }}>
+                      {hostFromUrl(url)}
+                    </a>
+                    {i < (commissioner.bio_sources as string[]).length - 1 && " · "}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Why-most-votes-are-yes note. Unanimous votes are the norm on most
             councils — items go through committee first, and commissioners often
             negotiate changes before a final vote. This is the context the
@@ -138,6 +172,44 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
             </div>
           ))}
         </div>
+
+        {/* In the news — auto-pulled weekly from Google News, filtered for
+            Macon/Bibb relevance. Empty state hidden; if nothing's been picked up,
+            the section just doesn't render. */}
+        {news && news.length > 0 && (
+          <section style={{ marginBottom: 48 }}>
+            <div style={{ fontSize: "var(--kicker)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--text-secondary)", borderTop: "1.5px solid var(--border)", paddingTop: 12, marginBottom: 16 }}>
+              In the news
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              {news.map((n) => (
+                <a
+                  key={n.id}
+                  href={n.source_url}
+                  target="_blank"
+                  rel="noopener"
+                  style={{ display: "block", padding: "14px 18px", background: "var(--card)", border: "1.5px solid var(--border)", textDecoration: "none", color: "var(--text)" }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: "var(--body)", lineHeight: 1.35, marginBottom: 4 }}>
+                    {n.title}
+                  </div>
+                  {n.snippet && (
+                    <p style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", lineHeight: 1.45, marginBottom: 6 }}>
+                      {n.snippet}
+                    </p>
+                  )}
+                  <div style={{ fontSize: "var(--micro)", color: "var(--text-light)", fontWeight: 500 }}>
+                    {n.source_name ?? hostFromUrl(n.source_url)}
+                    {n.published_at && <> · {formatDate(n.published_at.slice(0, 10))}</>}
+                  </div>
+                </a>
+              ))}
+            </div>
+            <p style={{ fontSize: "var(--micro)", color: "var(--text-light)", marginTop: 10 }}>
+              Headlines are pulled automatically from Google News. PeachTracker doesn&apos;t endorse or verify their reporting.
+            </p>
+          </section>
+        )}
 
         {/* Dissenting votes — most interesting for accountability */}
         {noVoteItems.length > 0 && (
@@ -205,6 +277,14 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
       <SiteFooter />
     </>
   );
+}
+
+function hostFromUrl(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
 
 function formatDate(iso: string) {
