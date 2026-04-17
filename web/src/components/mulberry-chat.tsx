@@ -302,7 +302,7 @@ export function MulberryChat() {
           </div>
 
           <div style={{ background: "var(--bg)", borderTop: "1.5px solid var(--border)", padding: "6px 14px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-light)", flexShrink: 0 }}>
-            Powered by Gemma · A PeachTracker project
+            Powered by Gemini · A PeachTracker project
           </div>
         </div>
       )}

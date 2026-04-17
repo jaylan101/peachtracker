@@ -97,7 +97,7 @@ export default async function MulberryAdminPage() {
         <div style={{ fontSize: "var(--body)", color: "var(--text-secondary)", lineHeight: 1.6 }}>
           User query → Cloudflare BGE-small embedding (384 dims) →
           pgvector top-10 candidates → Cloudflare BGE-reranker-base re-rank →
-          top-3 to Gemma 4 26B → natural language answer.
+          top-3 to Google Gemini 2.5 Flash → plain-language answer.
         </div>
       </div>
     </main>

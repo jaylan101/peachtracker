@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 01:35 — Mulberry: tighten system prompt to enforce plain-language, helpful-neighbor voice
+// Build: 2026-04-17 01:44 — Mulberry: scrub stale Gemma display strings (admin pipeline description, Powered-by footers, migration comments) — generation is fully Gemini 2.5 Flash
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
