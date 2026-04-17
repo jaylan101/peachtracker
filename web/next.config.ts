@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 02:39 — mulberry option 2 per-question embeddings table + dual vector search
+// Build: 2026-04-17 02:51 — Fix Mulberry MAX_TOKENS truncation — raise maxOutputTokens 400→2048 for Gemini 2.5 thinking budget
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

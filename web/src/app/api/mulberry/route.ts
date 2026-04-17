@@ -108,7 +108,11 @@ async function askGemini(question: string, context: string): Promise<GeminiOutco
       safetySettings: SAFETY_SETTINGS,
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 400,
+        // Gemini 2.5 Flash counts internal "thinking" tokens against this budget.
+        // At 400 it was exhausting thinking before emitting a full answer, so
+        // replies came back cut mid-sentence with finishReason=MAX_TOKENS.
+        // 2048 leaves ample room for thinking + a 2–4 sentence civic answer.
+        maxOutputTokens: 2048,
       },
     });
 
@@ -126,8 +130,23 @@ async function askGemini(question: string, context: string): Promise<GeminiOutco
       return { kind: "safety" };
     }
 
+    // Detect token-limit truncation so we don't silently ship a half-sentence.
+    const finishReasons = candidates.map((c) => String(c.finishReason ?? ""));
+    const hitMaxTokens = finishReasons.includes("MAX_TOKENS");
+
     const text = response.text()?.trim();
-    if (!text) return { kind: "safety" };
+    if (!text) {
+      if (hitMaxTokens) {
+        console.warn("[mulberry] Gemini hit MAX_TOKENS with no visible text — thinking budget exhausted");
+      }
+      return { kind: "safety" };
+    }
+    if (hitMaxTokens) {
+      console.warn(
+        `[mulberry] Gemini hit MAX_TOKENS; reply length=${text.length}. ` +
+        `Consider raising maxOutputTokens.`
+      );
+    }
     return { kind: "ok", reply: text };
   } catch (err: unknown) {
     const errObj = err as { status?: number; message?: string };
