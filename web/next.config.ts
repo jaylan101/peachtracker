@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-18 03:23 — fix(mobile): prevent horizontal overflow on narrow phones
+// Build: 2026-04-18 03:28 — fix(commission): shrink NO dissent badge; remove debug-cron stub
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

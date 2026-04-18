@@ -245,7 +245,7 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
                                   )}
                                   {v.notes && <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 2 }}>{v.notes}</div>}
                                 </div>
-                                <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: "#DC2626", border: "1.5px solid #DC2626", padding: "4px 10px", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+                                <span style={{ fontSize: "var(--micro)", fontWeight: 700, color: "#DC2626", border: "1px solid #DC2626", padding: "2px 7px", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap", alignSelf: "flex-start" }}>
                                   No
                                 </span>
                               </div>
