@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-18 03:28 — fix(commission): shrink NO dissent badge; remove debug-cron stub
+// Build: 2026-04-18 03:32 — fix(mobile): add viewport meta so phones render at device width
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

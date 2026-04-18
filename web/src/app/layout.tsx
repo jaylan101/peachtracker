@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { MulberryChat } from "@/components/mulberry-chat";
@@ -12,6 +12,13 @@ const outfit = Outfit({
 });
 
 const BASE_URL = "https://peachtracker.vercel.app";
+
+// Mobile viewport. Without this, mobile browsers render at ~980px CSS width
+// and scale down, which makes text look clipped/overflowing on narrow phones.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "PeachTracker — Macon-Bibb civic tracker",
