@@ -8,6 +8,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { cleanAgendaText } from "@/lib/civicclerk/decode-entities";
 
 // Give Vercel enough time to walk paginated CivicClerk responses.
 // The server caps page size at ~15 regardless of $top, so covering 3 years
@@ -238,14 +239,15 @@ export async function POST(request: Request) {
 
     let itemsSynced = 0, votesSynced = 0;
     for (const item of allItems) {
-      const rawName = item.agendaObjectItemName?.trim() ?? "";
-      const name = rawName.replace(/<[^>]*>/g, "").trim();
+      // cleanAgendaText strips HTML tags AND decodes entities (&amp;, &nbsp;, etc.)
+      // so titles/descriptions land in the DB in human-readable form.
+      const name = cleanAgendaText(item.agendaObjectItemName);
       if (!name) continue;
       if (["call to order", "prayer", "pledge"].some((s) => name.toLowerCase().startsWith(s))) continue;
 
       const { data: itemRow } = await supabase.from("agenda_items")
         .upsert({ meeting_id: meeting.id, item_number: item.sortOrder ?? 0, title: name,
-          full_text: item.agendaObjectItemDescription ?? null },
+          full_text: cleanAgendaText(item.agendaObjectItemDescription) || null },
           { onConflict: "meeting_id,item_number" })
         .select("id").maybeSingle();
       if (!itemRow) continue;
@@ -318,9 +320,8 @@ export async function POST(request: Request) {
     let votesSynced = 0;
 
     for (const item of allItems) {
-      // Strip HTML tags that CivicClerk embeds in item names
-      const rawName = item.agendaObjectItemName?.trim() ?? "";
-      const name = rawName.replace(/<[^>]*>/g, "").trim();
+      // Strip HTML tags + decode entities in one pass (see lib/civicclerk/decode-entities.ts).
+      const name = cleanAgendaText(item.agendaObjectItemName);
       if (!name) continue;
       if (["call to order", "prayer", "pledge of allegiance"].some((s) =>
         name.toLowerCase().startsWith(s))) continue;
@@ -331,7 +332,7 @@ export async function POST(request: Request) {
           meeting_id: meeting.id,
           item_number: item.sortOrder ?? 0,
           title: name,
-          full_text: item.agendaObjectItemDescription ?? null,
+          full_text: cleanAgendaText(item.agendaObjectItemDescription) || null,
         }, { onConflict: "meeting_id,item_number" })
         .select("id")
         .maybeSingle();

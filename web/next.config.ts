@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-17 15:16 — Mulberry: route meeting questions to /commission (2 new chunks + system prompt rule 8); reingest required
+// Build: 2026-04-18 03:12 — Sync: decode HTML entities in agenda titles + full_text (going-forward sync + backfill endpoint). Backfill required after deploy: POST /api/backfill-agenda-entities?phase=title then ?phase=full_text
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
