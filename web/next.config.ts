@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-18 03:12 — Sync: decode HTML entities in agenda titles + full_text (going-forward sync + backfill endpoint). Backfill required after deploy: POST /api/backfill-agenda-entities?phase=title then ?phase=full_text
+// Build: 2026-04-18 03:23 — fix(mobile): prevent horizontal overflow on narrow phones
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.

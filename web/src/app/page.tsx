@@ -174,7 +174,7 @@ export default async function Home() {
             {/* Post cards */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(340px, 100%), 1fr))",
               gap: "1.5px",
               background: "var(--border)",
               border: "1.5px solid var(--border)",
