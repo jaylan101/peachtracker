@@ -9,6 +9,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { cleanAgendaText } from "@/lib/civicclerk/decode-entities";
+import { generateExplainer } from "@/lib/civicclerk/generate-explainer";
+
+// After an agenda_items upsert, generate a plain-language one-sentence summary
+// via Gemini and write it to summary_eli5 — but ONLY if:
+//   1. The row currently has no summary_eli5 (don't overwrite existing work), AND
+//   2. summary_edited is false (admin hasn't manually tuned it)
+// Silently no-ops on Gemini failure (no API key, network error, empty response) —
+// summary_eli5 stays null and the commissioner page just skips rendering.
+async function maybeWriteExplainer(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  itemId: string,
+  title: string,
+  fullText: string | null,
+): Promise<void> {
+  const { data: existing } = await supabase
+    .from("agenda_items")
+    .select("summary_eli5, summary_edited")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (!existing) return;
+  if (existing.summary_eli5) return;        // already has one — respect it
+  if (existing.summary_edited) return;      // admin edited it to empty on purpose? leave alone
+
+  const { summary } = await generateExplainer({ title, fullText });
+  if (!summary) return;
+
+  await supabase
+    .from("agenda_items")
+    .update({ summary_eli5: summary })
+    .eq("id", itemId)
+    .eq("summary_edited", false);           // last-write guard against a race with admin edit
+}
 
 // Give Vercel enough time to walk paginated CivicClerk responses.
 // The server caps page size at ~15 regardless of $top, so covering 3 years
@@ -245,13 +277,18 @@ export async function POST(request: Request) {
       if (!name) continue;
       if (["call to order", "prayer", "pledge"].some((s) => name.toLowerCase().startsWith(s))) continue;
 
+      const fullText = cleanAgendaText(item.agendaObjectItemDescription) || null;
       const { data: itemRow } = await supabase.from("agenda_items")
         .upsert({ meeting_id: meeting.id, item_number: item.sortOrder ?? 0, title: name,
-          full_text: cleanAgendaText(item.agendaObjectItemDescription) || null },
+          full_text: fullText },
           { onConflict: "meeting_id,item_number" })
         .select("id").maybeSingle();
       if (!itemRow) continue;
       itemsSynced++;
+
+      // Generate plain-language summary for new items (skipped if already set
+      // or admin-edited). See maybeWriteExplainer for the guards.
+      await maybeWriteExplainer(supabase, itemRow.id, name, fullText);
 
       for (const vote of item.minutesItemVotes ?? []) {
         const allVoters = [
@@ -326,19 +363,24 @@ export async function POST(request: Request) {
       if (["call to order", "prayer", "pledge of allegiance"].some((s) =>
         name.toLowerCase().startsWith(s))) continue;
 
+      const fullText = cleanAgendaText(item.agendaObjectItemDescription) || null;
       const { data: itemRow } = await supabase
         .from("agenda_items")
         .upsert({
           meeting_id: meeting.id,
           item_number: item.sortOrder ?? 0,
           title: name,
-          full_text: cleanAgendaText(item.agendaObjectItemDescription) || null,
+          full_text: fullText,
         }, { onConflict: "meeting_id,item_number" })
         .select("id")
         .maybeSingle();
 
       if (!itemRow) continue;
       itemsSynced++;
+
+      // Generate plain-language summary for new items (skipped if already set
+      // or admin-edited). See maybeWriteExplainer for the guards.
+      await maybeWriteExplainer(supabase, itemRow.id, name, fullText);
 
       // Get votes: prefer GetMeetingItemMinutesVotes per item (more reliable than
       // embedded minutesItemVotes in Meetings/{id} which can be empty for recent meetings).

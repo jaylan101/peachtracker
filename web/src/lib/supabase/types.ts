@@ -91,6 +91,9 @@ export interface AgendaItem {
   item_number: number;
   title: string;
   summary_eli5: string | null;
+  // True once an admin has manually edited the summary. Protects the row from
+  // being overwritten by the Gemini regen or Claude-driven backfill paths.
+  summary_edited: boolean;
   category: string | null;
   full_text: string | null;
   created_at: string;

@@ -52,7 +52,7 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
     .select(`
       id, vote, notes,
       agenda_items (
-        id, title, category, item_number,
+        id, title, summary_eli5, category, item_number,
         meetings ( id, meeting_date, meeting_type )
       )
     `)
@@ -234,12 +234,17 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
                           return (
                             <div key={v.id} style={{ background: "#fef2f2", padding: "16px 24px" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                                <div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontWeight: 700, fontSize: "var(--body)", color: "var(--text)" }}>
                                     {v.agenda_items?.title}
                                   </div>
+                                  {v.agenda_items?.summary_eli5 && (
+                                    <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: 4, lineHeight: 1.45}}>
+                                      {v.agenda_items.summary_eli5}
+                                    </div>
+                                  )}
                                   {m && (
-                                    <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 4, fontWeight: 500 }}>
+                                    <div style={{ fontSize: "var(--micro)", color: "var(--text-secondary)", marginTop: 6, fontWeight: 500 }}>
                                       {meetingLabel(m.meeting_type)} · {formatDate(m.meeting_date)}
                                     </div>
                                   )}
@@ -269,12 +274,19 @@ export default async function CommissionerPage({ params }: { params: Promise<{ i
                       </div>
                       <div style={{ background: "var(--border)", display: "grid", gap: "1.5px", border: "1.5px solid var(--border)" }}>
                         {mVotes.map((v) => (
-                          <div key={v.id} style={{ background: v.vote === "no" ? "#fef2f2" : v.vote === "yes" ? "var(--green-bg)" : "var(--card)", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-                            <span style={{ fontSize: "var(--body)", fontWeight: 600, color: "var(--text)", flex: 1 }}>
-                              {v.agenda_items?.item_number && <span style={{ color: "var(--text-light)", marginRight: 6 }}>{v.agenda_items.item_number}.</span>}
-                              {v.agenda_items?.title}
-                            </span>
-                            <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: voteColor(v.vote), textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+                          <div key={v.id} style={{ background: v.vote === "no" ? "#fef2f2" : v.vote === "yes" ? "var(--green-bg)" : "var(--card)", padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: "var(--body)", fontWeight: 600, color: "var(--text)" }}>
+                                {v.agenda_items?.item_number && <span style={{ color: "var(--text-light)", marginRight: 6 }}>{v.agenda_items.item_number}.</span>}
+                                {v.agenda_items?.title}
+                              </div>
+                              {v.agenda_items?.summary_eli5 && (
+                                <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: 4, lineHeight: 1.45}}>
+                                  {v.agenda_items.summary_eli5}
+                                </div>
+                              )}
+                            </div>
+                            <span style={{ fontSize: "var(--kicker)", fontWeight: 700, color: voteColor(v.vote), textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap", marginTop: 2 }}>
                               {v.vote}
                             </span>
                           </div>
@@ -445,7 +457,14 @@ interface CommissionerLink {
 interface MeetingInfo { id: string; meeting_date: string; meeting_type: string; }
 interface VoteWithContext {
   id: string; vote: string; notes: string | null;
-  agenda_items: { id: string; title: string; category: string | null; item_number: number; meetings: MeetingInfo } | null;
+  agenda_items: {
+    id: string;
+    title: string;
+    summary_eli5: string | null;
+    category: string | null;
+    item_number: number;
+    meetings: MeetingInfo;
+  } | null;
 }
 
 export const dynamic = "force-dynamic";

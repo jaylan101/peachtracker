@@ -56,6 +56,9 @@ export default async function AdminDashboard() {
         <Link href="/admin/commission" className="admin-btn admin-btn-ghost">
           Commission tracker
         </Link>
+        <Link href="/admin/explainers" className="admin-btn admin-btn-ghost">
+          Explainers
+        </Link>
         <Link href="/admin/mulberry" className="admin-btn admin-btn-ghost">
           Mulberry AI
         </Link>

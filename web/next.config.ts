@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Build: 2026-04-18 03:32 — fix(mobile): add viewport meta so phones render at device width
+// Build: 2026-04-18 03:53 — explainers: wire Gemini at sync time + render on profile + admin /admin/explainers
 // MULBERRY_ENABLED=true
 // Public Supabase config — the anon (publishable) key is designed to ship to
 // browsers, so committing it is safe. RLS gates all writes.
